@@ -1,13 +1,19 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import LogoMark from '../components/LogoMark';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, session } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (session) navigate('/', { replace: true });
+  }, [session, navigate]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
