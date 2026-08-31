@@ -1,0 +1,59 @@
+import { useState, type FormEvent } from 'react';
+import { useAuth } from '../lib/auth';
+import LogoMark from '../components/LogoMark';
+
+export default function Login() {
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const { error: signInError } = await signIn(email, password);
+    setSubmitting(false);
+    if (signInError) setError(signInError);
+  }
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-ink-900">
+      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-800 p-8">
+        <div className="flex items-center gap-3">
+          <LogoMark size={32} />
+          <h1 className="font-serif text-xl text-champagne">Saint Daily</h1>
+        </div>
+        <label className="flex flex-col gap-1 text-sm text-muted">
+          Email
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border border-ink-700 bg-ink-700 px-3 py-2 text-champagne outline-none focus:border-accent-bright"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-muted">
+          Mot de passe
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border border-ink-700 bg-ink-700 px-3 py-2 text-champagne outline-none focus:border-accent-bright"
+          />
+        </label>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-accent-bright px-4 py-2 font-sans font-semibold text-ink-900 disabled:opacity-60"
+        >
+          {submitting ? 'Connexion…' : 'Se connecter'}
+        </button>
+      </form>
+    </div>
+  );
+}
