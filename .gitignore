@@ -5,3 +5,7 @@ release/
 .env
 .env.local
 *.log
+
+# Seeded design-canvas payload — regenerated from design/canvas/*.dc.html
+# via seed-canvas.mjs, not source content.
+design/saint-daily-app-design.html
