@@ -69,19 +69,31 @@ Explicitement écarté, à ne pas construire maintenant :
 - **Champagne** — `#F8E7C9` — couleur claire, équivalent du rôle `cream` de
   Saint Gym (texte sur fond sombre, surfaces claires).
 
-Ces deux couleurs sont l'ancrage de la palette et **ne changent pas**. Les
-nuances complémentaires (accent pour CTA/highlights, teintes `muted`,
-couleur `danger`, variations de `roleBg`/`roleText` si besoin) restent à
-définir — ce sera fait lors du brainstorming visuel dédié (cf. Hors scope),
-en partant de ces deux couleurs comme ancrage, pas en les remplaçant.
+Ces deux couleurs sont l'ancrage de la palette et **ne changent pas**.
+
+Validé lors du brainstorming visuel (canvas de maquettes, voir
+`design/canvas/`) :
+
+- **Accent doré** — `#E7B94E` (bright) / `#C08A2A` (mid) / `#8A5F1B` (deep) —
+  même rôle que le laiton de Saint Gym (CTA, highlights, mise en avant), sur
+  le même schéma `bright`/`mid`/`deep`.
+- **Typographie** — IBM Plex Serif (titres), IBM Plex Sans (texte courant),
+  IBM Plex Mono (données chiffrées — durées, dates), via Google Fonts.
+
+Restent à définir plus tard si besoin : teintes `muted`, couleur `danger`,
+variations de `roleBg`/`roleText` (probablement pas nécessaires vu l'absence
+de couche sociale/rôles).
 
 Le mark du logo (rayons SVG procéduraux, demi-dessin reflété — coordonnées
 `LOGO_RAYS/LOGO_VIEWBOX` fournies par l'utilisateur) est centralisé dans un
 module dédié (`lib/logoRays.ts` + `lib/theme.ts` équivalents pour Saint
 Daily), même technique que Saint Gym : source unique consommée à la fois par
 le rendu in-app (SVG React) et par la génération des icônes (fenêtre,
-taskbar, installeur), avec les couleurs Emerald Ink / Champagne à la place du
-laiton de Saint Gym.
+taskbar, installeur), avec l'accent doré à la place du laiton de Saint Gym.
+**Implémentation : les 17 rayons exacts de `LOGO_RAYS` fournis par
+l'utilisateur, pas une approximation** — le canvas de maquettes utilise une
+version simplifiée à 7 rayons pour le placeholder visuel du header, qui n'est
+pas la source de vérité du dessin.
 
 ## Modèle de données
 
