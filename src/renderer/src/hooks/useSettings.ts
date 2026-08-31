@@ -66,7 +66,23 @@ export function useSettings() {
       .select('*')
       .single();
     if (insertError) {
-      setError(insertError.message);
+      // Code '23505' = unique violation, peut arriver si React.StrictMode
+      // double-invoque l'effet en dev. Une autre invocation a créé la ligne,
+      // on la relit simplement.
+      if (insertError.code === '23505') {
+        const { data: existing, error: refetchError } = await supabase
+          .from('skill_app_settings')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (existing) {
+          setSettings(fromRow(existing as SettingsRow));
+        } else if (refetchError) {
+          setError(refetchError.message);
+        }
+      } else {
+        setError(insertError.message);
+      }
     } else {
       setSettings(fromRow(created as SettingsRow));
     }
