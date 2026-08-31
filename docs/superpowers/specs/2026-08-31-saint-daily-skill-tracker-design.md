@@ -57,13 +57,31 @@ Explicitement écarté, à ne pas construire maintenant :
 - Process principal Electron : fenêtre, **system tray**, **notifications
   natives**, **lancement automatique au démarrage de session** (nécessaire
   pour que les rappels de régularité aient un sens même app fermée).
-- Palette **Emerald Ink** (`#064E3B`) / **Champagne** (`#F8E7C9`) et le mark du
-  logo (rayons SVG procéduraux, demi-dessin reflété — voir les coordonnées
-  fournies) portés dans un module dédié à Saint Daily, sur le même schéma que
-  `lib/theme.ts` + `lib/logoRays.ts` de Saint Gym : source unique consommée à
-  la fois par le rendu in-app et par la génération des icônes (fenêtre,
-  taskbar, installeur). Valeurs de couleur différentes, technique identique.
+- Thème graphique et logo portés dans un module dédié à Saint Daily, sur le
+  même schéma que `lib/theme.ts` + `lib/logoRays.ts` de Saint Gym (voir
+  section dédiée ci-dessous).
 - Pas de dépendance de graphes externe — SVG natif, comme Saint Gym.
+
+## Thème graphique
+
+- **Emerald Ink** — `#064E3B` — couleur d'encre / fond, équivalent du rôle
+  `base` de Saint Gym (qui y est proche du noir ; ici, vert émeraude foncé).
+- **Champagne** — `#F8E7C9` — couleur claire, équivalent du rôle `cream` de
+  Saint Gym (texte sur fond sombre, surfaces claires).
+
+Ces deux couleurs sont l'ancrage de la palette et **ne changent pas**. Les
+nuances complémentaires (accent pour CTA/highlights, teintes `muted`,
+couleur `danger`, variations de `roleBg`/`roleText` si besoin) restent à
+définir — ce sera fait lors du brainstorming visuel dédié (cf. Hors scope),
+en partant de ces deux couleurs comme ancrage, pas en les remplaçant.
+
+Le mark du logo (rayons SVG procéduraux, demi-dessin reflété — coordonnées
+`LOGO_RAYS/LOGO_VIEWBOX` fournies par l'utilisateur) est centralisé dans un
+module dédié (`lib/logoRays.ts` + `lib/theme.ts` équivalents pour Saint
+Daily), même technique que Saint Gym : source unique consommée à la fois par
+le rendu in-app (SVG React) et par la génération des icônes (fenêtre,
+taskbar, installeur), avec les couleurs Emerald Ink / Champagne à la place du
+laiton de Saint Gym.
 
 ## Modèle de données
 
