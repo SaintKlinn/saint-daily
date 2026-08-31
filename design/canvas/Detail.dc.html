@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #03231A; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #E7B94E; text-decoration: none; }
+    a:hover { color: #F3CE73; }
+    ::selection { background: #C08A2A; color: #03231A; }
+  </style>
+</helmet>
+<div style="width:1280px; height:800px; display:flex; background:#03231A; color:#F8E7C9; overflow:hidden;">
+
+  <nav style="width:72px; min-width:72px; height:800px; background:#064E3B; border-right:1px solid #146856; display:flex; flex-direction:column; align-items:center; padding:24px 0 0 0; gap:40px;">
+    <svg width="30" height="20" viewBox="0 0 128 85" aria-hidden="true">
+      <g stroke="{{accent}}" stroke-linecap="round">
+        <line x1="64" y1="83" x2="64" y2="58" stroke-width="3" stroke-opacity="1"/>
+        <line x1="48" y1="78" x2="38" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="80" y1="78" x2="90" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="34" y1="66" x2="16" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+        <line x1="94" y1="66" x2="112" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+        <line x1="24" y1="48" x2="6" y2="14" stroke-width="1.8" stroke-opacity="0.45"/>
+        <line x1="104" y1="48" x2="122" y2="14" stroke-width="1.8" stroke-opacity="0.45"/>
+      </g>
+    </svg>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:30px;">
+      <span style="color:#8FA396" aria-label="Accueil" title="Accueil">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg>
+      </span>
+      <span style="color:{{accent}}" aria-label="Skills" title="Skills">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+      </span>
+      <span style="color:#8FA396" aria-label="Réglages" title="Réglages">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.4M12 18.6V21M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M3 12h2.4M18.6 12H21M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
+      </span>
+    </div>
+  </nav>
+
+  <main style="flex:1; padding:40px 56px; display:flex; flex-direction:column; gap:22px; overflow:hidden;">
+
+    <a href="#" style="display:flex; align-items:center; gap:8px; font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; width:fit-content;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      Retour
+    </a>
+
+    <header style="display:flex; align-items:flex-start; justify-content:space-between;">
+      <div>
+        <h1 style="margin:0; font-family:'IBM Plex Serif', serif; font-weight:500; font-size:36px; color:#F8E7C9;">Piano</h1>
+        <div style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; margin-top:6px;">#musique #instrument</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; border:1px solid #C08A2A; color:#C08A2A; padding:8px 14px;">
+          Intermédiaire
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <a href="#" style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; border:1px solid #146856; padding:8px 14px;">Archiver</a>
+      </div>
+    </header>
+
+    <section style="display:flex; gap:36px; flex:1; min-height:0;">
+
+      <div style="width:300px; min-width:300px; background:#064E3B; border:1px solid #146856; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:20px;">
+        <svg width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
+          <circle cx="110" cy="110" r="18" fill="none" stroke="{{accent}}" stroke-width="4" stroke-opacity="1"/>
+          <circle cx="110" cy="110" r="34" fill="none" stroke="{{accent}}" stroke-width="3.6" stroke-opacity="0.85"/>
+          <circle cx="110" cy="110" r="52" fill="none" stroke="{{accent}}" stroke-width="3.2" stroke-opacity="0.7"/>
+          <circle cx="110" cy="110" r="70" fill="none" stroke="{{accent}}" stroke-width="2.6" stroke-opacity="0.55"/>
+          <circle cx="110" cy="110" r="88" fill="none" stroke="{{accent}}" stroke-width="2" stroke-opacity="0.4"/>
+          <circle cx="110" cy="110" r="104" fill="none" stroke="{{accent}}" stroke-width="1.4" stroke-opacity="0.25" stroke-dasharray="2 4"/>
+          <text x="110" y="106" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#F8E7C9">38h</text>
+          <text x="110" y="126" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="#8FA396">cumulées</text>
+        </svg>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8FA396; letter-spacing:0.05em;">un anneau par mois de pratique</div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:24px; min-width:0;">
+
+        <div>
+          <h2 style="margin:0 0 12px 0; font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:14px; color:#F8E7C9;">Jalons</h2>
+          <div style="display:flex; flex-direction:column; gap:0; border-left:1px solid #146856; padding-left:18px;">
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 0;">
+              <span style="width:18px; height:18px; background:{{accent}}; display:flex; align-items:center; justify-content:center; margin-left:-27px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#03231A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6"/></svg></span>
+              <span style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9;">Premier morceau appris en entier</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 0;">
+              <span style="width:18px; height:18px; background:{{accent}}; display:flex; align-items:center; justify-content:center; margin-left:-27px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#03231A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6"/></svg></span>
+              <span style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9;">Gammes majeures sur deux octaves</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 0;">
+              <span style="width:16px; height:16px; border:1.5px solid #8FA396; margin-left:-26px;"></span>
+              <span style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#8FA396;">Improviser sur une grille de blues</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:0;">
+          <h2 style="margin:0 0 12px 0; font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:14px; color:#F8E7C9;">Journal</h2>
+          <div style="display:flex; flex-direction:column;">
+
+            <div style="display:flex; gap:18px; padding:14px 0; border-top:1px solid #146856;">
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8FA396; width:80px;">19 août</div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:{{accent}}; width:60px;">45 min</div>
+              <div style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9; flex:1;">Travaillé le legato sur le nocturne. Encore raide sur la main gauche mesure 12.</div>
+            </div>
+
+            <div style="display:flex; gap:18px; padding:14px 0; border-top:1px solid #146856;">
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8FA396; width:80px;">17 août</div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:{{accent}}; width:60px;">30 min</div>
+              <div style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9; flex:1;">Déchiffrage d'un nouveau morceau, juste la main droite.</div>
+            </div>
+
+            <div style="display:flex; gap:18px; padding:14px 0; border-top:1px solid #146856; border-bottom:1px solid #146856;">
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8FA396; width:80px;">13 août</div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:{{accent}}; width:60px;">50 min</div>
+              <div style="font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9; flex:1;">Gammes puis reprise du nocturne en entier, tempo lent.</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E7B94E","options":["#E7B94E","#C08A2A","#8A5F1B"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E7B94E' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,500;0,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #03231A; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #E7B94E; text-decoration: none; }
+    a:hover { color: #F3CE73; }
+  </style>
+</helmet>
+<div style="width:1280px; height:800px; position:relative; background:#03231A; overflow:hidden;">
+
+  <div style="position:absolute; inset:0; background:#03231A; opacity:0.9;"></div>
+
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+    <div style="width:460px; background:#064E3B; border:1px solid #146856; padding:36px; display:flex; flex-direction:column; gap:22px; box-shadow: 0 24px 60px rgba(0,0,0,0.45);">
+
+      <div style="display:flex; align-items:flex-start; justify-content:space-between;">
+        <div>
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#8FA396;">Nouvelle entrée</div>
+          <h1 style="margin:6px 0 0 0; font-family:'IBM Plex Serif', serif; font-weight:500; font-size:24px; color:#F8E7C9;">Journal de pratique</h1>
+        </div>
+        <span style="font-family:'IBM Plex Sans', sans-serif; font-size:20px; color:#8FA396; cursor:pointer;">×</span>
+      </div>
+
+      <label style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font-family:'IBM Plex Sans', sans-serif; font-size:12px; font-weight:600; color:#8FA396;">Skill</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#0B5F49; border:1px solid #146856; padding:12px 14px; font-family:'IBM Plex Sans', sans-serif; font-size:15px; color:#F8E7C9;">
+          Piano
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8FA396" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </label>
+
+      <label style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font-family:'IBM Plex Sans', sans-serif; font-size:12px; font-weight:600; color:#8FA396;">Durée</span>
+        <div style="display:flex; align-items:baseline; gap:10px; background:#0B5F49; border:1px solid #146856; padding:12px 14px;">
+          <span style="font-family:'IBM Plex Mono', monospace; font-size:20px; color:#F8E7C9;">45</span>
+          <span style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396;">minutes</span>
+        </div>
+      </label>
+
+      <label style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font-family:'IBM Plex Sans', sans-serif; font-size:12px; font-weight:600; color:#8FA396;">Note</span>
+        <div style="background:#0B5F49; border:1px solid #146856; padding:12px 14px; min-height:88px; font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#F8E7C9; line-height:1.5;">
+          Travaillé le legato sur le nocturne. Encore raide sur la main gauche mesure 12.
+        </div>
+      </label>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:6px;">
+        <button style="background:transparent; border:1px solid #146856; color:#8FA396; padding:12px 20px; font-family:'IBM Plex Sans', sans-serif; font-size:14px; font-weight:600; cursor:pointer;">Annuler</button>
+        <button style="background:{{accent}}; border:none; color:#03231A; padding:12px 22px; font-family:'IBM Plex Sans', sans-serif; font-size:14px; font-weight:600; cursor:pointer;">Enregistrer</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E7B94E","options":["#E7B94E","#C08A2A","#8A5F1B"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E7B94E' };
+  }
+}
+</script>
+</body>
+</html>

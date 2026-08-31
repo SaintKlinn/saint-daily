@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,500&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #03231A; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #E7B94E; text-decoration: none; }
+    a:hover { color: #F3CE73; }
+  </style>
+</helmet>
+<div style="width:1280px; height:800px; display:flex; background:#03231A; color:#F8E7C9; overflow:hidden;">
+
+  <nav style="width:72px; min-width:72px; height:800px; background:#064E3B; border-right:1px solid #146856; display:flex; flex-direction:column; align-items:center; padding:24px 0 0 0; gap:40px;">
+    <svg width="30" height="20" viewBox="0 0 128 85" aria-hidden="true">
+      <g stroke="#146856" stroke-linecap="round">
+        <line x1="64" y1="83" x2="64" y2="58" stroke-width="3" stroke-opacity="1"/>
+        <line x1="48" y1="78" x2="38" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="80" y1="78" x2="90" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="34" y1="66" x2="16" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+        <line x1="94" y1="66" x2="112" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+      </g>
+    </svg>
+  </nav>
+
+  <main style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;">
+
+    <svg width="120" height="80" viewBox="0 0 128 85" aria-hidden="true">
+      <g stroke="#8FA396" stroke-linecap="round">
+        <line x1="64" y1="83" x2="64" y2="58" stroke-width="2.4" stroke-opacity="0.5" stroke-dasharray="3 5"/>
+        <line x1="48" y1="78" x2="38" y2="48" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="3 5"/>
+        <line x1="80" y1="78" x2="90" y2="48" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="3 5"/>
+      </g>
+    </svg>
+
+    <h1 style="margin:0; font-family:'IBM Plex Serif', serif; font-weight:500; font-size:32px; color:#F8E7C9;">Introuvable</h1>
+    <p style="margin:0; max-width:360px; text-align:center; font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:#8FA396; line-height:1.6;">Ce skill n'existe plus, ou a été supprimé. Le lien qui vous a mené ici n'est plus valide.</p>
+
+    <a href="#" style="margin-top:10px; background:{{accent}}; color:#03231A; padding:12px 22px; font-family:'IBM Plex Sans', sans-serif; font-size:14px; font-weight:600;">Retour à l'accueil</a>
+
+  </main>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E7B94E","options":["#E7B94E","#C08A2A","#8A5F1B"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E7B94E' };
+  }
+}
+</script>
+</body>
+</html>

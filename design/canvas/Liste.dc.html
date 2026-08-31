@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #03231A; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #E7B94E; text-decoration: none; }
+    a:hover { color: #F3CE73; }
+    ::selection { background: #C08A2A; color: #03231A; }
+  </style>
+</helmet>
+<div style="width:1280px; height:800px; display:flex; background:#03231A; color:#F8E7C9; overflow:hidden;">
+
+  <nav style="width:72px; min-width:72px; height:800px; background:#064E3B; border-right:1px solid #146856; display:flex; flex-direction:column; align-items:center; padding:24px 0 0 0; gap:40px;">
+    <svg width="30" height="20" viewBox="0 0 128 85" aria-hidden="true">
+      <g stroke="{{accent}}" stroke-linecap="round">
+        <line x1="64" y1="83" x2="64" y2="58" stroke-width="3" stroke-opacity="1"/>
+        <line x1="48" y1="78" x2="38" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="80" y1="78" x2="90" y2="48" stroke-width="2.6" stroke-opacity="0.85"/>
+        <line x1="34" y1="66" x2="16" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+        <line x1="94" y1="66" x2="112" y2="32" stroke-width="2.2" stroke-opacity="0.65"/>
+        <line x1="24" y1="48" x2="6" y2="14" stroke-width="1.8" stroke-opacity="0.45"/>
+        <line x1="104" y1="48" x2="122" y2="14" stroke-width="1.8" stroke-opacity="0.45"/>
+      </g>
+    </svg>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:30px;">
+      <span style="color:#8FA396" aria-label="Accueil" title="Accueil">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg>
+      </span>
+      <span style="color:{{accent}}" aria-label="Skills" title="Skills">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+      </span>
+      <span style="color:#8FA396" aria-label="Réglages" title="Réglages">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.4M12 18.6V21M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M3 12h2.4M18.6 12H21M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
+      </span>
+    </div>
+  </nav>
+
+  <main style="flex:1; padding:48px 56px; display:flex; flex-direction:column; gap:28px; overflow:hidden;">
+
+    <header style="display:flex; align-items:center; justify-content:space-between;">
+      <h1 style="margin:0; font-family:'IBM Plex Serif', serif; font-weight:500; font-size:30px; color:#F8E7C9;">Skills</h1>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <label style="display:flex; align-items:center; gap:8px; font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396;">
+          <span style="width:34px; height:19px; background:#146856; border-radius:10px; display:inline-flex; align-items:center; padding:2px; box-sizing:border-box;">
+            <span style="width:15px; height:15px; background:#8FA396; border-radius:50%; display:block;"></span>
+          </span>
+          Voir les skills en pause
+        </label>
+        <div style="display:flex; align-items:center; gap:8px; background:#064E3B; border:1px solid #146856; padding:9px 14px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8FA396" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><line x1="20" y1="20" x2="16" y2="16"/></svg>
+          <span style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396;">Rechercher un skill ou une note</span>
+        </div>
+      </div>
+    </header>
+
+    <div style="display:flex; gap:10px;">
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; background:{{accent}}; color:#03231A; padding:6px 12px;">#musique</span>
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; border:1px solid #146856; color:#8FA396; padding:6px 12px;">#code</span>
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; border:1px solid #146856; color:#8FA396; padding:6px 12px;">#langues</span>
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; border:1px solid #146856; color:#8FA396; padding:6px 12px;">#sport</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:1px; background:#146856; border:1px solid #146856;">
+
+      <div style="background:#0B5F49; padding:20px 22px; display:flex; align-items:center; gap:20px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#146856" stroke-width="3"/>
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#E7B94E" stroke-width="3" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="24" transform="rotate(-90 20 20)"/>
+        </svg>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'IBM Plex Serif', serif; font-size:19px; color:#F8E7C9;">Piano</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; border:1px solid #C08A2A; color:#C08A2A; padding:2px 8px;">Intermédiaire</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; margin-top:3px;">#musique #instrument</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#8FA396; text-align:right;">série de 12 j<br>dernière · il y a 6 j</div>
+      </div>
+
+      <div style="background:#0B5F49; padding:20px 22px; display:flex; align-items:center; gap:20px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#146856" stroke-width="3"/>
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#E7B94E" stroke-width="3" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="8" transform="rotate(-90 20 20)"/>
+        </svg>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'IBM Plex Serif', serif; font-size:19px; color:#F8E7C9;">Code — Rust</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; border:1px solid #C08A2A; color:#C08A2A; padding:2px 8px;">Avancé</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; margin-top:3px;">#code #rust</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#8FA396; text-align:right;">série de 31 j<br>dernière · aujourd'hui</div>
+      </div>
+
+      <div style="background:#0B5F49; padding:20px 22px; display:flex; align-items:center; gap:20px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#146856" stroke-width="3"/>
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#E7B94E" stroke-width="3" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="83" transform="rotate(-90 20 20)"/>
+        </svg>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'IBM Plex Serif', serif; font-size:19px; color:#F8E7C9;">Espagnol</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; border:1px solid #C08A2A; color:#C08A2A; padding:2px 8px;">Débutant</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; margin-top:3px;">#langues</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#8FA396; text-align:right;">série de 2 j<br>dernière · il y a 8 j</div>
+      </div>
+
+      <div style="background:#0B5F49; padding:20px 22px; display:flex; align-items:center; gap:20px; opacity:0.55;">
+        <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#146856" stroke-width="3"/>
+        </svg>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'IBM Plex Serif', serif; font-size:19px; color:#F8E7C9;">Course à pied</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; border:1px solid #8FA396; color:#8FA396; padding:2px 8px;">En pause</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans', sans-serif; font-size:13px; color:#8FA396; margin-top:3px;">#sport</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#8FA396; text-align:right;">archivé · 14 mai</div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E7B94E","options":["#E7B94E","#C08A2A","#8A5F1B"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E7B94E' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1280, "h": 800 },
+    { "file": "Liste.dc.html", "x": 1400, "y": 0, "w": 1280, "h": 800 },
+    { "file": "Detail.dc.html", "x": 2800, "y": 0, "w": 1280, "h": 800 },
+    { "file": "NouvelleEntree.dc.html", "x": 0, "y": 950, "w": 1280, "h": 800 },
+    { "file": "Reglages.dc.html", "x": 1400, "y": 950, "w": 1280, "h": 800 },
+    { "file": "Introuvable.dc.html", "x": 2800, "y": 950, "w": 1280, "h": 800 }
+  ],
+  "annotations": [
+    { "id": "palette-note", "x": 0, "y": -140, "w": 640, "text": "Saint Daily — direction visuelle\nEmerald Ink #064E3B + Champagne #F8E7C9 (anchors) · gilt accent #E7B94E · IBM Plex Serif/Sans/Mono · rings replace Gym's sunburst rays\nHaut : Accueil, Liste, Détail. Bas : Nouvelle entrée, Réglages, Introuvable." }
+  ],
+  "launch": { "view": "canvas" }
+}
