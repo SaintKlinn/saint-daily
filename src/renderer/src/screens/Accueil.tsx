@@ -34,8 +34,8 @@ export default function Accueil() {
 
     for (const { skill, daysSince } of stats) {
       if (daysSince !== null && daysSince >= settings.reminderThresholdDays && !notifiedRef.current.has(skill.id)) {
-        notifiedRef.current.add(skill.id);
         if (Notification.permission === 'granted') {
+          notifiedRef.current.add(skill.id);
           new Notification('Saint Daily', { body: `${skill.name} : pas pratiqué depuis ${daysSince} jours.` });
         }
       }
