@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import { getDevLoginCredentials } from '../lib/devLogin';
 import LogoMark from '../components/LogoMark';
 
 export default function Login() {
@@ -22,13 +23,7 @@ export default function Login() {
   }, [session, navigate, location]);
 
   useEffect(() => {
-    // window.api est absent hors Electron (ex: cet onglet de prévisualisation
-    // pointé directement sur le serveur Vite) — dégrade silencieusement vers
-    // "pas de connexion dev" plutôt que de planter l'écran.
-    window.api
-      ?.getDevLoginCredentials?.()
-      .then(setDevCredentials)
-      .catch(() => setDevCredentials(null));
+    getDevLoginCredentials().then(setDevCredentials);
   }, []);
 
   async function handleSubmit(e: FormEvent) {

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './lib/auth';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
+import DevLogin from './screens/DevLogin';
 import Accueil from './screens/Accueil';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
@@ -30,6 +31,7 @@ function Router() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/dev-login" element={<DevLogin />} />
       <Route
         element={
           <AuthGate>
