@@ -7,7 +7,12 @@ release/
 *.log
 .worktrees/
 .claude/scheduled_tasks.lock
+dev_pid.txt
 
 # Seeded design-canvas payload — regenerated from design/canvas/*.dc.html
 # via seed-canvas.mjs, not source content.
 design/saint-daily-app-design.html
+
+# Generated app icons — produced by npm run icons, not committed
+resources/icon.png
+resources/icon.ico
