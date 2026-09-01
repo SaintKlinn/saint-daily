@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { useMilestones } from '../hooks/useMilestones';
@@ -121,26 +121,44 @@ export default function DetailSkill() {
 }
 
 function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error: string | null }> }) {
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         const input = e.currentTarget.elements.namedItem('label') as HTMLInputElement;
-        if (input.value.trim()) {
-          onAdd(input.value.trim());
-          input.value = '';
+        const label = input.value.trim();
+        if (!label) return;
+        setSubmitting(true);
+        setError(null);
+        const { error: addError } = await onAdd(label);
+        setSubmitting(false);
+        if (addError) {
+          setError(addError);
+          return;
         }
+        input.value = '';
       }}
-      className="mt-3 flex gap-2"
+      className="mt-3 flex flex-col gap-2"
     >
-      <input
-        name="label"
-        placeholder="Nouveau jalon"
-        className="flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-champagne"
-      />
-      <button type="submit" className="border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne">
-        Ajouter
-      </button>
+      <div className="flex gap-2">
+        <input
+          name="label"
+          placeholder="Nouveau jalon"
+          disabled={submitting}
+          className="flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-champagne"
+        />
+        <button
+          type="submit"
+          disabled={submitting}
+          className="border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne disabled:opacity-60"
+        >
+          Ajouter
+        </button>
+      </div>
+      {error && <p className="text-sm text-danger">{error}</p>}
     </form>
   );
 }
