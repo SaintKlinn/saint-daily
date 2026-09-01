@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useSettings } from '../hooks/useSettings';
+import Toggle from '../components/Toggle';
 
 export default function Reglages() {
   const { signOut } = useAuth();
@@ -63,60 +64,71 @@ export default function Reglages() {
   }
 
   return (
-    <div className="flex max-w-lg flex-col gap-8">
-      <h1 className="font-serif text-2xl text-champagne">Réglages</h1>
+    <div className="flex max-w-[640px] flex-col gap-8">
+      <h1 className="font-serif text-[30px] text-champagne">Réglages</h1>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-serif text-lg text-champagne">Rappels</h2>
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Rappels</h2>
         {actionError && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="mb-2 text-sm text-danger">
             {actionError}
           </p>
         )}
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Seuil de rappel (jours sans pratique)
-          <input
-            type="number"
-            min={1}
-            value={settings.reminderThresholdDays}
-            onChange={(e) => handleReminderChange(Number(e.target.value))}
-            className="w-24 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-champagne"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={settings.notificationsEnabled}
-            onChange={(e) => handleNotificationsChange(e.target.checked)}
-          />
-          Notifications natives activées
-        </label>
-        <label className="flex items-center gap-2 text-sm text-muted">
-          <input type="checkbox" checked={autoLaunch} onChange={(e) => handleAutoLaunchChange(e.target.checked)} />
-          Lancer Saint Daily au démarrage de session
-        </label>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <div>
+            <p className="text-[15px] text-champagne">Seuil de rappel</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              Nombre de jours sans pratique avant qu'un skill apparaisse dans les rappels dus
+            </p>
+          </div>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.reminderThresholdDays}
+              onChange={(e) => handleReminderChange(Number(e.target.value))}
+              aria-label="Seuil de rappel en jours"
+              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+            />
+            <span className="font-data text-[15px] text-champagne">jours</span>
+          </label>
+        </div>
+
+        <Toggle
+          checked={settings.notificationsEnabled}
+          onChange={handleNotificationsChange}
+          label="Notifications natives"
+          description="Une notification quand un skill franchit son seuil de rappel"
+        />
+        <Toggle
+          checked={autoLaunch}
+          onChange={handleAutoLaunchChange}
+          label="Lancement automatique"
+          description="Ouvrir Saint Daily au démarrage de session, en arrière-plan dans la zone de notification"
+        />
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-serif text-lg text-champagne">À propos</h2>
-        <details className="text-sm text-muted">
-          <summary className="cursor-pointer text-champagne">Confidentialité</summary>
-          <p className="mt-2">
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">À propos</h2>
+        <details className="border-b border-ink-700 py-4">
+          <summary className="cursor-pointer text-[15px] text-champagne">Confidentialité</summary>
+          <p className="mt-2 text-sm text-muted">
             Saint Daily est un outil 100% personnel : tes skills, jalons et entrées de pratique ne sont
             visibles que par toi. Les données sont stockées dans le projet Supabase partagé avec Saint Gym,
             protégées par des règles d'accès (RLS) qui limitent chaque ligne à son propriétaire.
           </p>
         </details>
-        <details className="text-sm text-muted">
-          <summary className="cursor-pointer text-champagne">Conditions d'utilisation</summary>
-          <p className="mt-2">
+        <details className="border-b border-ink-700 py-4">
+          <summary className="cursor-pointer text-[15px] text-champagne">Conditions d'utilisation</summary>
+          <p className="mt-2 text-sm text-muted">
             Projet personnel — pas de service tiers, pas de compte séparé à créer : Saint Daily réutilise le
             compte existant de l'écosystème Saint.
           </p>
         </details>
-        <details className="text-sm text-muted">
-          <summary className="cursor-pointer text-champagne">FAQ</summary>
-          <p className="mt-2">
+        <details className="border-b border-ink-700 py-4">
+          <summary className="cursor-pointer text-[15px] text-champagne">FAQ</summary>
+          <p className="mt-2 text-sm text-muted">
             <strong className="text-champagne">Pourquoi les rappels ne sonnent pas quand l'app est fermée ?</strong>
             <br />
             Les rappels sont calculés pendant que Saint Daily tourne (fenêtre ouverte ou réduite dans le

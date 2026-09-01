@@ -51,36 +51,36 @@ export default function Login() {
 
   return (
     <div className="flex h-screen items-center justify-center bg-ink-900">
-      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-800 p-8">
-        <div className="flex items-center gap-3">
+      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-900 p-9">
+        <div className="mb-1 flex items-center gap-3">
           <LogoMark size={32} />
           <h1 className="font-serif text-xl text-champagne">Saint Daily</h1>
         </div>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Email
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-ink-700 bg-ink-700 px-3 py-2 text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Mot de passe
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-ink-700 bg-ink-700 px-3 py-2 text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="bg-accent-bright px-4 py-2 font-sans font-semibold text-ink-900 disabled:opacity-60"
+          className="bg-accent-bright px-4 py-2.5 font-sans font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
         >
           {submitting ? 'Connexion…' : 'Se connecter'}
         </button>

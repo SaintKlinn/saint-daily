@@ -41,15 +41,18 @@ export default function NouvelleEntree() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4">
-      <h1 className="font-serif text-2xl text-champagne">Nouvelle entrée</h1>
+    <div className="mx-auto flex w-full max-w-md flex-col gap-5 border border-ink-700 bg-ink-900 p-9">
+      <div>
+        <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
+        <h1 className="mt-1.5 font-serif text-2xl text-champagne">Journal de pratique</h1>
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Skill
           <select
             value={skillId}
             onChange={(e) => setSkillId(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2 text-champagne"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne"
           >
             <option value="">Choisir…</option>
             {skills.map((s) => (
@@ -59,33 +62,49 @@ export default function NouvelleEntree() {
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Durée (minutes)
-          <input
-            type="number"
-            min={1}
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2 font-data text-champagne"
-          />
+        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+          Durée
+          <div className="flex items-baseline gap-2.5 border border-ink-700 bg-ink-800 px-3.5 py-3">
+            <input
+              type="number"
+              min={1}
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              className="w-16 bg-transparent font-data text-xl normal-case tracking-normal text-champagne focus:outline-none"
+            />
+            <span className="font-sans text-[13px] normal-case tracking-normal text-muted">minutes</span>
+          </div>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Note
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={4}
-            className="border border-ink-700 bg-ink-800 px-3 py-2 text-champagne"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-sm normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none"
           />
         </label>
-        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-accent-bright px-4 py-2 font-sans font-semibold text-ink-900 disabled:opacity-60"
-        >
-          {submitting ? 'Enregistrement…' : 'Enregistrer'}
-        </button>
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
+        <div className="mt-1 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="border border-ink-700 px-5 py-2.5 font-sans text-sm font-semibold text-muted hover:text-champagne"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-accent-bright px-5 py-2.5 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
+          >
+            {submitting ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
       </form>
     </div>
   );

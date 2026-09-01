@@ -6,6 +6,7 @@ import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import type { GenericLevel } from '../lib/types';
 import Introuvable from './Introuvable';
+import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -29,6 +30,10 @@ export default function DetailSkill() {
 
   const streak = useMemo(() => calculateStreak(entries), [entries]);
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
+  const totalHours = useMemo(
+    () => Math.round((entries.reduce((sum, e) => sum + e.durationMinutes, 0) / 60) * 10) / 10,
+    [entries]
+  );
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
 
   async function handleToggleArchived() {
@@ -77,7 +82,12 @@ export default function DetailSkill() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
+      <Link to="/skills" className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted hover:text-champagne">
+        <ChevronLeftIcon />
+        Retour
+      </Link>
+
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
           le signaler plutôt que de montrer un graphe/journal vide. */}
       {entriesError && (
@@ -93,115 +103,118 @@ export default function DetailSkill() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-serif text-3xl text-champagne">{skill.name}</h1>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {skill.tags.map((tag) => (
-              <span key={tag} className="border border-ink-700 px-2 py-0.5 text-xs text-muted">
-                {tag}
-              </span>
-            ))}
-          </div>
+          <h1 className="font-serif text-[36px] leading-tight text-champagne">{skill.name}</h1>
+          {skill.tags.length > 0 && (
+            <p className="mt-1.5 text-[13px] text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+          )}
         </div>
-        <button
-          onClick={handleToggleArchived}
-          className="border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne"
-        >
-          {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
-        </button>
+        <div className="flex items-center gap-3">
+          <label className="relative flex items-center gap-1.5 border border-accent-mid px-3.5 py-2 font-data text-[11px] uppercase tracking-[0.08em] text-accent-mid">
+            {LEVEL_LABELS[skill.genericLevel]}
+            <ChevronDownIcon />
+            <select
+              value={skill.genericLevel}
+              onChange={handleLevelChange}
+              aria-label="Niveau"
+              className="absolute inset-0 cursor-pointer opacity-0"
+            >
+              {(Object.keys(LEVEL_LABELS) as GenericLevel[]).map((level) => (
+                <option key={level} value={level}>
+                  {LEVEL_LABELS[level]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            onClick={handleToggleArchived}
+            className="border border-ink-700 px-3.5 py-2 font-sans text-[13px] text-muted hover:text-champagne"
+          >
+            {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-8 text-sm text-muted">
-        <span>
-          Streak : <span className="text-accent-bright">{streak} j</span>
-        </span>
-        <span>
-          Dernière pratique :{' '}
-          <span className="text-champagne">
+      <div className="flex min-h-0 flex-1 gap-9">
+        <div className="flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 border border-ink-700 bg-ink-900 p-6">
+          <svg viewBox="0 0 220 130" className="w-full">
+            <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
+          </svg>
+          <p className="font-data text-2xl text-champagne">{totalHours}h</p>
+          <p className="font-data text-[11px] uppercase tracking-[0.05em] text-muted">cumulées</p>
+          <p className="text-center text-sm text-muted">
+            Streak : <span className="text-accent-bright">{streak} j</span> · dernière pratique{' '}
             {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
-          </span>
-        </span>
-      </div>
-
-      <label className="flex max-w-xs flex-col gap-1 text-sm text-muted">
-        Niveau
-        <select
-          value={skill.genericLevel}
-          onChange={handleLevelChange}
-          className="border border-ink-700 bg-ink-800 px-3 py-2 text-champagne"
-        >
-          {(Object.keys(LEVEL_LABELS) as GenericLevel[]).map((level) => (
-            <option key={level} value={level}>
-              {LEVEL_LABELS[level]}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <section>
-        <h2 className="mb-2 font-serif text-lg text-champagne">Notes</h2>
-        {/* Partie « second cerveau » de la spec : les réflexions libres
-            sur un skill étaient saisies à la création et cherchables,
-            mais jamais réaffichées ni modifiables ensuite. */}
-        <NotesSection
-          key={skill.id}
-          notes={skill.notes}
-          onSave={(notes) => updateSkill(skill.id, { notes })}
-        />
-      </section>
-
-      <section>
-        <h2 className="mb-2 font-serif text-lg text-champagne">Progression (heures cumulées)</h2>
-        <svg viewBox="0 0 400 120" className="w-full max-w-xl border border-ink-700 bg-ink-800">
-          <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
-        </svg>
-      </section>
-
-      <section>
-        <h2 className="mb-2 font-serif text-lg text-champagne">Jalons</h2>
-        {milestonesError && (
-          <p role="alert" className="mb-2 text-sm text-danger">
-            {milestonesError}
           </p>
-        )}
-        <ul className="flex flex-col gap-2">
-          {milestones.map((m) => (
-            <li key={m.id} className="text-sm">
-              {/* Case et texte dans un même <label> : cliquer le texte doit
-                  aussi cocher, comme partout ailleurs dans l'app — la case
-                  seule était une cible bien trop petite (audit ui-ux-pro-max). */}
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!m.completedAt}
-                  onChange={(e) => handleToggleMilestone(m.id, e.target.checked)}
-                />
-                <span className={m.completedAt ? 'text-muted line-through' : 'text-champagne'}>{m.label}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-        <NewMilestoneForm onAdd={addMilestone} />
-      </section>
-
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-serif text-lg text-champagne">Journal de pratique</h2>
-          <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-sm text-accent-bright underline">
-            + Nouvelle entrée
-          </Link>
         </div>
-        <ul className="flex flex-col gap-3">
-          {entries.map((entry) => (
-            <li key={entry.id} className="border border-ink-700 p-3 text-sm">
-              <div className="flex justify-between text-muted">
-                <span>{new Date(entry.practicedAt).toLocaleDateString('fr-FR')}</span>
-                <span className="font-data">{entry.durationMinutes} min</span>
-              </div>
-              {entry.note && <p className="mt-1 text-champagne">{entry.note}</p>}
-            </li>
-          ))}
-        </ul>
-      </section>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <section>
+            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Jalons</h2>
+            {milestonesError && (
+              <p role="alert" className="mb-2 text-sm text-danger">
+                {milestonesError}
+              </p>
+            )}
+            <ul className="flex flex-col gap-0 border-l border-ink-700 pl-[18px]">
+              {milestones.map((m) => (
+                <li key={m.id} className="flex items-center py-2">
+                  <label className="flex cursor-pointer items-center gap-2.5">
+                    {/* Marge négative sur la case seulement (pas la ligne) :
+                        elle chevauche le trait vertical du <ul>, le texte
+                        suivant garde une position quasi normale grâce au
+                        gap (technique reprise de la maquette Detail). */}
+                    <span className="relative -ml-[27px] flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={!!m.completedAt}
+                        onChange={(e) => handleToggleMilestone(m.id, e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center peer-focus-visible:ring-2 peer-focus-visible:ring-accent-bright peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-ink-900 ${m.completedAt ? 'bg-accent-bright text-ink-900' : 'border-[1.5px] border-muted'}`}
+                      >
+                        {m.completedAt && <CheckIcon size={11} />}
+                      </span>
+                    </span>
+                    <span className={`text-sm ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
+                      {m.label}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <NewMilestoneForm onAdd={addMilestone} />
+          </section>
+
+          <section className="flex min-h-0 flex-1 flex-col">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-sans text-sm font-semibold text-champagne">Journal</h2>
+              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-sm text-accent-bright underline">
+                + Nouvelle entrée
+              </Link>
+            </div>
+            <div className="flex flex-col overflow-y-auto">
+              {entries.map((entry) => (
+                <div key={entry.id} className="flex gap-[18px] border-t border-ink-700 py-3.5 last:border-b">
+                  <p className="w-20 font-data text-xs text-muted">
+                    {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                  </p>
+                  <p className="w-16 font-data text-xs text-accent-bright">{entry.durationMinutes} min</p>
+                  <p className="flex-1 text-sm text-champagne">{entry.note}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-sans text-sm font-semibold text-champagne">Notes</h2>
+            {/* Partie « second cerveau » de la spec : les réflexions libres
+                sur un skill étaient saisies à la création et cherchables,
+                mais jamais réaffichées ni modifiables ensuite. */}
+            <NotesSection key={skill.id} notes={skill.notes} onSave={(notes) => updateSkill(skill.id, { notes })} />
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
@@ -245,7 +258,7 @@ function NotesSection({
   }
 
   return (
-    <div className="flex max-w-xl flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <textarea
         value={value}
         onChange={(e) => {
@@ -256,7 +269,7 @@ function NotesSection({
         rows={4}
         aria-label="Notes sur ce skill"
         placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
-        className="border border-ink-700 bg-ink-800 px-3 py-2 text-sm text-champagne"
+        className="border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-champagne placeholder:text-muted focus:outline-none"
       />
       <div className="flex items-center gap-3">
         <button
@@ -269,7 +282,11 @@ function NotesSection({
         </button>
         {status === 'saved' && <span className="text-sm text-muted">Notes enregistrées.</span>}
       </div>
-      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -302,7 +319,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           name="label"
           placeholder="Nouveau jalon"
           disabled={submitting}
-          className="flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-champagne"
+          className="flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-champagne placeholder:text-muted focus:outline-none"
         />
         <button
           type="submit"
@@ -312,7 +329,11 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           Ajouter
         </button>
       </div>
-      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
     </form>
   );
 }
@@ -327,7 +348,7 @@ function buildCumulativeHoursPath(entries: { practicedAt: string; durationMinute
   return sorted
     .map((entry, i) => {
       cumulativeMinutes += entry.durationMinutes;
-      const x = sorted.length === 1 ? 400 : (i / (sorted.length - 1)) * 400;
+      const x = sorted.length === 1 ? 220 : (i / (sorted.length - 1)) * 220;
       const y = 120 - (cumulativeMinutes / 60 / maxHours) * 110 - 5;
       return `${x},${y}`;
     })
