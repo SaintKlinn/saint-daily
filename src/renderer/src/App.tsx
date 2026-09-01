@@ -7,6 +7,8 @@ import Login from './screens/Login';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
 import DetailSkill from './screens/DetailSkill';
+import ListeSkills from './screens/ListeSkills';
+import NouveauSkill from './screens/NouveauSkill';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -30,6 +32,8 @@ function Router() {
           </AuthGate>
         }
       >
+        <Route path="skills" element={<ListeSkills />} />
+        <Route path="skills/nouveau" element={<NouveauSkill />} />
         <Route path="skills/:id" element={<DetailSkill />} />
         <Route path="entree/nouvelle" element={<NouvelleEntree />} />
         <Route path="*" element={<Introuvable />} />
