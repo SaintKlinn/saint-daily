@@ -5,6 +5,7 @@ import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
 import Introuvable from './screens/Introuvable';
+import NouvelleEntree from './screens/NouvelleEntree';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -28,6 +29,7 @@ function Router() {
           </AuthGate>
         }
       >
+        <Route path="entree/nouvelle" element={<NouvelleEntree />} />
         <Route path="*" element={<Introuvable />} />
       </Route>
     </Routes>
