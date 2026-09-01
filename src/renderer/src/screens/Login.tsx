@@ -50,12 +50,18 @@ export default function Login() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-ink-900">
+    <div
+      className="flex h-screen flex-col items-center justify-center gap-8 bg-ink-950 px-6"
+      style={{
+        backgroundImage:
+          'radial-gradient(ellipse 900px 500px at 50% 8%, rgba(231, 185, 78, 0.07), transparent 70%)',
+      }}
+    >
+      <div className="flex flex-col items-center gap-3">
+        <LogoMark width={92} height={61} animated />
+        <h1 className="font-serif text-2xl text-champagne">Saint Daily</h1>
+      </div>
       <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-900 p-9">
-        <div className="mb-1 flex items-center gap-3">
-          <LogoMark size={32} />
-          <h1 className="font-serif text-xl text-champagne">Saint Daily</h1>
-        </div>
         <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Email
           <input

@@ -87,7 +87,7 @@ export default function ListeSkills() {
       )}
 
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-        {visible.map((skill) => {
+        {visible.map((skill, i) => {
           const entries = entriesBySkill[skill.id] ?? [];
           const streak = calculateStreak(entries);
           const daysSince = daysSinceLastPractice(entries);
@@ -95,7 +95,8 @@ export default function ListeSkills() {
             <Link
               key={skill.id}
               to={`/skills/${skill.id}`}
-              className={`flex items-center gap-5 bg-ink-800 px-[22px] py-5 hover:bg-ink-700 ${skill.archivedAt ? 'opacity-55' : ''}`}
+              className={`flex items-center gap-5 bg-ink-800 px-[22px] py-5 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
+              style={{ animationDelay: `${i * 40}ms` }}
             >
               <ProgressRing
                 size={40}

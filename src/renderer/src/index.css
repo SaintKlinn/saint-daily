@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Révélation du logo (voir LogoMark.tsx, prop `animated`) : chaque trait
+   se dessine du centre vers sa longueur réelle puis reste à son opacité
+   cible — pas de boucle, c'est un geste d'ouverture ponctuel (écran de
+   connexion), pas un indicateur de chargement. */
+@keyframes logo-ray-reveal {
+  from {
+    stroke-dashoffset: var(--len);
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: var(--o);
+  }
+}
+
+.logo-ray-reveal {
+  stroke-dashoffset: var(--len);
+  opacity: 0;
+  animation: logo-ray-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--delay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-ray-reveal {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: var(--o);
+  }
+}
+
+/* Entrée en fondu des lignes de liste (Accueil, Liste des skills) — via
+   l'utilitaire Tailwind motion-safe:animate-[fade-up_...], qui n'applique
+   déjà l'animation que hors prefers-reduced-motion. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

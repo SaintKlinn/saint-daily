@@ -6,6 +6,7 @@ import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import type { GenericLevel } from '../lib/types';
 import Introuvable from './Introuvable';
+import RayCorner from '../components/RayCorner';
 import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
@@ -135,13 +136,14 @@ export default function DetailSkill() {
       </div>
 
       <div className="flex min-h-0 flex-1 gap-9">
-        <div className="flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 border border-ink-700 bg-ink-900 p-6">
-          <svg viewBox="0 0 220 130" className="w-full">
+        <div className="relative flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6">
+          <RayCorner variant={0} />
+          <svg viewBox="0 0 220 130" className="relative w-full">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
-          <p className="font-data text-2xl text-champagne">{totalHours}h</p>
-          <p className="font-data text-[11px] uppercase tracking-[0.05em] text-muted">cumulées</p>
-          <p className="text-center text-sm text-muted">
+          <p className="relative font-data text-2xl text-champagne">{totalHours}h</p>
+          <p className="relative font-data text-[11px] uppercase tracking-[0.05em] text-muted">cumulées</p>
+          <p className="relative text-center text-sm text-muted">
             Streak : <span className="text-accent-bright">{streak} j</span> · dernière pratique{' '}
             {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
           </p>
@@ -200,7 +202,7 @@ export default function DetailSkill() {
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   <p className="w-16 font-data text-xs text-accent-bright">{entry.durationMinutes} min</p>
-                  <p className="flex-1 text-sm text-champagne">{entry.note}</p>
+                  <p className="flex-1 font-serif text-[15px] italic text-champagne">{entry.note}</p>
                 </div>
               ))}
             </div>

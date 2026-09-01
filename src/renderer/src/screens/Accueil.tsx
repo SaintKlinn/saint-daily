@@ -5,6 +5,7 @@ import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
+import RayCorner from '../components/RayCorner';
 import { PlusIcon } from '../components/icons';
 
 // En dehors du composant, au niveau du module — persiste pour toute la
@@ -99,13 +100,14 @@ export default function Accueil() {
       )}
 
       <section className="grid grid-cols-3 gap-5">
-        <StatCard label="Skills actifs" value={String(activeSkills.length)} />
+        <StatCard label="Skills actifs" value={String(activeSkills.length)} rayVariant={2} />
         <StatCard
           label="Séries en cours"
           value={String(stats.filter((s) => s.streak > 0).length)}
           accent
+          rayVariant={4}
         />
-        <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} />
+        <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} rayVariant={0} />
       </section>
 
       <section className="flex min-h-0 flex-1 flex-col gap-3.5">
@@ -122,8 +124,12 @@ export default function Accueil() {
           <p className="text-sm text-muted">Rien de dû — tout est à jour.</p>
         ) : (
           <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-            {dueSkills.map(({ skill, daysSince }) => (
-              <div key={skill.id} className="flex items-center gap-[18px] bg-ink-800 p-[18px]">
+            {dueSkills.map(({ skill, daysSince }, i) => (
+              <div
+                key={skill.id}
+                className="flex items-center gap-[18px] bg-ink-800 p-[18px] motion-safe:animate-[fade-up_0.4s_ease-out_backwards]"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <ProgressRing
                   size={36}
                   radius={15}
@@ -151,11 +157,22 @@ export default function Accueil() {
   );
 }
 
-function StatCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function StatCard({
+  label,
+  value,
+  accent = false,
+  rayVariant,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  rayVariant: 0 | 1 | 2 | 3 | 4;
+}) {
   return (
-    <div className="flex flex-col gap-1.5 border border-ink-700 bg-ink-900 px-6 py-5">
-      <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">{label}</p>
-      <p className={`font-serif text-[32px] ${accent ? 'text-accent-bright' : 'text-champagne'}`}>{value}</p>
+    <div className="relative flex flex-col gap-1.5 overflow-hidden border border-ink-700 bg-ink-900 px-6 py-5">
+      <RayCorner variant={rayVariant} />
+      <p className="relative font-data text-[11px] uppercase tracking-[0.1em] text-muted">{label}</p>
+      <p className={`relative font-serif text-[32px] ${accent ? 'text-accent-bright' : 'text-champagne'}`}>{value}</p>
     </div>
   );
 }
