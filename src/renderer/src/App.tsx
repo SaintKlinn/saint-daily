@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import AppShell from './components/AppShell';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
 import Introuvable from './screens/Introuvable';
 
@@ -35,10 +36,12 @@ function Router() {
 
 export default function App() {
   return (
-    <HashRouter>
-      <AuthProvider>
-        <Router />
-      </AuthProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <AuthProvider>
+          <Router />
+        </AuthProvider>
+      </HashRouter>
+    </ErrorBoundary>
   );
 }

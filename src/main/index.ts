@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'node:path';
+import { registerDevLoginHandler } from './devLogin';
 
 const isDev = !app.isPackaged;
 
@@ -34,6 +35,7 @@ function createWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   createWindow();
+  registerDevLoginHandler();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

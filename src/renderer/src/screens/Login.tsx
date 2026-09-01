@@ -10,16 +10,36 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [devCredentials, setDevCredentials] = useState<{ email: string; password: string } | null>(null);
 
   useEffect(() => {
     if (session) navigate('/', { replace: true });
   }, [session, navigate]);
+
+  useEffect(() => {
+    // window.api est absent hors Electron (ex: cet onglet de prévisualisation
+    // pointé directement sur le serveur Vite) — dégrade silencieusement vers
+    // "pas de connexion dev" plutôt que de planter l'écran.
+    window.api
+      ?.getDevLoginCredentials?.()
+      .then(setDevCredentials)
+      .catch(() => setDevCredentials(null));
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     const { error: signInError } = await signIn(email, password);
+    setSubmitting(false);
+    if (signInError) setError(signInError);
+  }
+
+  async function handleDevLogin() {
+    if (!devCredentials) return;
+    setSubmitting(true);
+    setError(null);
+    const { error: signInError } = await signIn(devCredentials.email, devCredentials.password);
     setSubmitting(false);
     if (signInError) setError(signInError);
   }
@@ -59,6 +79,16 @@ export default function Login() {
         >
           {submitting ? 'Connexion…' : 'Se connecter'}
         </button>
+        {devCredentials && (
+          <button
+            type="button"
+            onClick={handleDevLogin}
+            disabled={submitting}
+            className="border border-ink-700 px-4 py-2 font-sans text-sm text-muted hover:text-champagne disabled:opacity-60"
+          >
+            Connexion dev ({devCredentials.email})
+          </button>
+        )}
       </form>
     </div>
   );
