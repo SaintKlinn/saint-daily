@@ -1,0 +1,13 @@
+appId: com.saintdaily.app
+productName: Saint Daily
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**/*
+win:
+  target: nsis
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
