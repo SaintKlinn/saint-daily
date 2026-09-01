@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useSkills } from '../hooks/useSkills';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
+import LogoMark from '../components/LogoMark';
 import { PlusIcon } from '../components/icons';
+import { colors } from '../theme/colors';
+
+const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
+const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
 
 // En dehors du composant, au niveau du module — persiste pour toute la
 // session de l'app, pas seulement le montage courant du composant (une
@@ -74,7 +80,12 @@ export default function Accueil() {
 
   return (
     <div className="flex flex-col gap-9">
-      <header className="flex items-end justify-between">
+      <motion.header
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+        className="flex items-end justify-between"
+      >
         <div>
           <p className="font-data text-xs uppercase tracking-[0.12em] text-muted">{greeting}</p>
           <h1 className="mt-1.5 font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
@@ -86,7 +97,7 @@ export default function Accueil() {
           <PlusIcon />
           Nouvelle entrée
         </Link>
-      </header>
+      </motion.header>
 
       {skillsError && (
         <p role="alert" className="text-sm text-danger">
@@ -99,36 +110,56 @@ export default function Accueil() {
         </p>
       )}
 
-      <section className="grid grid-cols-3 gap-5">
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={listVariants}
+        transition={{ delayChildren: 0.25 }}
+        className="grid grid-cols-3 gap-5"
+      >
         <StatCard label="Skills actifs" value={String(activeSkills.length)} rayVariant={2} />
         <StatCard
           label="Séries en cours"
           value={String(stats.filter((s) => s.streak > 0).length)}
-          accent
+          hero
           rayVariant={4}
         />
         <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} rayVariant={0} />
-      </section>
+      </motion.section>
 
       <section className="flex min-h-0 flex-1 flex-col gap-3.5">
-        <h2 className="font-sans text-[15px] font-semibold text-champagne">Rappels dus</h2>
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+          className="font-sans text-[15px] font-semibold text-champagne"
+        >
+          Rappels dus
+        </motion.h2>
         {activeSkills.length === 0 ? (
-          <p className="text-sm text-muted">
+          <EmptyReminders>
             Aucun skill actif pour l'instant.{' '}
             <Link to="/skills/nouveau" className="text-accent-bright underline">
               Crée ton premier skill
             </Link>
             .
-          </p>
+          </EmptyReminders>
         ) : dueSkills.length === 0 ? (
-          <p className="text-sm text-muted">Rien de dû — tout est à jour.</p>
+          <EmptyReminders>Rien de dû — tout est à jour.</EmptyReminders>
         ) : (
-          <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.45 }}
+            className="flex flex-col"
+          >
             {dueSkills.map(({ skill, daysSince }, i) => (
-              <div
+              <motion.div
                 key={skill.id}
-                className="flex items-center gap-[18px] bg-ink-800 p-[18px] motion-safe:animate-[fade-up_0.4s_ease-out_backwards]"
-                style={{ animationDelay: `${i * 60}ms` }}
+                variants={itemVariants}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-center gap-[18px] border border-ink-700 bg-ink-800 p-[18px] ${i > 0 ? 'border-t-0' : ''}`}
               >
                 <ProgressRing
                   size={36}
@@ -148,32 +179,70 @@ export default function Accueil() {
                 >
                   Logger
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </section>
     </div>
   );
 }
 
+function EmptyReminders({ children }: { children: ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+      className="flex flex-col items-center gap-2.5 border border-dashed border-ink-700 px-6 py-9 text-center"
+    >
+      <LogoMark size={26} className="opacity-50" />
+      <p className="text-sm text-muted">{children}</p>
+    </motion.div>
+  );
+}
+
 function StatCard({
   label,
   value,
-  accent = false,
+  hero = false,
   rayVariant,
 }: {
   label: string;
   value: string;
-  accent?: boolean;
+  hero?: boolean;
   rayVariant: 0 | 1 | 2 | 3 | 4;
 }) {
   return (
-    <div className="relative flex flex-col gap-1.5 overflow-hidden border border-ink-700 bg-ink-900 px-6 py-5">
+    <motion.div
+      variants={itemVariants}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className={`relative flex flex-col gap-1.5 overflow-hidden border px-6 py-5 ${hero ? 'border-accent-bright/35' : 'border-ink-700'}`}
+      style={{
+        background: hero
+          ? `linear-gradient(180deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 60%, ${colors.accent.bright}1f 100%)`
+          : `linear-gradient(160deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 68%)`,
+        boxShadow: `inset 0 1px 0 ${colors.accent.bright}14, 0 18px 34px -26px rgba(0, 0, 0, 0.8)`,
+      }}
+    >
       <RayCorner variant={rayVariant} />
-      <p className="relative font-data text-[11px] uppercase tracking-[0.1em] text-muted">{label}</p>
-      <p className={`relative font-serif text-[32px] ${accent ? 'text-accent-bright' : 'text-champagne'}`}>{value}</p>
-    </div>
+      <p className="relative flex items-center gap-[7px] font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+        <span
+          className="h-[5px] w-[5px] rounded-full"
+          style={{
+            background: hero ? colors.accent.bright : colors.accent.mid,
+            boxShadow: hero ? `0 0 6px ${colors.accent.bright}` : undefined,
+          }}
+        />
+        {label}
+      </p>
+      <p
+        className={`relative font-serif text-[38px] [font-variant-numeric:tabular-nums] ${hero ? 'text-accent-bright' : 'text-champagne'}`}
+        style={hero ? { textShadow: `0 0 22px ${colors.accent.bright}4d` } : undefined}
+      >
+        {value}
+      </p>
+    </motion.div>
   );
 }
 

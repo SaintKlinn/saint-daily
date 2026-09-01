@@ -8,7 +8,7 @@ import { colors } from '../theme/colors';
 // grille et donner un vrai rythme plutôt qu'un tampon répété. La carte
 // parente doit être `relative overflow-hidden` et son contenu texte doit
 // passer en `relative` pour rester au-dessus.
-const VARIANTS = {
+export const VARIANTS = {
   0: {
     position: '-top-2 -right-2',
     lines: [

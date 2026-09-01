@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { MotionConfig } from 'motion/react';
 import { AuthProvider, useAuth } from './lib/auth';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -54,11 +55,18 @@ function Router() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <HashRouter>
-        <AuthProvider>
-          <Router />
-        </AuthProvider>
-      </HashRouter>
+      {/* reducedMotion="user" : tous les composants motion.* de l'app
+          court-circuitent leurs animations si l'OS demande moins de
+          mouvement — même intention que les blocs
+          @media (prefers-reduced-motion: reduce) d'index.css, pour les
+          animations pilotées par Motion plutôt que par des keyframes CSS. */}
+      <MotionConfig reducedMotion="user">
+        <HashRouter>
+          <AuthProvider>
+            <Router />
+          </AuthProvider>
+        </HashRouter>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

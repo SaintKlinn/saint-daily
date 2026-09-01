@@ -45,3 +45,28 @@
     transform: translateY(0);
   }
 }
+
+/* Halo derrière le logo du rail (AppShell) : respire doucement en continu
+   après l'ouverture, pas juste une entrée — c'est ce qui doit lire comme
+   "vivant" une fois la cascade de montage terminée, sans jamais attirer
+   l'oeil plus que le contenu. */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rail-halo {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-halo {
+    animation: none;
+    opacity: 0.85;
+  }
+}
