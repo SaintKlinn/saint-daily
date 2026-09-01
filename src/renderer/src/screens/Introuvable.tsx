@@ -4,7 +4,7 @@ import LogoMark from '../components/LogoMark';
 export default function Introuvable() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 text-champagne">
-      <LogoMark size={80} className="opacity-30" />
+      <LogoMark size={80} className="opacity-30" animated />
       <h1 className="font-serif text-[32px] text-champagne">Introuvable</h1>
       <p className="max-w-[360px] text-center text-sm leading-relaxed text-muted">
         Ce skill n'existe plus, ou a été supprimé. Le lien qui vous a mené ici n'est plus valide.

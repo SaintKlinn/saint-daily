@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
+import RayCorner from '../components/RayCorner';
 
 export default function NouvelleEntree() {
   const navigate = useNavigate();
@@ -41,12 +42,13 @@ export default function NouvelleEntree() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-5 border border-ink-700 bg-ink-900 p-9">
-      <div>
+    <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
+      <RayCorner variant={0} />
+      <div className="relative">
         <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
         <h1 className="mt-1.5 font-serif text-2xl text-champagne">Journal de pratique</h1>
       </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Skill
           <select

@@ -14,7 +14,7 @@ export default function AppShell() {
   return (
     <div className="flex h-screen bg-ink-900 text-champagne">
       <nav className="flex w-[72px] min-w-[72px] flex-col items-center gap-10 border-r border-ink-700 bg-ink-900 pt-6">
-        <LogoMark width={30} height={20} />
+        <LogoMark width={30} height={20} animated />
         <div className="flex flex-col items-center gap-[30px]">
           {navItems.map(({ to, label, Icon }) => (
             <NavLink
@@ -32,7 +32,13 @@ export default function AppShell() {
           ))}
         </div>
       </nav>
-      <main className="flex-1 overflow-y-auto px-14 py-12">
+      <main
+        className="flex-1 overflow-y-auto px-14 py-12"
+        style={{
+          backgroundImage:
+            'radial-gradient(ellipse 900px 500px at 50% -10%, rgba(231, 185, 78, 0.05), transparent 70%)',
+        }}
+      >
         <Outlet />
       </main>
     </div>
