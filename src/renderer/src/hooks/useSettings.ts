@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
+import { toFrenchError } from '../lib/errors';
 import type { SkillAppSettings } from '../lib/types';
 
 interface SettingsRow {
@@ -50,7 +51,7 @@ export function useSettings() {
       .eq('user_id', session.user.id)
       .maybeSingle();
     if (fetchError) {
-      setError(fetchError.message);
+      setError(toFrenchError(fetchError.message));
       setLoading(false);
       return;
     }
@@ -78,10 +79,10 @@ export function useSettings() {
         if (existing) {
           setSettings(fromRow(existing as SettingsRow));
         } else if (refetchError) {
-          setError(refetchError.message);
+          setError(toFrenchError(refetchError.message));
         }
       } else {
-        setError(insertError.message);
+        setError(toFrenchError(insertError.message));
       }
     } else {
       setSettings(fromRow(created as SettingsRow));
@@ -99,7 +100,7 @@ export function useSettings() {
       .from('skill_app_settings')
       .update(toRow(patch))
       .eq('user_id', session.user.id);
-    if (updateError) return { error: updateError.message };
+    if (updateError) return { error: toFrenchError(updateError.message) };
     await refresh();
     return { error: null };
   }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,12 +14,15 @@ import Reglages from './screens/Reglages';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
+  const location = useLocation();
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-ink-900 text-champagne">Chargement…</div>
     );
   }
-  if (!session) return <Navigate to="/login" replace />;
+  // L'écran visé est transmis au login, qui y renvoie après reconnexion —
+  // pas de perte du contexte de navigation quand la session expire.
+  if (!session) return <Navigate to="/login" state={{ from: location }} replace />;
   return <>{children}</>;
 }
 

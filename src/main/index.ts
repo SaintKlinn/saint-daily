@@ -16,8 +16,12 @@ function createWindow(): BrowserWindow {
     minHeight: 640,
     backgroundColor: '#064E3B',
     autoHideMenuBar: true,
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      // .cjs et pas .js : le preload est buildé en CommonJS explicitement
+      // (voir electron.vite.config.ts) parce que package.json est en
+      // `"type": "module"`.
+      preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -47,17 +51,27 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
-app.whenReady().then(() => {
-  mainWindow = createWindow();
-  registerDevLoginHandler();
-  createTray(() => mainWindow);
-  registerAutoLaunchHandlers();
+// Ordre volontaire : les handlers IPC sont enregistrés AVANT createTray().
+// `new Tray(...)` lève si l'icône est introuvable ; si le tray passait en
+// premier, ce throw abortait le reste du callback et l'auto-launch n'était
+// jamais branché. Le .catch final garantit qu'une future erreur ici est
+// visible en console au lieu d'échouer silencieusement.
+app
+  .whenReady()
+  .then(() => {
+    mainWindow = createWindow();
+    registerDevLoginHandler();
+    registerAutoLaunchHandlers();
+    createTray(() => mainWindow);
 
-  app.on('activate', () => {
-    if (mainWindow) mainWindow.show();
-    else mainWindow = createWindow();
+    app.on('activate', () => {
+      if (mainWindow) mainWindow.show();
+      else mainWindow = createWindow();
+    });
+  })
+  .catch((error) => {
+    console.error('Erreur au démarrage :', error);
   });
-});
 
 app.on('before-quit', () => {
   isQuitting = true;

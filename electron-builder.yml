@@ -5,6 +5,13 @@ directories:
   buildResources: resources
 files:
   - out/**/*
+# `files` ne contient que out/**, donc resources/icon.png n'est pas dans
+# l'asar. L'icône du system tray est chargée au runtime depuis
+# process.resourcesPath (voir src/main/tray.ts) : elle doit être copiée
+# ici, sinon `new Tray(...)` lève dans l'app installée.
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
 win:
   target: nsis
   icon: resources/icon.ico

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
+import { toFrenchError } from '../lib/errors';
 import type { SkillMilestone } from '../lib/types';
 
 interface MilestoneRow {
@@ -41,7 +42,7 @@ export function useMilestones(skillId: string | null) {
       .eq('skill_id', skillId)
       .order('position', { ascending: true });
     if (fetchError) {
-      setError(fetchError.message);
+      setError(toFrenchError(fetchError.message));
     } else {
       setMilestones((data as MilestoneRow[]).map(fromRow));
     }
@@ -57,7 +58,7 @@ export function useMilestones(skillId: string | null) {
     const { error: insertError } = await getSupabaseClient()
       .from('skill_milestone')
       .insert({ skill_id: skillId, label, position: milestones.length });
-    if (insertError) return { error: insertError.message };
+    if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
     return { error: null };
   }
@@ -67,7 +68,7 @@ export function useMilestones(skillId: string | null) {
       .from('skill_milestone')
       .update({ completed_at: completed ? new Date().toISOString() : null })
       .eq('id', id);
-    if (updateError) return { error: updateError.message };
+    if (updateError) return { error: toFrenchError(updateError.message) };
     await refresh();
     return { error: null };
   }

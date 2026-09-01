@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import type { GenericLevel } from '../lib/types';
+import Introuvable from './Introuvable';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -15,9 +16,9 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
 
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
-  const { skills, updateSkill, setArchived } = useSkills();
-  const { milestones, addMilestone, toggleMilestone } = useMilestones(id ?? null);
-  const { entries } = usePracticeEntries(id ?? null);
+  const { skills, loading, error: skillsError, updateSkill, setArchived } = useSkills();
+  const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
+  const { entries, error: entriesError } = usePracticeEntries(id ?? null);
 
   const skill = skills.find((s) => s.id === id);
 
@@ -25,12 +26,33 @@ export default function DetailSkill() {
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
 
-  if (!skill) {
+  // Tant que les skills chargent, on ne peut pas conclure. Une fois le
+  // chargement terminé, un id qui ne correspond à rien = deep link cassé
+  // (skill supprimé, lien périmé) : c'est l'écran « introuvable » prévu
+  // par la spec, pas un « Chargement… » qui ne finit jamais.
+  // `skills.length === 0` en plus de `loading` : useSkills repasse
+  // loading à true à CHAQUE refresh, y compris celui qui suit une
+  // modification (niveau, notes, archivage). Sans cette condition, tout
+  // l'écran clignoterait sur « Chargement… » à chaque édition.
+  if (loading && skills.length === 0) {
     return <p className="text-muted">Chargement…</p>;
+  }
+  if (!skill) {
+    // Le chargement a échoué : la liste est vide parce que la requête a
+    // raté, pas parce que le skill n'existe plus. Ne pas afficher
+    // « Introuvable », qui serait un diagnostic faux.
+    if (skillsError) {
+      return <p className="text-sm text-danger">{skillsError}</p>;
+    }
+    return <Introuvable />;
   }
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Le skill est affiché, mais une requête annexe a pu échouer :
+          le signaler plutôt que de montrer un graphe/journal vide. */}
+      {entriesError && <p className="text-sm text-danger">{entriesError}</p>}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-serif text-3xl text-champagne">{skill.name}</h1>
@@ -78,6 +100,18 @@ export default function DetailSkill() {
       </label>
 
       <section>
+        <h2 className="mb-2 font-serif text-lg text-champagne">Notes</h2>
+        {/* Partie « second cerveau » de la spec : les réflexions libres
+            sur un skill étaient saisies à la création et cherchables,
+            mais jamais réaffichées ni modifiables ensuite. */}
+        <NotesSection
+          key={skill.id}
+          notes={skill.notes}
+          onSave={(notes) => updateSkill(skill.id, { notes })}
+        />
+      </section>
+
+      <section>
         <h2 className="mb-2 font-serif text-lg text-champagne">Progression (heures cumulées)</h2>
         <svg viewBox="0 0 400 120" className="w-full max-w-xl border border-ink-700 bg-ink-800">
           <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
@@ -86,6 +120,7 @@ export default function DetailSkill() {
 
       <section>
         <h2 className="mb-2 font-serif text-lg text-champagne">Jalons</h2>
+        {milestonesError && <p className="mb-2 text-sm text-danger">{milestonesError}</p>}
         <ul className="flex flex-col gap-2">
           {milestones.map((m) => (
             <li key={m.id} className="flex items-center gap-2 text-sm">
@@ -116,6 +151,74 @@ export default function DetailSkill() {
           ))}
         </ul>
       </section>
+    </div>
+  );
+}
+
+function NotesSection({
+  notes,
+  onSave,
+}: {
+  notes: string | null;
+  onSave: (notes: string | null) => Promise<{ error: string | null }>;
+}) {
+  // Monté avec key={skill.id} côté parent : l'état local est réinitialisé
+  // quand on passe d'un skill à un autre.
+  const [value, setValue] = useState(notes ?? '');
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  // Refs et pas la prop `notes` : cliquer sur « Enregistrer » déclenche
+  // d'abord le blur du textarea, donc deux appels rapprochés avant que la
+  // prop rafraîchie ne revienne. Ces deux refs rendent le second appel
+  // no-op au lieu d'écrire deux fois la même valeur.
+  const persistedRef = useRef(notes ?? '');
+  const inFlightRef = useRef(false);
+
+  async function handleSave() {
+    const next = value.trim() ? value : null;
+    const nextValue = next ?? '';
+    if (inFlightRef.current || persistedRef.current === nextValue) return;
+    inFlightRef.current = true;
+    setStatus('saving');
+    setError(null);
+    const { error: saveError } = await onSave(next);
+    inFlightRef.current = false;
+    if (saveError) {
+      setStatus('idle');
+      // La saisie reste dans le textarea — pas de perte, retry manuel.
+      setError(saveError);
+      return;
+    }
+    persistedRef.current = nextValue;
+    setStatus('saved');
+  }
+
+  return (
+    <div className="flex max-w-xl flex-col gap-2">
+      <textarea
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setStatus('idle');
+        }}
+        onBlur={handleSave}
+        rows={4}
+        aria-label="Notes sur ce skill"
+        placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
+        className="border border-ink-700 bg-ink-800 px-3 py-2 text-sm text-champagne"
+      />
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={status === 'saving'}
+          className="w-fit border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne disabled:opacity-60"
+        >
+          {status === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
+        </button>
+        {status === 'saved' && <span className="text-sm text-muted">Notes enregistrées.</span>}
+      </div>
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

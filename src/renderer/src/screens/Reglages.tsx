@@ -4,20 +4,40 @@ import { useSettings } from '../hooks/useSettings';
 
 export default function Reglages() {
   const { signOut } = useAuth();
-  const { settings, updateSettings } = useSettings();
+  const { settings, loading, error, updateSettings } = useSettings();
   const [autoLaunch, setAutoLaunch] = useState(false);
 
   useEffect(() => {
-    window.api.getAutoLaunch().then(setAutoLaunch);
+    // window.api est absent si le pont IPC n'a pas pu se charger (ou hors
+    // Electron). Sans ces gardes, l'appel levait de façon synchrone dans
+    // l'effet et remontait jusqu'à l'ErrorBoundary racine — qui est HORS
+    // du HashRouter : toute l'app devenait un écran d'erreur, sans même
+    // pouvoir naviguer ailleurs. Même pattern défensif que Login.tsx.
+    window.api
+      ?.getAutoLaunch?.()
+      .then(setAutoLaunch)
+      .catch(() => setAutoLaunch(false));
   }, []);
 
   async function handleAutoLaunchChange(enabled: boolean) {
+    // Pas de pont IPC : on ne persiste rien plutôt que d'écrire une
+    // valeur fausse dans les réglages. État suffisamment inhabituel pour
+    // ne pas mériter d'UX dédiée ici ; l'important est que ça ne lève pas.
+    if (!window.api?.setAutoLaunch) return;
     const actual = await window.api.setAutoLaunch(enabled);
     setAutoLaunch(actual);
     await updateSettings({ autoLaunchEnabled: actual });
   }
 
-  if (!settings) return <p className="text-muted">Chargement…</p>;
+  // `!settings` en plus de `loading` : useSettings repasse loading à true
+  // à chaque refresh, y compris celui qui suit un changement de réglage —
+  // sans ça l'écran clignoterait à chaque case cochée.
+  if (loading && !settings) return <p className="text-muted">Chargement…</p>;
+  // Même piège que le détail d'un skill : sans ce cas, un échec de
+  // chargement laissait « Chargement… » à l'écran indéfiniment.
+  if (!settings) {
+    return <p className="text-sm text-danger">{error ?? 'Réglages indisponibles pour le moment.'}</p>;
+  }
 
   return (
     <div className="flex max-w-lg flex-col gap-8">

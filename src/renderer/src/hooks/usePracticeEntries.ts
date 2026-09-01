@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
+import { toFrenchError } from '../lib/errors';
 import type { PracticeEntry } from '../lib/types';
 
 interface PracticeEntryRow {
@@ -45,7 +46,7 @@ export function usePracticeEntries(skillId: string | null) {
       .eq('skill_id', skillId)
       .order('practiced_at', { ascending: false });
     if (fetchError) {
-      setError(fetchError.message);
+      setError(toFrenchError(fetchError.message));
     } else {
       setEntries((data as PracticeEntryRow[]).map(fromRow));
     }
@@ -70,7 +71,7 @@ export function usePracticeEntries(skillId: string | null) {
       note: input.note ?? null,
       practiced_at: input.practicedAt ?? new Date().toISOString(),
     });
-    if (insertError) return { error: insertError.message };
+    if (insertError) return { error: toFrenchError(insertError.message) };
     if (input.skillId === skillId) await refresh();
     return { error: null };
   }
@@ -86,6 +87,7 @@ export function usePracticeEntries(skillId: string | null) {
 export function useAllPracticeEntries(skillIds: string[]) {
   const [entriesBySkill, setEntriesBySkill] = useState<Record<string, PracticeEntry[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const key = skillIds.join(',');
 
   useEffect(() => {
@@ -93,12 +95,21 @@ export function useAllPracticeEntries(skillIds: string[]) {
     async function load() {
       if (skillIds.length === 0) {
         setEntriesBySkill({});
+        setError(null);
         setLoading(false);
         return;
       }
       setLoading(true);
-      const { data } = await getSupabaseClient().from('practice_entry').select('*').in('skill_id', skillIds);
+      setError(null);
+      // L'erreur DOIT être capturée : sans elle, un échec de cette requête
+      // affichait silencieusement tous les skills avec streak 0 et aucun
+      // rappel « dû », sans le moindre indice que quelque chose a raté.
+      const { data, error: fetchError } = await getSupabaseClient()
+        .from('practice_entry')
+        .select('*')
+        .in('skill_id', skillIds);
       if (cancelled) return;
+      setError(fetchError ? toFrenchError(fetchError.message) : null);
       const bySkill: Record<string, PracticeEntry[]> = {};
       for (const row of (data ?? []) as PracticeEntryRow[]) {
         const entry = fromRow(row);
@@ -117,5 +128,5 @@ export function useAllPracticeEntries(skillIds: string[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return { entriesBySkill, loading };
+  return { entriesBySkill, loading, error };
 }

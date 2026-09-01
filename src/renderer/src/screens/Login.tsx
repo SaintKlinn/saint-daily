@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import LogoMark from '../components/LogoMark';
 
 export default function Login() {
   const { signIn, session } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -13,8 +14,12 @@ export default function Login() {
   const [devCredentials, setDevCredentials] = useState<{ email: string; password: string } | null>(null);
 
   useEffect(() => {
-    if (session) navigate('/', { replace: true });
-  }, [session, navigate]);
+    if (!session) return;
+    // AuthGate a mémorisé l'écran visé au moment où la session a expiré
+    // (voir App.tsx) : on y retourne au lieu de retomber sur l'accueil.
+    const from = (location.state as { from?: { pathname: string; search: string } } | null)?.from;
+    navigate(from ? `${from.pathname}${from.search ?? ''}` : '/', { replace: true });
+  }, [session, navigate, location]);
 
   useEffect(() => {
     // window.api est absent hors Electron (ex: cet onglet de prévisualisation

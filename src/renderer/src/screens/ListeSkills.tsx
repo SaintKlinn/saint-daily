@@ -4,7 +4,7 @@ import { useSkills } from '../hooks/useSkills';
 import { filterByTag } from '../lib/streaks';
 
 export default function ListeSkills() {
-  const { skills } = useSkills();
+  const { skills, error } = useSkills();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -31,6 +31,10 @@ export default function ListeSkills() {
           + Nouveau skill
         </Link>
       </div>
+
+      {/* Sans ça, un échec de chargement était indiscernable d'une liste
+          réellement vide (« Aucun skill ne correspond. »). */}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
         <input

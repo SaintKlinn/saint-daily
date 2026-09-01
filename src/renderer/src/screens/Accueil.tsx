@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 
+// En dehors du composant, au niveau du module — persiste pour toute la
+// session de l'app, pas seulement le montage courant du composant (une
+// navigation Accueil -> Skills -> Accueil ne doit pas re-notifier).
+const notifiedSkillIds = new Set<string>();
+
 export default function Accueil() {
-  const { skills } = useSkills();
+  const { skills, error: skillsError } = useSkills();
   const { settings } = useSettings();
   const activeSkills = useMemo(() => skills.filter((s) => !s.archivedAt), [skills]);
-  const { entriesBySkill } = useAllPracticeEntries(activeSkills.map((s) => s.id));
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
 
   const stats = useMemo(
     () =>
@@ -24,18 +29,16 @@ export default function Accueil() {
     [activeSkills, entriesBySkill]
   );
 
-  // Une notification par skill par session (pas de rappel qui revient
-  // toutes les 5 minutes tant qu'on n'a pas relancé l'app).
-  const notifiedRef = useRef(new Set<string>());
-
+  // Une notification par skill par session de l'app (pas de rappel qui
+  // revient toutes les 5 minutes tant qu'on n'a pas relancé l'app).
   useEffect(() => {
     if (!settings?.notificationsEnabled || typeof Notification === 'undefined') return;
     if (Notification.permission === 'default') Notification.requestPermission();
 
     for (const { skill, daysSince } of stats) {
-      if (daysSince !== null && daysSince >= settings.reminderThresholdDays && !notifiedRef.current.has(skill.id)) {
+      if (daysSince !== null && daysSince >= settings.reminderThresholdDays && !notifiedSkillIds.has(skill.id)) {
         if (Notification.permission === 'granted') {
-          notifiedRef.current.add(skill.id);
+          notifiedSkillIds.add(skill.id);
           new Notification('Saint Daily', { body: `${skill.name} : pas pratiqué depuis ${daysSince} jours.` });
         }
       }
@@ -50,6 +53,11 @@ export default function Accueil() {
           + Nouvelle entrée
         </Link>
       </div>
+
+      {/* Un échec de chargement doit être visible : sinon la page affiche
+          des streaks à 0 et aucun rappel « dû », sans rien signaler. */}
+      {skillsError && <p className="text-sm text-danger">{skillsError}</p>}
+      {entriesError && <p className="text-sm text-danger">{entriesError}</p>}
 
       <ul className="grid grid-cols-2 gap-4">
         {stats.map(({ skill, streak, daysSince }) => {

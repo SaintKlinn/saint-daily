@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
+import { toFrenchError } from '../lib/errors';
 import type { GenericLevel, Skill } from '../lib/types';
 
 interface SkillRow {
@@ -42,7 +43,7 @@ export function useSkills() {
       .select('*')
       .order('created_at', { ascending: false });
     if (fetchError) {
-      setError(fetchError.message);
+      setError(toFrenchError(fetchError.message));
     } else {
       setSkills((data as SkillRow[]).map(fromRow));
     }
@@ -67,7 +68,7 @@ export function useSkills() {
       generic_level: input.genericLevel,
       notes: input.notes ?? null,
     });
-    if (insertError) return { error: insertError.message };
+    if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
     return { error: null };
   }
@@ -82,7 +83,7 @@ export function useSkills() {
         ...(patch.genericLevel !== undefined ? { generic_level: patch.genericLevel } : {}),
       })
       .eq('id', id);
-    if (updateError) return { error: updateError.message };
+    if (updateError) return { error: toFrenchError(updateError.message) };
     await refresh();
     return { error: null };
   }
@@ -92,7 +93,7 @@ export function useSkills() {
       .from('skill')
       .update({ archived_at: archived ? new Date().toISOString() : null })
       .eq('id', id);
-    if (updateError) return { error: updateError.message };
+    if (updateError) return { error: toFrenchError(updateError.message) };
     await refresh();
     return { error: null };
   }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabase';
+import { toFrenchError } from './errors';
 
 interface AuthState {
   session: Session | null;
@@ -32,7 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    // Traduit ici, à la source : l'écran de login affiche la valeur telle
+    // quelle et ne voit jamais le message anglais de Supabase.
+    return { error: error ? toFrenchError(error.message) : null };
   }
 
   async function signOut() {
