@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
+import DetailSkill from './screens/DetailSkill';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -29,6 +30,7 @@ function Router() {
           </AuthGate>
         }
       >
+        <Route path="skills/:id" element={<DetailSkill />} />
         <Route path="entree/nouvelle" element={<NouvelleEntree />} />
         <Route path="*" element={<Introuvable />} />
       </Route>
