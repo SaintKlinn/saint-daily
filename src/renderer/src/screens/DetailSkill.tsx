@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { useMilestones } from '../hooks/useMilestones';
@@ -22,9 +22,34 @@ export default function DetailSkill() {
 
   const skill = skills.find((s) => s.id === id);
 
+  // Archiver, changer le niveau, cocher un jalon écrivaient en silence :
+  // un échec réseau ne se voyait qu'en revenant à l'état précédent au
+  // prochain refresh, sans un mot d'explication (audit ui-ux-pro-max).
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const streak = useMemo(() => calculateStreak(entries), [entries]);
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
+
+  async function handleToggleArchived() {
+    if (!skill) return;
+    setActionError(null);
+    const { error } = await setArchived(skill.id, !skill.archivedAt);
+    if (error) setActionError(error);
+  }
+
+  async function handleLevelChange(e: ChangeEvent<HTMLSelectElement>) {
+    if (!skill) return;
+    setActionError(null);
+    const { error } = await updateSkill(skill.id, { genericLevel: e.target.value as GenericLevel });
+    if (error) setActionError(error);
+  }
+
+  async function handleToggleMilestone(milestoneId: string, completed: boolean) {
+    setActionError(null);
+    const { error } = await toggleMilestone(milestoneId, completed);
+    if (error) setActionError(error);
+  }
 
   // Tant que les skills chargent, on ne peut pas conclure. Une fois le
   // chargement terminé, un id qui ne correspond à rien = deep link cassé
@@ -42,7 +67,11 @@ export default function DetailSkill() {
     // raté, pas parce que le skill n'existe plus. Ne pas afficher
     // « Introuvable », qui serait un diagnostic faux.
     if (skillsError) {
-      return <p className="text-sm text-danger">{skillsError}</p>;
+      return (
+        <p role="alert" className="text-sm text-danger">
+          {skillsError}
+        </p>
+      );
     }
     return <Introuvable />;
   }
@@ -51,7 +80,16 @@ export default function DetailSkill() {
     <div className="flex flex-col gap-8">
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
           le signaler plutôt que de montrer un graphe/journal vide. */}
-      {entriesError && <p className="text-sm text-danger">{entriesError}</p>}
+      {entriesError && (
+        <p role="alert" className="text-sm text-danger">
+          {entriesError}
+        </p>
+      )}
+      {actionError && (
+        <p role="alert" className="text-sm text-danger">
+          {actionError}
+        </p>
+      )}
 
       <div className="flex items-start justify-between">
         <div>
@@ -65,7 +103,7 @@ export default function DetailSkill() {
           </div>
         </div>
         <button
-          onClick={() => setArchived(skill.id, !skill.archivedAt)}
+          onClick={handleToggleArchived}
           className="border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne"
         >
           {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
@@ -88,7 +126,7 @@ export default function DetailSkill() {
         Niveau
         <select
           value={skill.genericLevel}
-          onChange={(e) => updateSkill(skill.id, { genericLevel: e.target.value as GenericLevel })}
+          onChange={handleLevelChange}
           className="border border-ink-700 bg-ink-800 px-3 py-2 text-champagne"
         >
           {(Object.keys(LEVEL_LABELS) as GenericLevel[]).map((level) => (
@@ -120,12 +158,25 @@ export default function DetailSkill() {
 
       <section>
         <h2 className="mb-2 font-serif text-lg text-champagne">Jalons</h2>
-        {milestonesError && <p className="mb-2 text-sm text-danger">{milestonesError}</p>}
+        {milestonesError && (
+          <p role="alert" className="mb-2 text-sm text-danger">
+            {milestonesError}
+          </p>
+        )}
         <ul className="flex flex-col gap-2">
           {milestones.map((m) => (
-            <li key={m.id} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={!!m.completedAt} onChange={(e) => toggleMilestone(m.id, e.target.checked)} />
-              <span className={m.completedAt ? 'text-muted line-through' : 'text-champagne'}>{m.label}</span>
+            <li key={m.id} className="text-sm">
+              {/* Case et texte dans un même <label> : cliquer le texte doit
+                  aussi cocher, comme partout ailleurs dans l'app — la case
+                  seule était une cible bien trop petite (audit ui-ux-pro-max). */}
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!m.completedAt}
+                  onChange={(e) => handleToggleMilestone(m.id, e.target.checked)}
+                />
+                <span className={m.completedAt ? 'text-muted line-through' : 'text-champagne'}>{m.label}</span>
+              </label>
             </li>
           ))}
         </ul>
@@ -218,7 +269,7 @@ function NotesSection({
         </button>
         {status === 'saved' && <span className="text-sm text-muted">Notes enregistrées.</span>}
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
@@ -261,7 +312,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           Ajouter
         </button>
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </form>
   );
 }

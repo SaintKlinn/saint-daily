@@ -11,7 +11,11 @@ export const colors = {
     700: '#146856',
   },
   champagne: '#F8E7C9', // ancrage, ne change pas
-  muted: '#8FA396',
+  // #8FA396 (canvas d'origine) passait sous 4.5:1 sur ink-900 ET ink-800
+  // (form cards, cartes skill, chips) — éclairci pour rester AA sur les
+  // deux fonds sans changer sa teinte (audit ui-ux-pro-max). Vérifié :
+  // 5.81:1 sur ink-900, 4.57:1 sur ink-800.
+  muted: '#BCCCC2',
   accent: {
     bright: '#E7B94E',
     hover: '#F3CE73',

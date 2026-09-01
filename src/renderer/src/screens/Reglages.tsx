@@ -6,6 +6,11 @@ export default function Reglages() {
   const { signOut } = useAuth();
   const { settings, loading, error, updateSettings } = useSettings();
   const [autoLaunch, setAutoLaunch] = useState(false);
+  // Les trois réglages ci-dessous écrivaient en silence : un échec réseau
+  // faisait revenir la case/valeur à son état précédent sans un mot
+  // d'explication. Un seul message suffit, ces trois contrôles sont dans
+  // la même section (audit ui-ux-pro-max).
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     // window.api est absent si le pont IPC n'a pas pu se charger (ou hors
@@ -19,14 +24,28 @@ export default function Reglages() {
       .catch(() => setAutoLaunch(false));
   }, []);
 
+  async function handleReminderChange(value: number) {
+    setActionError(null);
+    const { error: updateError } = await updateSettings({ reminderThresholdDays: value });
+    if (updateError) setActionError(updateError);
+  }
+
+  async function handleNotificationsChange(enabled: boolean) {
+    setActionError(null);
+    const { error: updateError } = await updateSettings({ notificationsEnabled: enabled });
+    if (updateError) setActionError(updateError);
+  }
+
   async function handleAutoLaunchChange(enabled: boolean) {
     // Pas de pont IPC : on ne persiste rien plutôt que d'écrire une
     // valeur fausse dans les réglages. État suffisamment inhabituel pour
     // ne pas mériter d'UX dédiée ici ; l'important est que ça ne lève pas.
     if (!window.api?.setAutoLaunch) return;
+    setActionError(null);
     const actual = await window.api.setAutoLaunch(enabled);
     setAutoLaunch(actual);
-    await updateSettings({ autoLaunchEnabled: actual });
+    const { error: updateError } = await updateSettings({ autoLaunchEnabled: actual });
+    if (updateError) setActionError(updateError);
   }
 
   // `!settings` en plus de `loading` : useSettings repasse loading à true
@@ -36,7 +55,11 @@ export default function Reglages() {
   // Même piège que le détail d'un skill : sans ce cas, un échec de
   // chargement laissait « Chargement… » à l'écran indéfiniment.
   if (!settings) {
-    return <p className="text-sm text-danger">{error ?? 'Réglages indisponibles pour le moment.'}</p>;
+    return (
+      <p role="alert" className="text-sm text-danger">
+        {error ?? 'Réglages indisponibles pour le moment.'}
+      </p>
+    );
   }
 
   return (
@@ -45,13 +68,18 @@ export default function Reglages() {
 
       <section className="flex flex-col gap-4">
         <h2 className="font-serif text-lg text-champagne">Rappels</h2>
+        {actionError && (
+          <p role="alert" className="text-sm text-danger">
+            {actionError}
+          </p>
+        )}
         <label className="flex flex-col gap-1 text-sm text-muted">
           Seuil de rappel (jours sans pratique)
           <input
             type="number"
             min={1}
             value={settings.reminderThresholdDays}
-            onChange={(e) => updateSettings({ reminderThresholdDays: Number(e.target.value) })}
+            onChange={(e) => handleReminderChange(Number(e.target.value))}
             className="w-24 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-champagne"
           />
         </label>
@@ -59,7 +87,7 @@ export default function Reglages() {
           <input
             type="checkbox"
             checked={settings.notificationsEnabled}
-            onChange={(e) => updateSettings({ notificationsEnabled: e.target.checked })}
+            onChange={(e) => handleNotificationsChange(e.target.checked)}
           />
           Notifications natives activées
         </label>

@@ -56,8 +56,8 @@ export default function Accueil() {
 
       {/* Un échec de chargement doit être visible : sinon la page affiche
           des streaks à 0 et aucun rappel « dû », sans rien signaler. */}
-      {skillsError && <p className="text-sm text-danger">{skillsError}</p>}
-      {entriesError && <p className="text-sm text-danger">{entriesError}</p>}
+      {skillsError && <p role="alert" className="text-sm text-danger">{skillsError}</p>}
+      {entriesError && <p role="alert" className="text-sm text-danger">{entriesError}</p>}
 
       <ul className="grid grid-cols-2 gap-4">
         {stats.map(({ skill, streak, daysSince }) => {

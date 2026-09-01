@@ -34,7 +34,7 @@ export default function ListeSkills() {
 
       {/* Sans ça, un échec de chargement était indiscernable d'une liste
           réellement vide (« Aucun skill ne correspond. »). */}
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
         <input

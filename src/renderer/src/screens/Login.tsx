@@ -76,7 +76,7 @@ export default function Login() {
             className="border border-ink-700 bg-ink-700 px-3 py-2 text-champagne outline-none focus:border-accent-bright"
           />
         </label>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={submitting}

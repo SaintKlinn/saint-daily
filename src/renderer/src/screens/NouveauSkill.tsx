@@ -77,7 +77,7 @@ export default function NouveauSkill() {
             className="border border-ink-700 bg-ink-800 px-3 py-2 text-champagne"
           />
         </label>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
