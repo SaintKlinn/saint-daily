@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './lib/auth';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
+import Accueil from './screens/Accueil';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
 import DetailSkill from './screens/DetailSkill';
@@ -32,6 +33,7 @@ function Router() {
           </AuthGate>
         }
       >
+        <Route index element={<Accueil />} />
         <Route path="skills" element={<ListeSkills />} />
         <Route path="skills/nouveau" element={<NouveauSkill />} />
         <Route path="skills/:id" element={<DetailSkill />} />
