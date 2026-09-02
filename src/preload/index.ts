@@ -32,6 +32,8 @@ interface PomodoroStateSnapshot {
 
 type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
 
+type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded' | 'error';
+
 const api = {
   getDevLoginCredentials: (): Promise<{ email: string; password: string } | null> =>
     ipcRenderer.invoke('get-dev-login-credentials'),
@@ -63,6 +65,14 @@ const api = {
     setPinned: (pinned: boolean): void => {
       ipcRenderer.send('pomodoro:set-pinned', pinned);
     },
+  },
+  autoUpdate: {
+    onStatus: (callback: (status: AutoUpdateStatus) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: AutoUpdateStatus) => callback(status);
+      ipcRenderer.on('auto-update:status', listener);
+      return () => ipcRenderer.removeListener('auto-update:status', listener);
+    },
+    installNow: (): Promise<void> => ipcRenderer.invoke('auto-update:install-now'),
   },
 };
 

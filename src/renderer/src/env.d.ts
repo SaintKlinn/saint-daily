@@ -12,6 +12,8 @@ export interface PomodoroStateSnapshot {
 
 export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
 
+export type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded' | 'error';
+
 export interface SaintDailyApi {
   getDevLoginCredentials: () => Promise<{ email: string; password: string } | null>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
@@ -22,6 +24,10 @@ export interface SaintDailyApi {
     sendControl: (action: PomodoroControlAction) => void;
     onControl: (callback: (action: PomodoroControlAction) => void) => () => void;
     setPinned: (pinned: boolean) => void;
+  };
+  autoUpdate: {
+    onStatus: (callback: (status: AutoUpdateStatus) => void) => () => void;
+    installNow: () => Promise<void>;
   };
 }
 
