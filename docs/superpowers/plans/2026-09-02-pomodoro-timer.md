@@ -380,9 +380,17 @@ describe('partialMinutesElapsed', () => {
     expect(partialMinutesElapsed(session, durations, Date.parse('2026-09-02T12:00:00Z'))).toBe(15);
   });
 
-  it('returns 0 (not negative) for a break phase treated as work by mistake is out of scope; only work is ever queried', () => {
-    const session = baseSession({ phase: 'work', phaseEndsAt: Date.parse('2026-09-02T10:25:00Z') });
-    expect(partialMinutesElapsed(session, durations, Date.parse('2026-09-02T10:25:00Z'))).toBe(0);
+  it('credits the full phase duration when now has reached phaseEndsAt exactly', () => {
+    const now = Date.parse('2026-09-02T10:25:00Z');
+    const session = baseSession({ phaseEndsAt: now });
+    expect(partialMinutesElapsed(session, durations, now)).toBe(25);
+  });
+
+  it('still credits the full phase duration when now is past phaseEndsAt (an overdue, not-yet-ticked phase — e.g. a throttled timer while the window was backgrounded)', () => {
+    const phaseEndsAt = Date.parse('2026-09-02T10:25:00Z');
+    const now = Date.parse('2026-09-02T10:27:00Z'); // 2 minutes late
+    const session = baseSession({ phaseEndsAt });
+    expect(partialMinutesElapsed(session, durations, now)).toBe(25);
   });
 });
 
@@ -597,7 +605,7 @@ git commit -m "Add pure Pomodoro state-machine module with tests"
 - Consumes: nothing new from this plan (uses only `electron` APIs already in use by `src/main/index.ts`/`src/main/tray.ts`).
 - Produces: `window.api.pomodoro` (`reportState`, `onState`, `sendControl`, `onControl`, `setPinned`) — consumed by Task 5 (`PomodoroProvider`) and Task 6 (`PomodoroOverlay` screen). `createPomodoroOverlay(getMainWindow)` (`src/main/pomodoroOverlay.ts`) — consumed by `src/main/index.ts`'s startup sequence.
 
-**Note on typing:** the preload script (Node/CJS context, `tsconfig.node.json`) cannot import types from `src/renderer/src/lib/pomodoroLogic.ts` (outside its `tsconfig.node.json` `include`). `env.d.ts` therefore declares the snapshot shape as an inline structural type — it must be kept in sync by hand with `PomodoroSession`/`PomodoroDurations` in `lib/pomodoroLogic.ts` (Task 3) if either changes.
+**Note on typing:** `src/renderer/src/env.d.ts` is itself under `tsconfig.web.json` (same project as `lib/pomodoroLogic.ts`), so it imports `PomodoroSession`/`PomodoroDurations` directly — no duplication there. `src/preload/index.ts` is different: it's Node/CJS context under `tsconfig.node.json`, whose `include` doesn't cover `src/renderer/src/**`, so it cannot import those types at all. Step 1 therefore declares a local, preload-only structural copy of the same two shapes plus `PomodoroControlAction` — this is the one copy that must be kept in sync by hand if `PomodoroSession`/`PomodoroDurations`/`PomodoroControlAction` change.
 
 - [ ] **Step 1: Extend the preload script**
 
@@ -611,6 +619,33 @@ import { contextBridge, ipcRenderer } from 'electron';
 // (voir src/main/pomodoroOverlay.ts). Un seul preload pour les deux fenêtres
 // (principale et overlay) — la fenêtre overlay n'appelle simplement jamais
 // getDevLoginCredentials/setAutoLaunch.
+//
+// Copie locale, à resynchroniser à la main avec PomodoroSession/
+// PomodoroDurations de src/renderer/src/lib/pomodoroLogic.ts si elles
+// changent : ce fichier est compilé sous tsconfig.node.json, dont
+// `include` ne couvre pas src/renderer/src/**, donc il ne peut rien
+// importer de ces types-là (voir la note de typage du Task 4).
+interface PomodoroStateSnapshot {
+  session: {
+    skillId: string;
+    skillName: string;
+    phase: 'work' | 'shortBreak' | 'longBreak';
+    status: 'idle' | 'running' | 'paused' | 'awaitingAdvance';
+    cycleIndex: number;
+    phaseEndsAt: number;
+    remainingMsAtPause: number | null;
+    loggedEntryIds: string[];
+  };
+  durations: {
+    workMinutes: number;
+    shortBreakMinutes: number;
+    longBreakMinutes: number;
+    cyclesBeforeLongBreak: number;
+  };
+}
+
+type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
+
 const api = {
   getDevLoginCredentials: (): Promise<{ email: string; password: string } | null> =>
     ipcRenderer.invoke('get-dev-login-credentials'),
@@ -655,27 +690,14 @@ In `src/renderer/src/env.d.ts`, replace the file:
 ```ts
 /// <reference types="vite/client" />
 
-// Doit rester synchronisé à la main avec PomodoroSession/PomodoroDurations
-// de src/renderer/src/lib/pomodoroLogic.ts — le preload (contexte Node,
-// tsconfig.node.json) ne peut pas importer un type du renderer
-// (tsconfig.web.json). Voir Task 4 du plan Pomodoro pour le détail.
+import type { PomodoroDurations, PomodoroSession } from './lib/pomodoroLogic';
+
+// env.d.ts est sous tsconfig.web.json, le même projet que lib/pomodoroLogic.ts
+// (contrairement à src/preload/index.ts, sous tsconfig.node.json) — donc pas
+// de duplication ici, juste un import direct.
 export interface PomodoroStateSnapshot {
-  session: {
-    skillId: string;
-    skillName: string;
-    phase: 'work' | 'shortBreak' | 'longBreak';
-    status: 'idle' | 'running' | 'paused' | 'awaitingAdvance';
-    cycleIndex: number;
-    phaseEndsAt: number;
-    remainingMsAtPause: number | null;
-    loggedEntryIds: string[];
-  };
-  durations: {
-    workMinutes: number;
-    shortBreakMinutes: number;
-    longBreakMinutes: number;
-    cyclesBeforeLongBreak: number;
-  };
+  session: PomodoroSession;
+  durations: PomodoroDurations;
 }
 
 export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
@@ -871,6 +893,7 @@ import { getSupabaseClient } from './supabase';
 import { useAuth } from './auth';
 import { toFrenchError } from './errors';
 import { useSettings } from '../hooks/useSettings';
+import type { PomodoroControlAction } from '../env';
 import {
   advancePhase,
   checkpointNoteLabel,
@@ -883,8 +906,6 @@ import {
   type PomodoroDurations,
   type PomodoroSession,
 } from './pomodoroLogic';
-
-export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
 
 interface PomodoroContextValue {
   session: PomodoroSession | null;
