@@ -1,5 +1,6 @@
 import { app, ipcMain, type BrowserWindow } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import electronUpdater from 'electron-updater';
+const { autoUpdater } = electronUpdater;
 
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4h
 const INITIAL_DELAY_MS = 10_000;
