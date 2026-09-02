@@ -949,6 +949,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const noteRef = useRef(note);
   noteRef.current = note;
 
+  // Verrou de ré-entrance pour stop() — voir le commentaire sur stop()
+  // plus bas pour le scénario qu'il empêche.
+  const stoppingRef = useRef(false);
+
   const durations: PomodoroDurations | null = settings
     ? {
         workMinutes: settings.pomodoroWorkMinutes,
@@ -1069,6 +1073,22 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   }
 
   async function stop() {
+    // Sans ce verrou, un double-clic sur Arrêter (ou une course entre la
+    // fenêtre principale et l'overlay) relirait le même sessionRef.current
+    // pas encore remis à null et consoliderait deux fois — une deuxième
+    // entrée consolidée, minutes comptées en double. pause/resume/advance
+    // n'ont pas besoin de ce verrou : ils passent par setSession(current
+    // => ...), qui se base sur l'état React réel, pas un ref figé.
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+    try {
+      await stopInternal();
+    } finally {
+      stoppingRef.current = false;
+    }
+  }
+
+  async function stopInternal() {
     const current = sessionRef.current;
     const currentDurations = durationsRef.current;
     const currentAuthSession = authSessionRef.current;
