@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
+import UpdateBanner from './UpdateBanner';
 import { HomeIcon, ListIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
 
@@ -15,7 +16,9 @@ const navItems = [
 
 export default function AppShell() {
   return (
-    <div className="flex h-screen bg-ink-900 text-champagne">
+    <div className="flex h-screen flex-col bg-ink-900 text-champagne">
+      <UpdateBanner />
+      <div className="flex flex-1 overflow-hidden">
       <nav
         className="relative flex w-[72px] min-w-[72px] flex-col items-center gap-10 overflow-hidden border-r border-ink-700 pt-6"
         style={{ background: `linear-gradient(180deg, ${colors.ink[900]} 0%, #054838 55%, ${colors.ink[950]} 100%)` }}
@@ -70,6 +73,7 @@ export default function AppShell() {
       >
         <Outlet />
       </main>
+      </div>
     </div>
   );
 }
