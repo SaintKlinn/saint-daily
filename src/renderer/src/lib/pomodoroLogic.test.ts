@@ -169,9 +169,17 @@ describe('partialMinutesElapsed', () => {
     expect(partialMinutesElapsed(session, durations, Date.parse('2026-09-02T12:00:00Z'))).toBe(15);
   });
 
-  it('returns 0 (not negative) for a break phase treated as work by mistake is out of scope; only work is ever queried', () => {
-    const session = baseSession({ phase: 'work', phaseEndsAt: Date.parse('2026-09-02T10:25:00Z') });
-    expect(partialMinutesElapsed(session, durations, Date.parse('2026-09-02T10:25:00Z'))).toBe(0);
+  it('credits the full phase duration when now has reached phaseEndsAt exactly', () => {
+    const now = Date.parse('2026-09-02T10:25:00Z');
+    const session = baseSession({ phaseEndsAt: now });
+    expect(partialMinutesElapsed(session, durations, now)).toBe(25);
+  });
+
+  it('still credits the full phase duration when now is past phaseEndsAt (an overdue, not-yet-ticked phase — e.g. a throttled timer while the window was backgrounded)', () => {
+    const phaseEndsAt = Date.parse('2026-09-02T10:25:00Z');
+    const now = Date.parse('2026-09-02T10:27:00Z'); // 2 minutes late
+    const session = baseSession({ phaseEndsAt });
+    expect(partialMinutesElapsed(session, durations, now)).toBe(25);
   });
 });
 

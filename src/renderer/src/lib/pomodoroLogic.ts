@@ -137,12 +137,10 @@ export function partialMinutesElapsed(
   now: number = Date.now()
 ): number {
   const totalMs = phaseDurationMinutes(session.phase, durations) * 60_000;
-  const isPaused = session.status === 'paused' && session.remainingMsAtPause !== null;
-  const remainingMs = isPaused ? session.remainingMsAtPause : Math.max(0, session.phaseEndsAt - now);
-  // If phase has ended (no remaining time) and not paused, return 0
-  if (remainingMs === 0 && !isPaused) {
-    return 0;
-  }
+  const remainingMs =
+    session.status === 'paused' && session.remainingMsAtPause !== null
+      ? session.remainingMsAtPause
+      : Math.max(0, session.phaseEndsAt - now);
   const elapsedMs = Math.max(0, totalMs - remainingMs);
   return Math.round(elapsedMs / 60_000);
 }
