@@ -1,4 +1,4 @@
-// Machine à états pure du minuteur Pomodoro — aucune dépendance React/
+﻿// Machine à états pure du minuteur Pomodoro — aucune dépendance React/
 // Supabase/Electron, pour rester testable en isolation (voir spec, section
 // "Machine à états"). `usePomodoro` (hooks/PomodoroProvider) est la seule
 // couche qui appelle Supabase et l'IPC ; ce module ne fait que calculer.
@@ -137,12 +137,9 @@ export function partialMinutesElapsed(
   now: number = Date.now()
 ): number {
   const totalMs = phaseDurationMinutes(session.phase, durations) * 60_000;
-  const remainingMs =
-    session.status === 'paused' && session.remainingMsAtPause !== null
-      ? session.remainingMsAtPause
-      : Math.max(0, session.phaseEndsAt - now);
-  // If no time is remaining and session is not paused, the phase has ended
   const isPaused = session.status === 'paused' && session.remainingMsAtPause !== null;
+  const remainingMs = isPaused ? session.remainingMsAtPause : Math.max(0, session.phaseEndsAt - now);
+  // If phase has ended (no remaining time) and not paused, return 0
   if (remainingMs === 0 && !isPaused) {
     return 0;
   }
