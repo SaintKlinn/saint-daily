@@ -35,4 +35,9 @@ export interface SkillAppSettings {
   reminderThresholdDays: number;
   notificationsEnabled: boolean;
   autoLaunchEnabled: boolean;
+  pomodoroWorkMinutes: number;
+  pomodoroShortBreakMinutes: number;
+  pomodoroLongBreakMinutes: number;
+  pomodoroCyclesBeforeLongBreak: number;
+  pomodoroAutoAdvance: boolean;
 }

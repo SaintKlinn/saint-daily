@@ -9,6 +9,11 @@ interface SettingsRow {
   reminder_threshold_days: number;
   notifications_enabled: boolean;
   auto_launch_enabled: boolean;
+  pomodoro_work_minutes: number;
+  pomodoro_short_break_minutes: number;
+  pomodoro_long_break_minutes: number;
+  pomodoro_cycles_before_long_break: number;
+  pomodoro_auto_advance: boolean;
 }
 
 function fromRow(row: SettingsRow): SkillAppSettings {
@@ -17,6 +22,11 @@ function fromRow(row: SettingsRow): SkillAppSettings {
     reminderThresholdDays: row.reminder_threshold_days,
     notificationsEnabled: row.notifications_enabled,
     autoLaunchEnabled: row.auto_launch_enabled,
+    pomodoroWorkMinutes: row.pomodoro_work_minutes,
+    pomodoroShortBreakMinutes: row.pomodoro_short_break_minutes,
+    pomodoroLongBreakMinutes: row.pomodoro_long_break_minutes,
+    pomodoroCyclesBeforeLongBreak: row.pomodoro_cycles_before_long_break,
+    pomodoroAutoAdvance: row.pomodoro_auto_advance,
   };
 }
 
@@ -25,6 +35,17 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
     ...(patch.reminderThresholdDays !== undefined ? { reminder_threshold_days: patch.reminderThresholdDays } : {}),
     ...(patch.notificationsEnabled !== undefined ? { notifications_enabled: patch.notificationsEnabled } : {}),
     ...(patch.autoLaunchEnabled !== undefined ? { auto_launch_enabled: patch.autoLaunchEnabled } : {}),
+    ...(patch.pomodoroWorkMinutes !== undefined ? { pomodoro_work_minutes: patch.pomodoroWorkMinutes } : {}),
+    ...(patch.pomodoroShortBreakMinutes !== undefined
+      ? { pomodoro_short_break_minutes: patch.pomodoroShortBreakMinutes }
+      : {}),
+    ...(patch.pomodoroLongBreakMinutes !== undefined
+      ? { pomodoro_long_break_minutes: patch.pomodoroLongBreakMinutes }
+      : {}),
+    ...(patch.pomodoroCyclesBeforeLongBreak !== undefined
+      ? { pomodoro_cycles_before_long_break: patch.pomodoroCyclesBeforeLongBreak }
+      : {}),
+    ...(patch.pomodoroAutoAdvance !== undefined ? { pomodoro_auto_advance: patch.pomodoroAutoAdvance } : {}),
   };
 }
 
@@ -32,6 +53,11 @@ const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId'> = {
   reminderThresholdDays: 5,
   notificationsEnabled: true,
   autoLaunchEnabled: true,
+  pomodoroWorkMinutes: 25,
+  pomodoroShortBreakMinutes: 5,
+  pomodoroLongBreakMinutes: 15,
+  pomodoroCyclesBeforeLongBreak: 4,
+  pomodoroAutoAdvance: true,
 };
 
 export function useSettings() {
