@@ -90,13 +90,21 @@ export default function Accueil() {
           <p className="font-data text-xs uppercase tracking-[0.12em] text-muted">{greeting}</p>
           <h1 className="mt-1.5 font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
         </div>
-        <Link
-          to="/entree/nouvelle"
-          className="flex items-center gap-2 bg-accent-bright px-5 py-3 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover"
-        >
-          <PlusIcon />
-          Nouvelle entrée
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/pomodoro"
+            className="border border-ink-700 px-5 py-3 font-sans text-sm text-muted hover:text-champagne"
+          >
+            Démarrer un pomodoro
+          </Link>
+          <Link
+            to="/entree/nouvelle"
+            className="flex items-center gap-2 bg-accent-bright px-5 py-3 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover"
+          >
+            <PlusIcon />
+            Nouvelle entrée
+          </Link>
+        </div>
       </motion.header>
 
       {skillsError && (

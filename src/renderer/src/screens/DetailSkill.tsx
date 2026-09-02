@@ -126,6 +126,12 @@ export default function DetailSkill() {
               ))}
             </select>
           </label>
+          <Link
+            to={`/pomodoro?skillId=${skill.id}`}
+            className="border border-ink-700 px-3.5 py-2 font-sans text-[13px] text-muted hover:text-champagne"
+          >
+            Démarrer un pomodoro
+          </Link>
           <button
             onClick={handleToggleArchived}
             className="border border-ink-700 px-3.5 py-2 font-sans text-[13px] text-muted hover:text-champagne"
