@@ -3,6 +3,7 @@
   "productName": "Saint Daily",
   "version": "0.1.0",
   "private": true,
+  "repository": "github:SaintKlinn/saint-daily",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
