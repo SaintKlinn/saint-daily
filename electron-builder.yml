@@ -3,6 +3,8 @@ productName: Saint Daily
 directories:
   output: release
   buildResources: resources
+publish:
+  provider: github
 files:
   - out/**/*
 # `files` ne contient que out/**, donc resources/icon.png n'est pas dans
