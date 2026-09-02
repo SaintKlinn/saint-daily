@@ -1017,6 +1017,13 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       const current = sessionRef.current;
       const currentDurations = durationsRef.current;
       if (!current || current.status !== 'running' || !currentDurations) return;
+      // Number.isFinite d'abord : `now < NaN` vaut toujours false en JS, donc
+      // sans ce garde-fou, un phaseEndsAt corrompu (settings dont les
+      // colonnes Pomodoro manquent côté base, par ex.) ferait échouer la
+      // comparaison "ouvert" — chaque tick serait traité comme une phase
+      // terminée, avec une boucle d'avancement de cycle sans fin. On
+      // s'arrête plutôt en silence et on attend un phaseEndsAt valide.
+      if (!Number.isFinite(current.phaseEndsAt)) return;
       if (Date.now() < current.phaseEndsAt) return;
 
       const cycleIndexBeforeCompletion = current.cycleIndex;
