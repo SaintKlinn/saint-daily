@@ -6,6 +6,7 @@ import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
 import DevLogin from './screens/DevLogin';
+import PomodoroOverlay from './screens/PomodoroOverlay';
 import Accueil from './screens/Accueil';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
@@ -33,6 +34,7 @@ function Router() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/dev-login" element={<DevLogin />} />
+      <Route path="/pomodoro-overlay" element={<PomodoroOverlay />} />
       <Route
         element={
           <AuthGate>
