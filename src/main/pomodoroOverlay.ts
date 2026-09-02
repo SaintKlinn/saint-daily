@@ -6,6 +6,13 @@ const OVERLAY_HEIGHT = 84;
 
 let overlayWindow: BrowserWindow | null = null;
 
+// Même garde que isQuitting dans src/main/index.ts : sans elle, le close
+// handler ci-dessous préviendrait indéfiniment sa propre fermeture, y
+// compris pendant une vraie séquence app.quit() (déclenchée depuis le tray)
+// — l'overlay ne se fermerait jamais, window-all-closed ne se déclencherait
+// jamais, et l'app resterait un process zombie impossible à quitter.
+let isQuitting = false;
+
 function buildOverlayWindow(): BrowserWindow {
   const { workArea } = screen.getPrimaryDisplay();
   const win = new BrowserWindow({
@@ -35,8 +42,10 @@ function buildOverlayWindow(): BrowserWindow {
   // système doivent quand même la laisser réutilisable) — même raison que
   // win.hide() sur la fenêtre principale (src/main/index.ts).
   win.on('close', (event) => {
-    event.preventDefault();
-    win.hide();
+    if (!isQuitting) {
+      event.preventDefault();
+      win.hide();
+    }
   });
 
   const isDev = !app.isPackaged;
@@ -55,6 +64,10 @@ function buildOverlayWindow(): BrowserWindow {
  * démarrage, après createWindow() — voir src/main/index.ts.
  */
 export function createPomodoroOverlay(getMainWindow: () => BrowserWindow | null): void {
+  app.on('before-quit', () => {
+    isQuitting = true;
+  });
+
   overlayWindow = buildOverlayWindow();
 
   // Fenêtre principale -> overlay : relaie chaque instantané d'état.

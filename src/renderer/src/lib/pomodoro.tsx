@@ -84,6 +84,16 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     );
   }, [session]);
 
+  // Filet de sécurité si le Provider se démonte alors qu'une session
+  // épinglée est encore active (ex. déconnexion) : sans ça, l'overlay reste
+  // visible et continue de capturer les clics indéfiniment, orphelin de
+  // toute fenêtre principale pour le désépingler.
+  useEffect(() => {
+    return () => {
+      window.api?.pomodoro?.setPinned?.(false);
+    };
+  }, []);
+
   const logCheckpoint = useCallback(
     async (minutes: number, cycleIndex: number, cyclesBeforeLongBreak: number, skillId: string) => {
       if (!authSession || minutes <= 0) return;
@@ -129,6 +139,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       const current = sessionRef.current;
       const currentDurations = durationsRef.current;
       if (!current || current.status !== 'running' || !currentDurations) return;
+      // Empêche le tick de ressusciter une session que stop() est en train
+      // de nettoyer : sans ce garde-fou, un tick qui se déclenche entre les
+      // appels Supabase de stopInternal() et son setSession(null) final
+      // relirait un sessionRef.current sur le point d'être invalidé.
+      if (stoppingRef.current) return;
       // Number.isFinite d'abord : `now < NaN` vaut toujours false en JS, donc
       // sans ce garde-fou, un phaseEndsAt corrompu (settings dont les
       // colonnes Pomodoro manquent côté base, par ex.) ferait échouer la
@@ -235,25 +250,36 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       if (fetchError) {
         setError(toFrenchError(fetchError.message));
       } else {
+        // Insertion AVANT suppression : si la consolidée échoue à
+        // s'insérer (réseau coupé, session expirée), les checkpoints
+        // restent intacts — dégradation acceptée vers "les checkpoints
+        // existent encore", jamais vers une perte silencieuse (voir spec).
+        // Pire cas si la suppression échoue ensuite : un doublon visible et
+        // corrigeable dans le journal, pas une perte.
         const total = consolidateDuration((rows as { duration_minutes: number }[]).map((r) => r.duration_minutes));
-        const { error: deleteError } = await supabase.from('practice_entry').delete().in('id', entryIds);
-        if (deleteError) {
-          setError(toFrenchError(deleteError.message));
+        const noteAtStop = noteRef.current.trim();
+        const { error: insertError } = await supabase.from('practice_entry').insert({
+          skill_id: current.skillId,
+          user_id: currentAuthSession.user.id,
+          duration_minutes: total,
+          note: noteAtStop ? noteAtStop : null,
+        });
+        if (insertError) {
+          setError(toFrenchError(insertError.message));
         } else {
-          const noteAtStop = noteRef.current.trim();
-          const { error: insertError } = await supabase.from('practice_entry').insert({
-            skill_id: current.skillId,
-            user_id: currentAuthSession.user.id,
-            duration_minutes: total,
-            note: noteAtStop ? noteAtStop : null,
-          });
-          if (insertError) setError(toFrenchError(insertError.message));
+          const { error: deleteError } = await supabase.from('practice_entry').delete().in('id', entryIds);
+          if (deleteError) setError(toFrenchError(deleteError.message));
         }
       }
     }
 
     setSession(null);
     setNote('');
+    // Désépingle l'overlay : sans ça, la fenêtre transparente reste
+    // parquée en haut à droite après la fin d'une session, capturant les
+    // clics dans sa zone même invisible (comportement Electron sur les
+    // fenêtres transparentes).
+    setPinned(false);
   }
 
   async function stop() {

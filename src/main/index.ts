@@ -25,6 +25,11 @@ function createWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      // Le tick du minuteur Pomodoro (src/renderer/src/lib/pomodoro.tsx) vit
+      // dans un setInterval de ce renderer — sans ça, Chromium le throttle
+      // dès que la fenêtre est masquée/minimisée, ce qui est exactement le
+      // scénario "épingler l'overlay et continuer à travailler".
+      backgroundThrottling: false,
     },
   });
 

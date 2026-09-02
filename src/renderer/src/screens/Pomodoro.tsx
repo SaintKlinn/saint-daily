@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePomodoro } from '../lib/pomodoro';
 import { useSkills } from '../hooks/useSkills';
@@ -13,6 +13,18 @@ export default function Pomodoro() {
   const { session, durations, note, setNote, error, pinned, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
+
+  // PomodoroProvider ne pousse un nouvel état qu'aux transitions de phase,
+  // pas à chaque tick (voir lib/pomodoro.tsx) — donc rien d'autre ne force
+  // un re-render de cet écran chaque seconde. Sans ce tick local, le calcul
+  // de remainingMs plus bas (basé sur Date.now()) resterait figé à sa
+  // valeur du dernier vrai re-render. Même pattern que PomodoroOverlay.tsx.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (!session) return;
+    const id = window.setInterval(() => forceTick((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [session?.status]);
 
   if (!session) {
     return (
