@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { registerDevLoginHandler } from './devLogin';
 import { createTray } from './tray';
 import { registerAutoLaunchHandlers } from './autoLaunch';
+import { registerAutoUpdateHandlers } from './autoUpdate';
 import { createPomodoroOverlay } from './pomodoroOverlay';
 
 const isDev = !app.isPackaged;
@@ -68,6 +69,7 @@ app
     mainWindow = createWindow();
     registerDevLoginHandler();
     registerAutoLaunchHandlers();
+    registerAutoUpdateHandlers(() => mainWindow);
     createPomodoroOverlay(() => mainWindow);
     createTray(() => mainWindow);
 
