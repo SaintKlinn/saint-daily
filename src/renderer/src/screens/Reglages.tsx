@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useSettings } from '../hooks/useSettings';
+import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
 
 export default function Reglages() {
@@ -46,6 +47,12 @@ export default function Reglages() {
     const actual = await window.api.setAutoLaunch(enabled);
     setAutoLaunch(actual);
     const { error: updateError } = await updateSettings({ autoLaunchEnabled: actual });
+    if (updateError) setActionError(updateError);
+  }
+
+  async function handlePomodoroSettingChange(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
+    setActionError(null);
+    const { error: updateError } = await updateSettings(patch);
     if (updateError) setActionError(updateError);
   }
 
@@ -106,6 +113,83 @@ export default function Reglages() {
           onChange={handleAutoLaunchChange}
           label="Lancement automatique"
           description="Ouvrir Saint Daily au démarrage de session, en arrière-plan dans la zone de notification"
+        />
+      </section>
+
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Pomodoro</h2>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <p className="text-[15px] text-champagne">Travail</p>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.pomodoroWorkMinutes}
+              onChange={(e) => handlePomodoroSettingChange({ pomodoroWorkMinutes: Number(e.target.value) })}
+              aria-label="Durée d'un cycle de travail en minutes"
+              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+            />
+            <span className="font-data text-[15px] text-champagne">min</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <p className="text-[15px] text-champagne">Pause courte</p>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.pomodoroShortBreakMinutes}
+              onChange={(e) => handlePomodoroSettingChange({ pomodoroShortBreakMinutes: Number(e.target.value) })}
+              aria-label="Durée d'une pause courte en minutes"
+              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+            />
+            <span className="font-data text-[15px] text-champagne">min</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <p className="text-[15px] text-champagne">Pause longue</p>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.pomodoroLongBreakMinutes}
+              onChange={(e) => handlePomodoroSettingChange({ pomodoroLongBreakMinutes: Number(e.target.value) })}
+              aria-label="Durée d'une pause longue en minutes"
+              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+            />
+            <span className="font-data text-[15px] text-champagne">min</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <div>
+            <p className="text-[15px] text-champagne">Cycles avant la pause longue</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              Nombre de cycles de travail entre deux pauses longues
+            </p>
+          </div>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.pomodoroCyclesBeforeLongBreak}
+              onChange={(e) =>
+                handlePomodoroSettingChange({ pomodoroCyclesBeforeLongBreak: Number(e.target.value) })
+              }
+              aria-label="Nombre de cycles avant la pause longue"
+              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+            />
+          </label>
+        </div>
+
+        <Toggle
+          checked={settings.pomodoroAutoAdvance}
+          onChange={(checked) => handlePomodoroSettingChange({ pomodoroAutoAdvance: checked })}
+          label="Enchaînement automatique"
+          description="Passer seul du travail à la pause (et inversement) plutôt que d'attendre un clic"
         />
       </section>
 
