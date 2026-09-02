@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { AuthProvider, useAuth } from './lib/auth';
+import { PomodoroProvider } from './lib/pomodoro';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
@@ -13,6 +14,7 @@ import NouvelleEntree from './screens/NouvelleEntree';
 import DetailSkill from './screens/DetailSkill';
 import ListeSkills from './screens/ListeSkills';
 import NouveauSkill from './screens/NouveauSkill';
+import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
 
 function AuthGate({ children }: { children: ReactNode }) {
@@ -38,7 +40,9 @@ function Router() {
       <Route
         element={
           <AuthGate>
-            <AppShell />
+            <PomodoroProvider>
+              <AppShell />
+            </PomodoroProvider>
           </AuthGate>
         }
       >
@@ -47,6 +51,7 @@ function Router() {
         <Route path="skills/nouveau" element={<NouveauSkill />} />
         <Route path="skills/:id" element={<DetailSkill />} />
         <Route path="entree/nouvelle" element={<NouvelleEntree />} />
+        <Route path="pomodoro" element={<Pomodoro />} />
         <Route path="reglages" element={<Reglages />} />
         <Route path="*" element={<Introuvable />} />
       </Route>
