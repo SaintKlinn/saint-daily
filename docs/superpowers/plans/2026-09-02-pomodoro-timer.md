@@ -937,6 +937,18 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef(session);
   sessionRef.current = session;
 
+  // stop() peut être invoqué depuis le listener onControl (abonné une
+  // seule fois, deps []) — sans ces refs, un Stop déclenché depuis
+  // l'overlay lirait authSession/note figés au tout premier rendu du
+  // Provider (note toujours '', donc la note tapée par l'utilisateur
+  // serait silencieusement perdue). pause/resume/advance n'ont pas ce
+  // problème : ils ne touchent l'état que via setSession(current => ...)
+  // ou durationsRef, jamais une valeur réactive fermée directement.
+  const authSessionRef = useRef(authSession);
+  authSessionRef.current = authSession;
+  const noteRef = useRef(note);
+  noteRef.current = note;
+
   const durations: PomodoroDurations | null = settings
     ? {
         workMinutes: settings.pomodoroWorkMinutes,
@@ -1059,7 +1071,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   async function stop() {
     const current = sessionRef.current;
     const currentDurations = durationsRef.current;
-    if (!current || !authSession || !currentDurations) {
+    const currentAuthSession = authSessionRef.current;
+    if (!current || !currentAuthSession || !currentDurations) {
       setSession(null);
       return;
     }
@@ -1075,7 +1088,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         .from('practice_entry')
         .insert({
           skill_id: current.skillId,
-          user_id: authSession.user.id,
+          user_id: currentAuthSession.user.id,
           duration_minutes: partialMinutes,
           note: checkpointNoteLabel(current.cycleIndex, currentDurations.cyclesBeforeLongBreak),
         })
@@ -1104,9 +1117,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         } else {
           const { error: insertError } = await supabase.from('practice_entry').insert({
             skill_id: current.skillId,
-            user_id: authSession.user.id,
+            user_id: currentAuthSession.user.id,
             duration_minutes: total,
-            note: note.trim() ? note.trim() : null,
+            note: noteRef.current.trim() ? noteRef.current.trim() : null,
           });
           if (insertError) setError(toFrenchError(insertError.message));
         }
