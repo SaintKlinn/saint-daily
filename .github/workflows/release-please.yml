@@ -35,6 +35,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run icons
+
       - run: npm run dist:win:publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

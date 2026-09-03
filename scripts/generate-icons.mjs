@@ -51,6 +51,82 @@ function buildSvg(size) {
   </svg>`;
 }
 
+// Même dessin que buildSvg, mais sur un canevas non carré (bandeaux
+// d'installeur NSIS) avec le logo centré à une taille choisie plutôt que
+// remplissant tout le cadre.
+function buildBrandedSvg(canvasWidth, canvasHeight, logoWidth) {
+  const lines = LOGO_RAYS.map(
+    (r) => `<line x1="${r.x1}" y1="${r.y1}" x2="${r.x2}" y2="${r.y2}" stroke-opacity="${r.o}" />`
+  ).join('');
+  const scale = logoWidth / 128;
+  const offsetX = (canvasWidth - 128 * scale) / 2;
+  const offsetY = (canvasHeight - 128 * scale) / 2;
+  return `<svg width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${canvasWidth}" height="${canvasHeight}" fill="${INK}" />
+    <g transform="translate(${offsetX}, ${offsetY}) scale(${scale})">
+      <g transform="translate(0, 21.5)" stroke="${ACCENT}" stroke-width="3" stroke-linecap="round">${lines}</g>
+    </g>
+  </svg>`;
+}
+
+// NSIS (via makensis, pas seulement electron-builder) exige un vrai BMP
+// pour installerHeader/installerSidebar — voir NsisTarget.js, le chemin
+// est passé tel quel à MUI_HEADERIMAGE_BITMAP/MUI_WELCOMEFINISHPAGE_BITMAP,
+// aucune conversion n'est faite côté electron-builder. sharp ne sait pas
+// écrire de BMP (voir sharp.format), donc encodage minimal à la main :
+// BITMAPFILEHEADER + BITMAPINFOHEADER, 24 bits/pixel, non compressé,
+// lignes stockées de bas en haut, chaque ligne alignée sur 4 octets.
+async function pngBufferToBmp(pngBuffer, width, height) {
+  const { data: rgb } = await sharp(pngBuffer)
+    .flatten({ background: INK })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const rowSize = Math.ceil((width * 3) / 4) * 4;
+  const pixelDataSize = rowSize * height;
+  const fileSize = 54 + pixelDataSize;
+  const buf = Buffer.alloc(fileSize);
+
+  buf.write('BM', 0, 'ascii');
+  buf.writeUInt32LE(fileSize, 2);
+  buf.writeUInt32LE(0, 6); // réservé
+  buf.writeUInt32LE(54, 10); // offset des pixels
+
+  buf.writeUInt32LE(40, 14); // taille BITMAPINFOHEADER
+  buf.writeInt32LE(width, 18);
+  buf.writeInt32LE(height, 22); // positif = stocké de bas en haut
+  buf.writeUInt16LE(1, 26); // plans
+  buf.writeUInt16LE(24, 28); // bits/pixel
+  buf.writeUInt32LE(0, 30); // BI_RGB, non compressé
+  buf.writeUInt32LE(pixelDataSize, 34);
+  buf.writeInt32LE(0, 38);
+  buf.writeInt32LE(0, 42);
+  buf.writeUInt32LE(0, 46);
+  buf.writeUInt32LE(0, 50);
+
+  for (let y = 0; y < height; y++) {
+    const srcRow = height - 1 - y; // BMP : bas en haut
+    const destOffset = 54 + y * rowSize;
+    for (let x = 0; x < width; x++) {
+      const srcIdx = (srcRow * width + x) * 3;
+      const destIdx = destOffset + x * 3;
+      buf[destIdx] = rgb[srcIdx + 2]; // B
+      buf[destIdx + 1] = rgb[srcIdx + 1]; // G
+      buf[destIdx + 2] = rgb[srcIdx]; // R
+    }
+  }
+
+  return buf;
+}
+
+async function buildBmp(canvasWidth, canvasHeight, logoWidth) {
+  const png = await sharp(Buffer.from(buildBrandedSvg(canvasWidth, canvasHeight, logoWidth)))
+    .resize(canvasWidth, canvasHeight)
+    .png()
+    .toBuffer();
+  return pngBufferToBmp(png, canvasWidth, canvasHeight);
+}
+
 async function main() {
   await mkdir(outDir, { recursive: true });
 
@@ -67,7 +143,18 @@ async function main() {
   const ico = await pngToIco(icoBuffers);
   await writeFile(join(outDir, 'icon.ico'), ico);
 
-  console.log(`Icônes générées dans ${outDir} (icon.png, icon.ico)`);
+  // Bandeaux de l'installeur NSIS (assisted installer, oneClick: false) —
+  // dimensions imposées par MUI2 : 164×314 pour le bandeau latéral
+  // (page d'accueil/fin), 150×57 pour le bandeau d'en-tête (autres pages).
+  const installerSidebar = await buildBmp(164, 314, 120);
+  await writeFile(join(outDir, 'installerSidebar.bmp'), installerSidebar);
+
+  const installerHeader = await buildBmp(150, 57, 40);
+  await writeFile(join(outDir, 'installerHeader.bmp'), installerHeader);
+
+  console.log(
+    `Icônes générées dans ${outDir} (icon.png, icon.ico, installerSidebar.bmp, installerHeader.bmp)`
+  );
 }
 
 main();

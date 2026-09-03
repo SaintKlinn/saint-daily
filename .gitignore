@@ -16,3 +16,5 @@ design/saint-daily-app-design.html
 # Generated app icons — produced by npm run icons, not committed
 resources/icon.png
 resources/icon.ico
+resources/installerSidebar.bmp
+resources/installerHeader.bmp
