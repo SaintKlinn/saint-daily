@@ -21,8 +21,6 @@ const notifiedSkillIds = new Set<string>();
 
 const GREETING_LABEL_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   weekday: 'long',
-  hour: '2-digit',
-  minute: '2-digit',
 });
 
 export default function Accueil() {
