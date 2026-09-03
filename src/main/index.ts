@@ -11,6 +11,13 @@ let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
 
 function createWindow(): BrowserWindow {
+  // Même contrainte que src/main/tray.ts : hors app packagée, resources/
+  // n'est pas dans l'asar (electron-builder ne pack que out/**) mais
+  // copiée à côté via `extraResources`, donc accessible via
+  // process.resourcesPath plutôt qu'un chemin relatif à __dirname.
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(__dirname, '../../resources/icon.png');
   const win = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -18,7 +25,7 @@ function createWindow(): BrowserWindow {
     minHeight: 640,
     backgroundColor: '#064E3B',
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.png'),
+    icon: iconPath,
     webPreferences: {
       // .cjs et pas .js : le preload est buildé en CommonJS explicitement
       // (voir electron.vite.config.ts) parce que package.json est en
