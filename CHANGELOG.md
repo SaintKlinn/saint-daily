@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1](https://github.com/SaintKlinn/saint-daily/compare/v1.1.0...v1.1.1) (2026-09-03)
+
+
+### Corrections
+
+* generate app/installer icons in CI, add branded installer artwork ([52f35b2](https://github.com/SaintKlinn/saint-daily/commit/52f35b217382063d4b4d4ef17eff2b891f9b7e57))
+* packaged app was missing its window icon and Supabase config ([e1009c4](https://github.com/SaintKlinn/saint-daily/commit/e1009c4c97232d908e6a6c0295765f42920d96bd))
+
+
+### Documentation
+
+* add MIT license ([24adbb8](https://github.com/SaintKlinn/saint-daily/commit/24adbb8166caf277fe044efd3e1307efc1077cc4))
+* add README ([c9bd7fb](https://github.com/SaintKlinn/saint-daily/commit/c9bd7fb9fb68fecbe8d48f7146786ac566df770b))
+
 ## [1.1.0](https://github.com/SaintKlinn/saint-daily/compare/v1.0.0...v1.1.0) (2026-09-03)
 
 
