@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useSkills } from '../hooks/useSkills';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { filterByTag, calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import Toggle from '../components/Toggle';
+import EmptyState from '../components/EmptyState';
+import { buttonClassName } from '../components/Button';
 import { SearchIcon } from '../components/icons';
 import type { GenericLevel } from '../lib/types';
 
@@ -41,7 +44,12 @@ export default function ListeSkills() {
 
   return (
     <div className="flex flex-col gap-7">
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-center justify-between"
+      >
         <h1 className="font-serif text-[30px] text-champagne">Skills</h1>
         <div className="flex items-center gap-3.5">
           <Toggle bordered={false} checked={showArchived} onChange={setShowArchived} label="Voir les skills en pause" />
@@ -51,14 +59,15 @@ export default function ListeSkills() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un skill ou une note"
-              className="w-56 bg-transparent font-sans text-[13px] text-champagne placeholder:text-muted focus:outline-none"
+              aria-label="Rechercher un skill ou une note"
+              className="w-56 bg-transparent font-sans text-[13px] text-champagne placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
             />
           </div>
-          <Link to="/skills/nouveau" className="bg-accent-bright px-4 py-2 text-sm font-semibold text-ink-900 hover:bg-accent-hover">
+          <Link to="/skills/nouveau" className={buttonClassName('primary')}>
             + Nouveau skill
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {error && (
         <p role="alert" className="text-sm text-danger">
@@ -70,7 +79,8 @@ export default function ListeSkills() {
         <div className="flex flex-wrap gap-2.5">
           <button
             onClick={() => setTag(null)}
-            className={`font-data text-xs px-3 py-1.5 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+            aria-pressed={tag === null}
+            className={`font-data text-xs px-3 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
           >
             Tous les tags
           </button>
@@ -78,7 +88,8 @@ export default function ListeSkills() {
             <button
               key={t}
               onClick={() => setTag(tag === t ? null : t)}
-              className={`font-data text-xs px-3 py-1.5 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              aria-pressed={tag === t}
+              className={`font-data text-xs px-3 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
             >
               #{t}
             </button>
@@ -134,7 +145,7 @@ export default function ListeSkills() {
             </Link>
           );
         })}
-        {visible.length === 0 && <p className="bg-ink-800 px-[22px] py-5 text-sm text-muted">Aucun skill ne correspond.</p>}
+        {visible.length === 0 && <EmptyState>Aucun skill ne correspond.</EmptyState>}
       </div>
     </div>
   );

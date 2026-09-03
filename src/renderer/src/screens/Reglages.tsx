@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
 import { useSettings } from '../hooks/useSettings';
 import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export default function Reglages() {
   const { signOut } = useAuth();
@@ -59,20 +65,23 @@ export default function Reglages() {
   // `!settings` en plus de `loading` : useSettings repasse loading à true
   // à chaque refresh, y compris celui qui suit un changement de réglage —
   // sans ça l'écran clignoterait à chaque case cochée.
-  if (loading && !settings) return <p className="text-muted">Chargement…</p>;
+  if (loading && !settings) return <EmptyState role="status">Chargement…</EmptyState>;
   // Même piège que le détail d'un skill : sans ce cas, un échec de
   // chargement laissait « Chargement… » à l'écran indéfiniment.
   if (!settings) {
-    return (
-      <p role="alert" className="text-sm text-danger">
-        {error ?? 'Réglages indisponibles pour le moment.'}
-      </p>
-    );
+    return <EmptyState role="alert">{error ?? 'Réglages indisponibles pour le moment.'}</EmptyState>;
   }
 
   return (
     <div className="flex max-w-[640px] flex-col gap-8">
-      <h1 className="font-serif text-[30px] text-champagne">Réglages</h1>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="font-serif text-[30px] text-champagne"
+      >
+        Réglages
+      </motion.h1>
 
       <section className="flex flex-col gap-0">
         <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Rappels</h2>
@@ -96,7 +105,7 @@ export default function Reglages() {
               value={settings.reminderThresholdDays}
               onChange={(e) => handleReminderChange(Number(e.target.value))}
               aria-label="Seuil de rappel en jours"
-              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
             />
             <span className="font-data text-[15px] text-champagne">jours</span>
           </label>
@@ -128,7 +137,7 @@ export default function Reglages() {
               value={settings.pomodoroWorkMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroWorkMinutes: Number(e.target.value) })}
               aria-label="Durée d'un cycle de travail en minutes"
-              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
             />
             <span className="font-data text-[15px] text-champagne">min</span>
           </label>
@@ -143,7 +152,7 @@ export default function Reglages() {
               value={settings.pomodoroShortBreakMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroShortBreakMinutes: Number(e.target.value) })}
               aria-label="Durée d'une pause courte en minutes"
-              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
             />
             <span className="font-data text-[15px] text-champagne">min</span>
           </label>
@@ -158,7 +167,7 @@ export default function Reglages() {
               value={settings.pomodoroLongBreakMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroLongBreakMinutes: Number(e.target.value) })}
               aria-label="Durée d'une pause longue en minutes"
-              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
             />
             <span className="font-data text-[15px] text-champagne">min</span>
           </label>
@@ -180,7 +189,7 @@ export default function Reglages() {
                 handlePomodoroSettingChange({ pomodoroCyclesBeforeLongBreak: Number(e.target.value) })
               }
               aria-label="Nombre de cycles avant la pause longue"
-              className="w-10 bg-transparent text-right font-data text-[15px] text-champagne focus:outline-none"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
             />
           </label>
         </div>
@@ -221,12 +230,9 @@ export default function Reglages() {
         </details>
       </section>
 
-      <button
-        onClick={() => signOut()}
-        className="w-fit border border-ink-700 px-4 py-2 text-sm text-muted hover:text-champagne"
-      >
+      <Button variant="secondary" size="sm" className="w-fit" onClick={() => signOut()}>
         Se déconnecter
-      </button>
+      </Button>
     </div>
   );
 }

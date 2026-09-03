@@ -3,6 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import RayCorner from '../components/RayCorner';
+import Button from '../components/Button';
+import { SelectField, TextAreaField } from '../components/FormField';
+
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export default function NouvelleEntree() {
   const navigate = useNavigate();
@@ -49,21 +54,14 @@ export default function NouvelleEntree() {
         <h1 className="mt-1.5 font-serif text-2xl text-champagne">Journal de pratique</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Skill
-          <select
-            value={skillId}
-            onChange={(e) => setSkillId(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne"
-          >
-            <option value="">Choisir…</option>
-            {skills.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
+          <option value="">Choisir…</option>
+          {skills.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </SelectField>
         <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
           Durée
           <div className="flex items-baseline gap-2.5 border border-ink-700 bg-ink-800 px-3.5 py-3">
@@ -72,40 +70,25 @@ export default function NouvelleEntree() {
               min={1}
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              className="w-16 bg-transparent font-data text-xl normal-case tracking-normal text-champagne focus:outline-none"
+              aria-label="Durée en minutes"
+              className={`w-16 bg-transparent font-data text-xl normal-case tracking-normal text-champagne ${FOCUS_RING}`}
             />
             <span className="font-sans text-[13px] normal-case tracking-normal text-muted">minutes</span>
           </div>
         </label>
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Note
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            rows={4}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-sm normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none"
-          />
-        </label>
+        <TextAreaField label="Note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
           </p>
         )}
         <div className="mt-1 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="border border-ink-700 px-5 py-2.5 font-sans text-sm font-semibold text-muted hover:text-champagne"
-          >
+          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
             Annuler
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="bg-accent-bright px-5 py-2.5 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" variant="primary" disabled={submitting}>
             {submitting ? 'Enregistrement…' : 'Enregistrer'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

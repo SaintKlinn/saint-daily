@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useSkills } from '../hooks/useSkills';
@@ -7,7 +7,8 @@ import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
-import LogoMark from '../components/LogoMark';
+import EmptyState from '../components/EmptyState';
+import { buttonClassName } from '../components/Button';
 import { PlusIcon } from '../components/icons';
 import { colors } from '../theme/colors';
 
@@ -80,16 +81,10 @@ export default function Accueil() {
       >
         <h1 className="font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
         <div className="flex items-center gap-3">
-          <Link
-            to="/pomodoro"
-            className="border border-ink-700 px-5 py-3 font-sans text-sm text-muted hover:text-champagne"
-          >
+          <Link to="/pomodoro" className={buttonClassName('secondary')}>
             Démarrer un pomodoro
           </Link>
-          <Link
-            to="/entree/nouvelle"
-            className="flex items-center gap-2 bg-accent-bright px-5 py-3 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover"
-          >
+          <Link to="/entree/nouvelle" className={buttonClassName('primary')}>
             <PlusIcon />
             Nouvelle entrée
           </Link>
@@ -134,15 +129,15 @@ export default function Accueil() {
           Rappels dus
         </motion.h2>
         {activeSkills.length === 0 ? (
-          <EmptyReminders>
+          <EmptyState>
             Aucun skill actif pour l'instant.{' '}
             <Link to="/skills/nouveau" className="text-accent-bright underline">
               Crée ton premier skill
             </Link>
             .
-          </EmptyReminders>
+          </EmptyState>
         ) : dueSkills.length === 0 ? (
-          <EmptyReminders>Rien de dû — tout est à jour.</EmptyReminders>
+          <EmptyState>Rien de dû — tout est à jour.</EmptyState>
         ) : (
           <motion.div
             initial="hidden"
@@ -170,10 +165,7 @@ export default function Accueil() {
                   )}
                 </Link>
                 <p className="font-data text-[13px] text-muted">pas pratiqué depuis {daysSince} j</p>
-                <Link
-                  to={`/entree/nouvelle?skillId=${skill.id}`}
-                  className="border border-accent-bright px-4 py-2 font-sans text-[13px] font-semibold text-accent-bright hover:bg-accent-bright hover:text-ink-900"
-                >
+                <Link to={`/entree/nouvelle?skillId=${skill.id}`} className={buttonClassName('accent-outline', 'sm')}>
                   Logger
                 </Link>
               </motion.div>
@@ -182,20 +174,6 @@ export default function Accueil() {
         )}
       </section>
     </div>
-  );
-}
-
-function EmptyReminders({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
-      className="flex flex-col items-center gap-2.5 border border-dashed border-ink-700 px-6 py-9 text-center"
-    >
-      <LogoMark size={26} className="opacity-50" />
-      <p className="text-sm text-muted">{children}</p>
-    </motion.div>
   );
 }
 

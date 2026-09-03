@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSkills } from '../hooks/useSkills';
 import type { GenericLevel } from '../lib/types';
 import RayCorner from '../components/RayCorner';
+import Button from '../components/Button';
+import { FormField, SelectField, TextAreaField } from '../components/FormField';
 
 export default function NouveauSkill() {
   const navigate = useNavigate();
@@ -43,65 +45,32 @@ export default function NouveauSkill() {
         <h1 className="mt-1.5 font-serif text-2xl text-champagne">Commencer à suivre</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Nom
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Tags (séparés par des virgules)
-          <input
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="Musique, Créatif"
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Niveau de départ
-          <select
-            value={genericLevel}
-            onChange={(e) => setGenericLevel(e.target.value as GenericLevel)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne"
-          >
-            <option value="debutant">Débutant</option>
-            <option value="intermediaire">Intermédiaire</option>
-            <option value="avance">Avancé</option>
-            <option value="expert">Expert</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
-          Notes
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-sm normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none"
-          />
-        </label>
+        <FormField label="Nom" value={name} onChange={(e) => setName(e.target.value)} />
+        <FormField
+          label="Tags (séparés par des virgules)"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="Musique, Créatif"
+        />
+        <SelectField label="Niveau de départ" value={genericLevel} onChange={(e) => setGenericLevel(e.target.value as GenericLevel)}>
+          <option value="debutant">Débutant</option>
+          <option value="intermediaire">Intermédiaire</option>
+          <option value="avance">Avancé</option>
+          <option value="expert">Expert</option>
+        </SelectField>
+        <TextAreaField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
           </p>
         )}
         <div className="mt-1 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="border border-ink-700 px-5 py-2.5 font-sans text-sm font-semibold text-muted hover:text-champagne"
-          >
+          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
             Annuler
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="bg-accent-bright px-5 py-2.5 font-sans text-sm font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" variant="primary" disabled={submitting}>
             {submitting ? 'Création…' : 'Créer'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useSkills } from '../hooks/useSkills';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
@@ -7,7 +8,12 @@ import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import type { GenericLevel } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
+import EmptyState from '../components/EmptyState';
+import Button, { buttonClassName } from '../components/Button';
 import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
+
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -66,7 +72,7 @@ export default function DetailSkill() {
   // modification (niveau, notes, archivage). Sans cette condition, tout
   // l'écran clignoterait sur « Chargement… » à chaque édition.
   if (loading && skills.length === 0) {
-    return <p className="text-muted">Chargement…</p>;
+    return <EmptyState role="status">Chargement…</EmptyState>;
   }
   if (!skill) {
     // Le chargement a échoué : la liste est vide parce que la requête a
@@ -84,10 +90,12 @@ export default function DetailSkill() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Link to="/skills" className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted hover:text-champagne">
-        <ChevronLeftIcon />
-        Retour
-      </Link>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
+        <Link to="/skills" className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted hover:text-champagne">
+          <ChevronLeftIcon />
+          Retour
+        </Link>
+      </motion.div>
 
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
           le signaler plutôt que de montrer un graphe/journal vide. */}
@@ -126,25 +134,19 @@ export default function DetailSkill() {
               ))}
             </select>
           </label>
-          <Link
-            to={`/pomodoro?skillId=${skill.id}`}
-            className="border border-ink-700 px-3.5 py-2 font-sans text-[13px] text-muted hover:text-champagne"
-          >
+          <Link to={`/pomodoro?skillId=${skill.id}`} className={buttonClassName('secondary', 'sm')}>
             Démarrer un pomodoro
           </Link>
-          <button
-            onClick={handleToggleArchived}
-            className="border border-ink-700 px-3.5 py-2 font-sans text-[13px] text-muted hover:text-champagne"
-          >
+          <Button variant="secondary" size="sm" onClick={handleToggleArchived}>
             {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1 gap-9">
         <div className="relative flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6">
           <RayCorner variant={0} />
-          <svg viewBox="0 0 220 130" className="relative w-full">
+          <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
           <p className="relative font-data text-2xl text-champagne">{totalHours}h</p>
@@ -277,17 +279,12 @@ function NotesSection({
         rows={4}
         aria-label="Notes sur ce skill"
         placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
-        className="border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-champagne placeholder:text-muted focus:outline-none"
+        className={`border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
       />
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={status === 'saving'}
-          className="w-fit border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne disabled:opacity-60"
-        >
+        <Button type="button" variant="secondary" size="sm" onClick={handleSave} disabled={status === 'saving'}>
           {status === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
-        </button>
+        </Button>
         {status === 'saved' && <span className="text-sm text-muted">Notes enregistrées.</span>}
       </div>
       {error && (
@@ -325,17 +322,14 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
       <div className="flex gap-2">
         <input
           name="label"
+          aria-label="Nouveau jalon"
           placeholder="Nouveau jalon"
           disabled={submitting}
-          className="flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-champagne placeholder:text-muted focus:outline-none"
+          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
-        <button
-          type="submit"
-          disabled={submitting}
-          className="border border-ink-700 px-3 py-1.5 text-sm text-muted hover:text-champagne disabled:opacity-60"
-        >
+        <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
           Ajouter
-        </button>
+        </Button>
       </div>
       {error && (
         <p role="alert" className="text-sm text-danger">
