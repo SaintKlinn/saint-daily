@@ -71,11 +71,19 @@ l'artefact" (mécanique, automatique une fois la décision prise).
 
 ## Dépôt GitHub
 
-- Nouveau dépôt **privé**, créé sous le compte GitHub de l'utilisateur,
-  nom `saint-daily` (cohérent avec `package.json`).
+- Nouveau dépôt **public**, créé sous le compte GitHub de l'utilisateur,
+  nom `saint-daily` (cohérent avec `package.json`). Décision révisée en
+  cours d'implémentation : un dépôt privé empêcherait `electron-updater`
+  de vérifier les mises à jour pour quiconque installe le `.exe` sans un
+  token GitHub personnel configuré sur sa machine — incompatible avec
+  l'objectif de partager le `.exe` avec d'autres personnes. Le code
+  source n'expose aucun secret (`.env.local` est gitignore, les
+  identifiants dev sont lus à l'exécution, jamais commités).
 - Push de l'historique local existant tel quel (aucun commit modifié).
 - `GITHUB_TOKEN` fourni automatiquement par Actions suffit pour tout le
-  pipeline — pas de token personnel à gérer. Le workflow déclare
+  pipeline — pas de token personnel à gérer, ni pour la CI ni pour
+  l'auto-update en runtime (un dépôt public ne nécessite aucune
+  authentification pour lire ses releases). Le workflow déclare
   `permissions: contents: write` (pour que le job de build publie
   l'asset sur la release) **et** `pull-requests: write` (pour que
   `release-please` puisse créer/mettre à jour la Release PR elle-même).
@@ -188,7 +196,7 @@ Nouveau module main-process (même famille que `devLogin.ts`/`tray.ts`/
 | Question | Décision |
 |---|---|
 | Où le `.exe` est-il disponible | GitHub Releases |
-| Dépôt | Nouveau dépôt GitHub privé, à créer |
+| Dépôt | Nouveau dépôt GitHub public, à créer (révisé depuis privé — voir "Dépôt GitHub" : incompatible avec le partage du `.exe`) |
 | Déclenchement du build | Automatique via GitHub Actions (résout aussi le blocage NSIS local) |
 | Rédaction du changelog | Automatisée depuis des commits structurés (Conventional Commits) |
 | Déclenchement de la release | Confirmation via une Release PR (release-please), jamais publié sans ce geste |
