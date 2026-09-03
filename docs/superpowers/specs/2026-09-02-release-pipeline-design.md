@@ -91,9 +91,7 @@ commit du projet) :
 |---|---|---|
 | `feat:` | mineure (1.x.0) | "Nouveautés" |
 | `fix:` | patch (1.0.x) | "Corrections" |
-| `perf:` | patch | "Performance" |
-| `refactor:` | patch | "Améliorations internes" |
-| `chore:`, `docs:`, `ci:`, `build:` | aucun bump de version | "Divers" |
+| `perf:`, `refactor:`, `chore:`, `docs:`, `ci:`, `build:` | aucun bump de version (release-please ne bump que sur `feat`/`fix`/breaking change) | "Performance" / "Améliorations internes" / "Divers" selon le type |
 
 Pas de notion de "breaking change" pertinente ici (pas d'API publique) —
 la version majeure ne bouge pas automatiquement ; un bump majeur, si
