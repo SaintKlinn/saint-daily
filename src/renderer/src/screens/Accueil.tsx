@@ -19,10 +19,6 @@ const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 
 // navigation Accueil -> Skills -> Accueil ne doit pas re-notifier).
 const notifiedSkillIds = new Set<string>();
 
-const GREETING_LABEL_FORMAT = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'long',
-});
-
 export default function Accueil() {
   const { skills, error: skillsError } = useSkills();
   const { settings } = useSettings();
@@ -74,20 +70,15 @@ export default function Accueil() {
     }
   }, [stats, settings]);
 
-  const greeting = capitalize(GREETING_LABEL_FORMAT.format(new Date()));
-
   return (
     <div className="flex flex-col gap-9">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-        className="flex items-end justify-between"
+        className="flex items-center justify-between"
       >
-        <div>
-          <p className="font-data text-xs uppercase tracking-[0.12em] text-muted">{greeting}</p>
-          <h1 className="mt-1.5 font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
-        </div>
+        <h1 className="font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
         <div className="flex items-center gap-3">
           <Link
             to="/pomodoro"
@@ -250,10 +241,6 @@ function StatCard({
       </p>
     </motion.div>
   );
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function formatMinutes(totalMinutes: number): string {
