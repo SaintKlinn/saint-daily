@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.0](https://github.com/SaintKlinn/saint-daily/compare/v1.1.1...v1.2.0) (2026-09-03)
+
+
+### Nouveautés
+
+* add migration to move Saint Daily tables into their own schema ([9506516](https://github.com/SaintKlinn/saint-daily/commit/9506516d75aa79ec048b663a922e96b8d3b32bda))
+* point the Supabase client at the saint_daily schema ([77f9470](https://github.com/SaintKlinn/saint-daily/commit/77f9470f213c5216766208eeedab39d73be9e207))
+
+
+### Corrections
+
+* extract shared Button/FormField/EmptyState, close real UI gaps ([d4c922e](https://github.com/SaintKlinn/saint-daily/commit/d4c922e7d3634fbbcf7c574f5fe10e806518d425))
+* grant anon/authenticated access to the new saint_daily schema ([9f4dd40](https://github.com/SaintKlinn/saint-daily/commit/9f4dd40bb41922f9aec1eb39b1211cb5106f4599))
+* remove the day/time greeting label from Accueil entirely ([687d447](https://github.com/SaintKlinn/saint-daily/commit/687d447b0af551156abd004a59ee4d46247a4c44))
+* remove the time from the Accueil greeting, keep the day name ([daa80ed](https://github.com/SaintKlinn/saint-daily/commit/daa80edc63eab9c957b59921e9455c80d443df2d))
+
+
+### Documentation
+
+* document Exposed schemas setup step, clean up Supabase client typing ([ed02f16](https://github.com/SaintKlinn/saint-daily/commit/ed02f16cab45f5d3dff48c20f55124a69bf44c00))
+
 ## [1.1.1](https://github.com/SaintKlinn/saint-daily/compare/v1.1.0...v1.1.1) (2026-09-03)
 
 
