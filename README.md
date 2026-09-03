@@ -22,7 +22,7 @@ Prérequis : Node 20+, un projet Supabase (la table `profile` est partagée avec
 
 1. `npm install`
 2. Copier `.env.local.example` en `.env.local` et renseigner `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
-3. Appliquer les migrations SQL de `supabase/migrations/` sur le projet
+3. Appliquer les migrations SQL de `supabase/migrations/` sur le projet, puis dans le dashboard Supabase, ajouter `saint_daily` à Project Settings → API → Exposed schemas (garder `public`)
 4. `npm run icons` (génère les icônes app/installeur depuis `resources/` — gitignorées, pas committées)
 5. `npm run dev`
 
