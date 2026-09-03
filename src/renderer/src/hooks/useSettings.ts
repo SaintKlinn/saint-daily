@@ -72,7 +72,7 @@ export function useSettings() {
     setError(null);
     const supabase = getSupabaseClient();
     const { data, error: fetchError } = await supabase
-      .from('skill_app_settings')
+      .from('app_settings')
       .select('*')
       .eq('user_id', session.user.id)
       .maybeSingle();
@@ -88,7 +88,7 @@ export function useSettings() {
     }
     // Première visite : crée la ligne de réglages avec les valeurs par défaut.
     const { data: created, error: insertError } = await supabase
-      .from('skill_app_settings')
+      .from('app_settings')
       .insert({ user_id: session.user.id, ...toRow(DEFAULT_SETTINGS) })
       .select('*')
       .single();
@@ -98,7 +98,7 @@ export function useSettings() {
       // on la relit simplement.
       if (insertError.code === '23505') {
         const { data: existing, error: refetchError } = await supabase
-          .from('skill_app_settings')
+          .from('app_settings')
           .select('*')
           .eq('user_id', session.user.id)
           .maybeSingle();
@@ -123,7 +123,7 @@ export function useSettings() {
   async function updateSettings(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
     if (!session) return { error: 'Non connecté' };
     const { error: updateError } = await getSupabaseClient()
-      .from('skill_app_settings')
+      .from('app_settings')
       .update(toRow(patch))
       .eq('user_id', session.user.id);
     if (updateError) return { error: toFrenchError(updateError.message) };
