@@ -45,3 +45,7 @@ Convention de commit, à partir de la mise en place de ce pipeline : `type: suje
 ## Projet personnel
 
 Saint Daily est un outil à usage personnel — pas de garantie de support, Windows uniquement pour l'instant.
+
+## Licence
+
+[MIT](LICENSE)
