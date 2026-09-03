@@ -5,6 +5,8 @@ directories:
   buildResources: resources
 publish:
   provider: github
+  releaseType: release
+  private: true
 files:
   - out/**/*
 # `files` ne contient que out/**, donc resources/icon.png n'est pas dans

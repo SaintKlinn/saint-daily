@@ -1,6 +1,5 @@
 import { app, ipcMain, type BrowserWindow } from 'electron';
 import electronUpdater from 'electron-updater';
-const { autoUpdater } = electronUpdater;
 
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4h
 const INITIAL_DELAY_MS = 10_000;
@@ -20,11 +19,16 @@ export type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded
 export function registerAutoUpdateHandlers(getMainWindow: () => BrowserWindow | null): void {
   if (!app.isPackaged) return;
 
+  const { autoUpdater } = electronUpdater;
+
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = false;
 
   function sendStatus(status: AutoUpdateStatus): void {
-    getMainWindow()?.webContents.send('auto-update:status', status);
+    const win = getMainWindow();
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('auto-update:status', status);
+    }
   }
 
   autoUpdater.on('checking-for-update', () => sendStatus('checking'));
