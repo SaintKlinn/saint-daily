@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { calculateStreak, daysSinceLastPractice, filterByTag, streakJustExtended } from './streaks';
+import {
+  calculateStreak,
+  daysSinceLastPractice,
+  filterByTag,
+  filterSkillsForPicker,
+  sortSkillsByRecentPractice,
+  streakJustExtended,
+} from './streaks';
 
 describe('calculateStreak', () => {
   it('returns 0 with no entries', () => {
@@ -76,5 +83,54 @@ describe('streakJustExtended', () => {
   it('is false when the streak held steady or dropped', () => {
     expect(streakJustExtended(4, 4)).toBe(false);
     expect(streakJustExtended(4, 0)).toBe(false);
+  });
+});
+
+describe('filterSkillsForPicker', () => {
+  const skills = [
+    { name: 'Piano', archivedAt: null },
+    { name: 'Guitare', archivedAt: '2026-01-01T00:00:00Z' },
+    { name: 'Peinture', archivedAt: null },
+  ];
+
+  it('excludes archived skills even with no search', () => {
+    expect(filterSkillsForPicker(skills, '')).toEqual([skills[0], skills[2]]);
+  });
+
+  it('filters case-insensitively on the name among active skills', () => {
+    expect(filterSkillsForPicker(skills, 'pia')).toEqual([skills[0]]);
+  });
+
+  it('never returns an archived skill even if its name matches the search', () => {
+    expect(filterSkillsForPicker(skills, 'guit')).toEqual([]);
+  });
+});
+
+describe('sortSkillsByRecentPractice', () => {
+  const now = new Date('2026-08-31T18:00:00Z');
+  const a = { id: 'a', name: 'Alpha' };
+  const b = { id: 'b', name: 'Beta' };
+  const c = { id: 'c', name: 'Charlie' };
+
+  it('sorts by most recently practiced first', () => {
+    const entriesBySkill = {
+      a: [{ practicedAt: '2026-08-29T09:00:00Z' }], // 2 jours
+      b: [{ practicedAt: '2026-08-31T09:00:00Z' }], // aujourd'hui
+      c: [{ practicedAt: '2026-08-25T09:00:00Z' }], // 6 jours
+    };
+    expect(sortSkillsByRecentPractice([a, b, c], entriesBySkill, now)).toEqual([b, a, c]);
+  });
+
+  it('puts never-practiced skills last, alphabetically among themselves', () => {
+    const entriesBySkill = { a: [{ practicedAt: '2026-08-30T09:00:00Z' }] };
+    expect(sortSkillsByRecentPractice([c, b, a], entriesBySkill, now)).toEqual([a, b, c]);
+  });
+
+  it('breaks ties on the same daysSinceLastPractice alphabetically', () => {
+    const entriesBySkill = {
+      a: [{ practicedAt: '2026-08-30T09:00:00Z' }],
+      b: [{ practicedAt: '2026-08-30T09:00:00Z' }],
+    };
+    expect(sortSkillsByRecentPractice([b, a], entriesBySkill, now)).toEqual([a, b]);
   });
 });
