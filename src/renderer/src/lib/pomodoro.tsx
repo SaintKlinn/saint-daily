@@ -24,6 +24,7 @@ interface PomodoroContextValue {
   setNote: (note: string) => void;
   error: string | null;
   pinned: boolean;
+  cycleCompletedAt: number | null;
   start: (skillId: string, skillName: string) => void;
   pause: () => void;
   resume: () => void;
@@ -41,6 +42,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pinned, setPinnedState] = useState(false);
+  const [cycleCompletedAt, setCycleCompletedAt] = useState<number | null>(null);
 
   // Toujours la dernière valeur dans le setInterval du tick, sans le
   // remettre en place à chaque changement de session (voir Step 2).
@@ -161,6 +163,16 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         settings?.pomodoroAutoAdvance ?? true
       );
       setSession(next);
+      if (current.phase === 'work' && next.phase === 'longBreak') {
+        // Auto-effacé après un délai plutôt que par un "consume" explicite
+        // côté écran : Pomodoro.tsx peut démonter/remonter (navigation)
+        // sans jamais relire un timestamp périmé comme un nouvel événement.
+        const completedAt = Date.now();
+        setCycleCompletedAt(completedAt);
+        setTimeout(() => {
+          setCycleCompletedAt((c) => (c === completedAt ? null : c));
+        }, 2500);
+      }
       notifyPhaseChange(next.phase, skillNameForNotification);
       if (loggedMinutes > 0) {
         void logCheckpoint(loggedMinutes, cycleIndexBeforeCompletion, currentDurations.cyclesBeforeLongBreak, current.skillId);
@@ -305,7 +317,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
 
   return (
     <PomodoroContext.Provider
-      value={{ session, durations, note, setNote, error, pinned, start, pause, resume, advance, stop, setPinned }}
+      value={{ session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned }}
     >
       {children}
     </PomodoroContext.Provider>
