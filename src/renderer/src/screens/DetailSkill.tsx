@@ -26,7 +26,7 @@ export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const { skills, loading, error: skillsError, updateSkill, setArchived } = useSkills();
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
-  const { entries, error: entriesError } = usePracticeEntries(id ?? null);
+  const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 
   const skill = skills.find((s) => s.id === id);
 
@@ -40,15 +40,28 @@ export default function DetailSkill() {
   const previousStreakRef = useRef<number | null>(null);
   const [streakPulse, setStreakPulse] = useState(false);
 
+  // Le skill affiché peut changer sans démonter le composant (même route
+  // `skills/:id`, seul le param change) : la ref doit oublier le streak du
+  // skill précédent, sinon le premier streak réel du nouveau skill se
+  // compare à celui de l'ancien et déclenche un faux pulse.
   useEffect(() => {
+    previousStreakRef.current = null;
+  }, [id]);
+
+  useEffect(() => {
+    // `entries` vaut `[]` (donc streak = 0) tant que le fetch n'a pas
+    // résolu : comparer à ce stade prendrait le premier streak réel pour
+    // une « progression » depuis 0 et déclencherait un faux pulse au
+    // chargement de la page.
+    if (entriesLoading) return;
     const previous = previousStreakRef.current;
     previousStreakRef.current = streak;
     if (streakJustExtended(previous, streak)) {
       setStreakPulse(true);
-      const id = setTimeout(() => setStreakPulse(false), 400);
-      return () => clearTimeout(id);
+      const timeoutId = setTimeout(() => setStreakPulse(false), 400);
+      return () => clearTimeout(timeoutId);
     }
-  }, [streak]);
+  }, [streak, entriesLoading]);
 
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const totalHours = useMemo(
