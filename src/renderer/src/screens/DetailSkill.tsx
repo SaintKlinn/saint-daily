@@ -22,6 +22,12 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
   expert: 'Expert',
 };
 
+// Persiste tout le temps que l'app tourne, pas seulement le montage
+// courant du composant — sans ça, revenir sur DetailSkill après avoir
+// loggé une entrée via /entree/nouvelle (qui démonte cet écran) perdrait
+// la référence et le pulse de récompense ne se déclencherait jamais.
+const knownStreakBySkillId = new Map<string, number>();
+
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const { skills, loading, error: skillsError, updateSkill, setArchived } = useSkills();
@@ -35,33 +41,44 @@ export default function DetailSkill() {
   // prochain refresh, sans un mot d'explication (audit ui-ux-pro-max).
   const [actionError, setActionError] = useState<string | null>(null);
   const [celebratingMilestoneId, setCelebratingMilestoneId] = useState<string | null>(null);
+  // Set dans un event handler, pas un effet : pas de fonction de nettoyage
+  // possible au démontage. On garde donc l'id du timeout en cours ici pour
+  // pouvoir l'annuler — soit si le composant se démonte pendant le pulse,
+  // soit si deux jalons sont cochés coup sur coup (sinon deux timeouts
+  // concurrents pourraient chacun tenter de fermer/rouvrir la pulse).
+  const celebrationTimeoutRef = useRef<number | null>(null);
 
   const streak = useMemo(() => calculateStreak(entries), [entries]);
-  const previousStreakRef = useRef<number | null>(null);
   const [streakPulse, setStreakPulse] = useState(false);
-
-  // Le skill affiché peut changer sans démonter le composant (même route
-  // `skills/:id`, seul le param change) : la ref doit oublier le streak du
-  // skill précédent, sinon le premier streak réel du nouveau skill se
-  // compare à celui de l'ancien et déclenche un faux pulse.
-  useEffect(() => {
-    previousStreakRef.current = null;
-  }, [id]);
 
   useEffect(() => {
     // `entries` vaut `[]` (donc streak = 0) tant que le fetch n'a pas
     // résolu : comparer à ce stade prendrait le premier streak réel pour
     // une « progression » depuis 0 et déclencherait un faux pulse au
     // chargement de la page.
-    if (entriesLoading) return;
-    const previous = previousStreakRef.current;
-    previousStreakRef.current = streak;
+    // `knownStreakBySkillId` est indexée par skill.id : passer d'un skill à
+    // un autre (même route `skills/:id`, seul le param change, sans
+    // démontage) lit/écrit une entrée différente de la map, donc le streak
+    // du skill précédent ne peut pas fuiter dans la comparaison du nouveau.
+    if (entriesLoading || !skill) return;
+    const previous = knownStreakBySkillId.get(skill.id) ?? null;
+    knownStreakBySkillId.set(skill.id, streak);
     if (streakJustExtended(previous, streak)) {
       setStreakPulse(true);
       const timeoutId = setTimeout(() => setStreakPulse(false), 400);
       return () => clearTimeout(timeoutId);
     }
-  }, [streak, entriesLoading]);
+  }, [streak, entriesLoading, skill]);
+
+  // Nettoie le timeout de célébration de jalon au démontage — sans ça, un
+  // démontage pendant le pulse (navigation immédiate après avoir coché un
+  // jalon) laisserait le timeout appeler setCelebratingMilestoneId sur un
+  // composant déjà démonté.
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current !== null) clearTimeout(celebrationTimeoutRef.current);
+    };
+  }, []);
 
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const totalHours = useMemo(
@@ -92,8 +109,12 @@ export default function DetailSkill() {
       return;
     }
     if (completed) {
+      if (celebrationTimeoutRef.current !== null) clearTimeout(celebrationTimeoutRef.current);
       setCelebratingMilestoneId(milestoneId);
-      setTimeout(() => setCelebratingMilestoneId((current) => (current === milestoneId ? null : current)), 400);
+      celebrationTimeoutRef.current = window.setTimeout(() => {
+        setCelebratingMilestoneId((current) => (current === milestoneId ? null : current));
+        celebrationTimeoutRef.current = null;
+      }, 400);
     }
   }
 
@@ -125,7 +146,10 @@ export default function DetailSkill() {
   return (
     <div className="flex flex-col gap-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-        <Link to="/skills" className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted hover:text-champagne">
+        <Link
+          to="/skills"
+          className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted transition-colors duration-150 hover:text-champagne"
+        >
           <ChevronLeftIcon />
           Retour
         </Link>
@@ -188,10 +212,12 @@ export default function DetailSkill() {
           <p className="relative text-center text-sm text-muted">
             Streak :{' '}
             <motion.span
-              className="text-accent-bright"
+              // `inline-block` : un élément inline nu ignore `transform`,
+              // donc l'animation `scale` ci-dessous n'aurait aucun effet
+              // sans ça.
+              className="inline-block text-accent-bright"
               animate={streakPulse ? { scale: [1, 1.35, 1] } : { scale: 1 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              style={{ display: 'inline-block' }}
             >
               {streak} j
             </motion.span>{' '}

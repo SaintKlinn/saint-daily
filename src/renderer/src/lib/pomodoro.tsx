@@ -165,8 +165,13 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       setSession(next);
       if (current.phase === 'work' && next.phase === 'longBreak') {
         // Auto-effacé après un délai plutôt que par un "consume" explicite
-        // côté écran : Pomodoro.tsx peut démonter/remonter (navigation)
-        // sans jamais relire un timestamp périmé comme un nouvel événement.
+        // côté écran. La fenêtre (2.5s) est volontairement courte plutôt que
+        // de garantir "ne rejoue jamais" : si Pomodoro.tsx démonte/remonte
+        // (navigation) DANS cette fenêtre, l'effet qui lit cycleCompletedAt
+        // au montage rejoue la célébration — c'est voulu (mieux vaut montrer
+        // une célébration qu'on aurait pu manquer que la perdre en
+        // silence), pas un bug. Le but est seulement d'éviter de la rejouer
+        // longtemps après coup.
         const completedAt = Date.now();
         setCycleCompletedAt(completedAt);
         setTimeout(() => {
