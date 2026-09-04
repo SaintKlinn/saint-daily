@@ -14,6 +14,7 @@ export default function Reglages() {
   const { signOut } = useAuth();
   const { settings, loading, error, updateSettings } = useSettings();
   const [autoLaunch, setAutoLaunch] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
   // Les trois réglages ci-dessous écrivaient en silence : un échec réseau
   // faisait revenir la case/valeur à son état précédent sans un mot
   // d'explication. Un seul message suffit, ces trois contrôles sont dans
@@ -30,6 +31,10 @@ export default function Reglages() {
       ?.getAutoLaunch?.()
       .then(setAutoLaunch)
       .catch(() => setAutoLaunch(false));
+    window.api
+      ?.getAppVersion?.()
+      .then(setAppVersion)
+      .catch(() => setAppVersion(null));
   }, []);
 
   async function handleReminderChange(value: number) {
@@ -203,7 +208,10 @@ export default function Reglages() {
       </section>
 
       <section className="flex flex-col gap-0">
-        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">À propos</h2>
+        <div className="mb-1 flex items-baseline justify-between">
+          <h2 className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">À propos</h2>
+          {appVersion && <span className="font-data text-[11px] text-muted">Version {appVersion}</span>}
+        </div>
         <details className="border-b border-ink-700 py-4">
           <summary className="cursor-pointer text-[15px] text-champagne">Confidentialité</summary>
           <p className="mt-2 text-sm text-muted">

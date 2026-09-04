@@ -16,6 +16,7 @@ export type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded
 
 export interface SaintDailyApi {
   getDevLoginCredentials: () => Promise<{ email: string; password: string } | null>;
+  getAppVersion: () => Promise<string>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
   getAutoLaunch: () => Promise<boolean>;
   pomodoro: {

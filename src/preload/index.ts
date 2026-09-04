@@ -37,6 +37,7 @@ type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded' | 'er
 const api = {
   getDevLoginCredentials: (): Promise<{ email: string; password: string } | null> =>
     ipcRenderer.invoke('get-dev-login-credentials'),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
   setAutoLaunch: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('set-auto-launch', enabled),
   getAutoLaunch: (): Promise<boolean> => ipcRenderer.invoke('get-auto-launch'),
   pomodoro: {

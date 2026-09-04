@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
 import { registerDevLoginHandler } from './devLogin';
 import { createTray } from './tray';
@@ -24,6 +24,12 @@ function createWindow(): BrowserWindow {
     minWidth: 960,
     minHeight: 640,
     backgroundColor: '#064E3B',
+    // Reste cachée jusqu'au premier rendu réel (voir ready-to-show
+    // ci-dessous) : sans ça, la fenêtre affiche backgroundColor à vide
+    // pendant le chargement du renderer, un flash de vert brut avant que
+    // React ait rien peint.
+    show: false,
+    title: `Saint Daily — ${app.getVersion()}`,
     autoHideMenuBar: true,
     icon: iconPath,
     webPreferences: {
@@ -45,6 +51,13 @@ function createWindow(): BrowserWindow {
     shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  // index.html a son propre <title>Saint Daily</title> statique — sans ce
+  // preventDefault, Electron resynchronise le titre de la fenêtre dessus
+  // dès la fin du chargement et écrase le numéro de version mis plus haut.
+  win.on('page-title-updated', (event) => event.preventDefault());
+
+  win.once('ready-to-show', () => win.show());
 
   // Masquer plutôt que fermer : la fenêtre doit rester en mémoire pour
   // que les rappels de régularité (notifications) continuent de
@@ -74,6 +87,7 @@ app
   .whenReady()
   .then(() => {
     mainWindow = createWindow();
+    ipcMain.handle('get-app-version', () => app.getVersion());
     registerDevLoginHandler();
     registerAutoLaunchHandlers();
     registerAutoUpdateHandlers(() => mainWindow);
