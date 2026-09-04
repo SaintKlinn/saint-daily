@@ -3,11 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { usePomodoro } from '../lib/pomodoro';
 import { useSkills } from '../hooks/useSkills';
+import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { phaseDurationMinutes } from '../lib/pomodoroLogic';
 import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
-import { SelectField } from '../components/FormField';
+import SkillPicker from '../components/SkillPicker';
 import { colors } from '../theme/colors';
 
 const FOCUS_RING =
@@ -17,6 +18,7 @@ export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
   const { skills } = useSkills();
+  const { entriesBySkill } = useAllPracticeEntries(skills.map((s) => s.id));
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
@@ -55,14 +57,7 @@ export default function Pomodoro() {
             {error}
           </p>
         )}
-        <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
-          <option value="">Choisir…</option>
-          {skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </SelectField>
+        <SkillPicker skills={skills} entriesBySkill={entriesBySkill} value={skillId} onChange={setSkillId} />
         <Button
           variant="primary"
           disabled={!skillId || !durations}
