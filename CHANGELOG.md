@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/SaintKlinn/saint-daily/compare/v1.2.0...v1.3.0) (2026-09-04)
+
+
+### Nouveautés
+
+* show app version in window title and Réglages, fix startup flash ([df966fe](https://github.com/SaintKlinn/saint-daily/commit/df966fe1a6052e5290629f8708c9bc757495c7b3))
+
+
+### Corrections
+
+* stop pomodoro overlay from creating a second Supabase auth client ([70e0924](https://github.com/SaintKlinn/saint-daily/commit/70e092445c0b25763c3ebb6a700d454746d35958))
+
 ## [1.2.0](https://github.com/SaintKlinn/saint-daily/compare/v1.1.1...v1.2.0) (2026-09-03)
 
 
