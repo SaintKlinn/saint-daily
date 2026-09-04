@@ -12,7 +12,13 @@ export interface PomodoroStateSnapshot {
 
 export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
 
-export type AutoUpdateStatus = 'idle' | 'checking' | 'downloading' | 'downloaded' | 'error';
+export type AutoUpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+
+export interface AutoUpdateState {
+  status: AutoUpdateStatus;
+  version?: string;
+  percent?: number;
+}
 
 export interface SaintDailyApi {
   getDevLoginCredentials: () => Promise<{ email: string; password: string } | null>;
@@ -27,7 +33,8 @@ export interface SaintDailyApi {
     setPinned: (pinned: boolean) => void;
   };
   autoUpdate: {
-    onStatus: (callback: (status: AutoUpdateStatus) => void) => () => void;
+    onStatus: (callback: (state: AutoUpdateState) => void) => () => void;
+    downloadNow: () => Promise<void>;
     installNow: () => Promise<void>;
   };
 }
