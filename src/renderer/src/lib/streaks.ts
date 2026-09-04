@@ -29,6 +29,14 @@ export function calculateStreak(entries: PracticeEntryLike[], now: Date = new Da
   return streak;
 }
 
+/** Vrai seulement si `current` dépasse une valeur précédente connue —
+ *  `previous: null` encode "pas encore de valeur de référence" (premier
+ *  rendu), pour ne jamais déclencher un pulse de récompense à l'ouverture
+ *  de l'écran. */
+export function streakJustExtended(previous: number | null, current: number): boolean {
+  return previous !== null && current > previous;
+}
+
 /** Nombre de jours pleins écoulés depuis la dernière pratique. null si aucune entrée. */
 export function daysSinceLastPractice(entries: PracticeEntryLike[], now: Date = new Date()): number | null {
   if (entries.length === 0) return null;

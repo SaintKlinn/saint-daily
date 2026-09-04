@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateStreak, daysSinceLastPractice, filterByTag } from './streaks';
+import { calculateStreak, daysSinceLastPractice, filterByTag, streakJustExtended } from './streaks';
 
 describe('calculateStreak', () => {
   it('returns 0 with no entries', () => {
@@ -61,5 +61,20 @@ describe('filterByTag', () => {
 
   it('returns an empty list when no skill has the tag', () => {
     expect(filterByTag(skills, 'Sport')).toEqual([]);
+  });
+});
+
+describe('streakJustExtended', () => {
+  it('is false with no previous value (first render, nothing to compare against yet)', () => {
+    expect(streakJustExtended(null, 5)).toBe(false);
+  });
+
+  it('is true when the streak grew', () => {
+    expect(streakJustExtended(3, 4)).toBe(true);
+  });
+
+  it('is false when the streak held steady or dropped', () => {
+    expect(streakJustExtended(4, 4)).toBe(false);
+    expect(streakJustExtended(4, 0)).toBe(false);
   });
 });
