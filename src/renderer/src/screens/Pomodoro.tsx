@@ -8,6 +8,7 @@ import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { SelectField } from '../components/FormField';
+import { colors } from '../theme/colors';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -16,7 +17,7 @@ export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
   const { skills } = useSkills();
-  const { session, durations, note, setNote, error, pinned, start, pause, resume, advance, stop, setPinned } =
+  const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
 
@@ -31,6 +32,14 @@ export default function Pomodoro() {
     const id = window.setInterval(() => forceTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [session?.status]);
+
+  const [showCycleComplete, setShowCycleComplete] = useState(false);
+  useEffect(() => {
+    if (!cycleCompletedAt) return;
+    setShowCycleComplete(true);
+    const id = setTimeout(() => setShowCycleComplete(false), 2000);
+    return () => clearTimeout(id);
+  }, [cycleCompletedAt]);
 
   if (!session) {
     return (
@@ -92,11 +101,28 @@ export default function Pomodoro() {
         {session.skillName} · cycle {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
       </p>
       <div className="relative flex flex-col items-center gap-2">
-        <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
+        <motion.div
+          className="flex items-center justify-center rounded-full"
+          animate={showCycleComplete ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={showCycleComplete ? { filter: `drop-shadow(0 0 18px ${colors.accent.bright}99)` } : undefined}
+        >
+          <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
+        </motion.div>
         <p className="font-serif text-3xl text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
         <p className="font-data text-xs uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
+        {showCycleComplete && (
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="font-data text-xs uppercase tracking-[0.1em] text-muted"
+          >
+            Cycle terminé
+          </motion.p>
+        )}
       </div>
 
       {error && (
