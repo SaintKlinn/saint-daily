@@ -25,7 +25,7 @@ interface PomodoroContextValue {
   error: string | null;
   pinned: boolean;
   cycleCompletedAt: number | null;
-  start: (skillId: string, skillName: string) => void;
+  start: (skillId: string, skillName: string, workMinutes: number) => void;
   pause: () => void;
   resume: () => void;
   advance: () => void;
@@ -49,7 +49,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef(session);
   sessionRef.current = session;
 
-  const durations: PomodoroDurations | null = settings
+  const settingsDurations: PomodoroDurations | null = settings
     ? {
         workMinutes: settings.pomodoroWorkMinutes,
         shortBreakMinutes: settings.pomodoroShortBreakMinutes,
@@ -57,6 +57,12 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         cyclesBeforeLongBreak: settings.pomodoroCyclesBeforeLongBreak,
       }
     : null;
+  // Figée une fois à start() (durée de travail choisie au lancement,
+  // pauses/cycles des Réglages au moment du lancement) et remise à null à
+  // l'arrêt — sans ça, changer les Réglages pendant qu'une session tourne
+  // changerait la durée des phases de travail suivantes en plein milieu.
+  const [sessionDurations, setSessionDurations] = useState<PomodoroDurations | null>(null);
+  const durations = sessionDurations ?? settingsDurations;
   const durationsRef = useRef(durations);
   durationsRef.current = durations;
 
@@ -202,11 +208,13 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function start(skillId: string, skillName: string) {
-    if (!durationsRef.current) return;
+  function start(skillId: string, skillName: string, workMinutes: number) {
+    if (!settingsDurations) return;
+    const effective: PomodoroDurations = { ...settingsDurations, workMinutes };
+    setSessionDurations(effective);
     setError(null);
     setNote('');
-    setSession(startSession(skillId, skillName, durationsRef.current));
+    setSession(startSession(skillId, skillName, effective));
   }
 
   function pause() {
@@ -291,6 +299,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     }
 
     setSession(null);
+    setSessionDurations(null);
     setNote('');
     // Désépingle l'overlay : sans ça, la fenêtre transparente reste
     // parquée en haut à droite après la fin d'une session, capturant les
