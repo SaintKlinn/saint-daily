@@ -1,10 +1,10 @@
-import { useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useSkills } from '../hooks/useSkills';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
-import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
+import { calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import type { GenericLevel } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
@@ -34,8 +34,22 @@ export default function DetailSkill() {
   // un échec réseau ne se voyait qu'en revenant à l'état précédent au
   // prochain refresh, sans un mot d'explication (audit ui-ux-pro-max).
   const [actionError, setActionError] = useState<string | null>(null);
+  const [celebratingMilestoneId, setCelebratingMilestoneId] = useState<string | null>(null);
 
   const streak = useMemo(() => calculateStreak(entries), [entries]);
+  const previousStreakRef = useRef<number | null>(null);
+  const [streakPulse, setStreakPulse] = useState(false);
+
+  useEffect(() => {
+    const previous = previousStreakRef.current;
+    previousStreakRef.current = streak;
+    if (streakJustExtended(previous, streak)) {
+      setStreakPulse(true);
+      const id = setTimeout(() => setStreakPulse(false), 400);
+      return () => clearTimeout(id);
+    }
+  }, [streak]);
+
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const totalHours = useMemo(
     () => Math.round((entries.reduce((sum, e) => sum + e.durationMinutes, 0) / 60) * 10) / 10,
@@ -60,7 +74,14 @@ export default function DetailSkill() {
   async function handleToggleMilestone(milestoneId: string, completed: boolean) {
     setActionError(null);
     const { error } = await toggleMilestone(milestoneId, completed);
-    if (error) setActionError(error);
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    if (completed) {
+      setCelebratingMilestoneId(milestoneId);
+      setTimeout(() => setCelebratingMilestoneId((current) => (current === milestoneId ? null : current)), 400);
+    }
   }
 
   // Tant que les skills chargent, on ne peut pas conclure. Une fois le
@@ -152,7 +173,16 @@ export default function DetailSkill() {
           <p className="relative font-data text-2xl text-champagne">{totalHours}h</p>
           <p className="relative font-data text-[11px] uppercase tracking-[0.05em] text-muted">cumulées</p>
           <p className="relative text-center text-sm text-muted">
-            Streak : <span className="text-accent-bright">{streak} j</span> · dernière pratique{' '}
+            Streak :{' '}
+            <motion.span
+              className="text-accent-bright"
+              animate={streakPulse ? { scale: [1, 1.35, 1] } : { scale: 1 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: 'inline-block' }}
+            >
+              {streak} j
+            </motion.span>{' '}
+            · dernière pratique{' '}
             {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
           </p>
         </div>
@@ -185,6 +215,15 @@ export default function DetailSkill() {
                       >
                         {m.completedAt && <CheckIcon size={11} />}
                       </span>
+                      {celebratingMilestoneId === m.id && (
+                        <motion.span
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-full bg-accent-bright"
+                          initial={{ opacity: 0.6, scale: 1 }}
+                          animate={{ opacity: 0, scale: 2.2 }}
+                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        />
+                      )}
                     </span>
                     <span className={`text-sm ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
                       {m.label}
