@@ -15,7 +15,7 @@ const SIZE_CLASSES: Record<Size, string> = {
 };
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 font-sans disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+  'inline-flex items-center justify-center gap-2 font-sans transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 // Exportée séparément pour les <Link> react-router, qui ont besoin du même
 // style mais ne sont pas des <button> — voir NavLink-style usages.

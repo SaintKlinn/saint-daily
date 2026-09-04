@@ -158,7 +158,7 @@ export default function Accueil() {
                   radius={15}
                   filled={settings ? ringFillFromDaysSince(daysSince, settings.reminderThresholdDays) : 0}
                 />
-                <Link to={`/skills/${skill.id}`} className="flex-1 hover:opacity-80">
+                <Link to={`/skills/${skill.id}`} className="flex-1 transition-opacity duration-150 hover:opacity-80">
                   <p className="font-serif text-lg text-champagne">{skill.name}</p>
                   {skill.tags.length > 0 && (
                     <p className="mt-0.5 text-[13px] text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
