@@ -95,16 +95,22 @@ dépôt suit le format **Conventional Commits** (`type: sujet`, en anglais
 pour le type/mot-clé, sujet en français comme le reste des messages de
 commit du projet) :
 
-| Type | Effet sur la version | Visible dans le changelog |
-|---|---|---|
-| `feat:` | mineure (1.x.0) | "Nouveautés" |
-| `fix:` | patch (1.0.x) | "Corrections" |
-| `perf:`, `refactor:`, `chore:`, `docs:`, `ci:`, `build:` | aucun bump de version (release-please ne bump que sur `feat`/`fix`/breaking change) | "Performance" / "Améliorations internes" / "Divers" selon le type |
+| Type | Effet sur la version | Quand l'utiliser | Visible dans le changelog |
+|---|---|---|---|
+| `feat:` | mineure (1.x.0) | Grosse mise à jour uniquement : fonctionnalité à part entière, refonte visuelle majeure | "Nouveautés" |
+| `fix:` | patch (1.0.x) | Corrections de bug **et** petits ajouts/améliorations — tout ce qui n'est pas une grosse mise à jour | "Corrections" |
+| `perf:`, `refactor:`, `chore:`, `docs:`, `ci:`, `build:` | aucun bump de version (release-please ne bump que sur `feat`/`fix`/breaking change) | — | "Performance" / "Améliorations internes" / "Divers" selon le type |
 
-Pas de notion de "breaking change" pertinente ici (pas d'API publique) —
-la version majeure ne bouge pas automatiquement ; un bump majeur, si
+`1.[mineure].[patch]` : le premier chiffre est fixe (pas de notion de
+"breaking change" pertinente ici, pas d'API publique — un bump majeur, si
 jamais souhaité, se fait par override manuel au moment de merger la
-Release PR.
+Release PR) ; le deuxième ne bouge que pour une grosse mise à jour ; le
+troisième absorbe tout le reste, bug fix ou petite fonctionnalité
+confondus. Choix délibérément différent du sens habituel de Conventional Commits (où
+tout `feat:` bump la mineure, quelle que soit sa taille) : ici, c'est la
+taille du changement qui détermine le type à utiliser, pas l'inverse — un
+petit ajout reste un `fix:` même s'il s'agit techniquement d'une
+fonctionnalité nouvelle.
 
 **Configuration release-please** (`release-please-config.json`) : le
 `changelog-sections` par défaut de l'outil n'affiche que `feat`/`fix` —
