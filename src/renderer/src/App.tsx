@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { HashRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { AuthProvider, useAuth } from './lib/auth';
 import { PomodoroProvider } from './lib/pomodoro';
@@ -31,29 +31,50 @@ function AuthGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// L'overlay Pomodoro est une fenêtre Electron à part (voir
+// src/main/pomodoroOverlay.ts), toujours créée au démarrage même si elle
+// reste cachée — donc si sa route passait par AuthProvider comme le reste
+// de l'app, elle instancierait un second client Supabase qui rafraîchit en
+// silence la MÊME session persistée que la fenêtre principale. Les refresh
+// tokens Supabase étant à usage unique, les deux rafraîchissements
+// entraient parfois en collision et invalidaient la session en cours —
+// d'où les déconnexions aléatoires au lancement. PomodoroOverlay.tsx n'a de
+// toute façon jamais besoin d'auth (pur relais IPC), donc sa route reste en
+// dehors de AuthProviderLayout : un seul client Supabase par lancement,
+// point.
+function AuthProviderLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+}
+
 function Router() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/dev-login" element={<DevLogin />} />
       <Route path="/pomodoro-overlay" element={<PomodoroOverlay />} />
-      <Route
-        element={
-          <AuthGate>
-            <PomodoroProvider>
-              <AppShell />
-            </PomodoroProvider>
-          </AuthGate>
-        }
-      >
-        <Route index element={<Accueil />} />
-        <Route path="skills" element={<ListeSkills />} />
-        <Route path="skills/nouveau" element={<NouveauSkill />} />
-        <Route path="skills/:id" element={<DetailSkill />} />
-        <Route path="entree/nouvelle" element={<NouvelleEntree />} />
-        <Route path="pomodoro" element={<Pomodoro />} />
-        <Route path="reglages" element={<Reglages />} />
-        <Route path="*" element={<Introuvable />} />
+      <Route element={<AuthProviderLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/dev-login" element={<DevLogin />} />
+        <Route
+          element={
+            <AuthGate>
+              <PomodoroProvider>
+                <AppShell />
+              </PomodoroProvider>
+            </AuthGate>
+          }
+        >
+          <Route index element={<Accueil />} />
+          <Route path="skills" element={<ListeSkills />} />
+          <Route path="skills/nouveau" element={<NouveauSkill />} />
+          <Route path="skills/:id" element={<DetailSkill />} />
+          <Route path="entree/nouvelle" element={<NouvelleEntree />} />
+          <Route path="pomodoro" element={<Pomodoro />} />
+          <Route path="reglages" element={<Reglages />} />
+          <Route path="*" element={<Introuvable />} />
+        </Route>
       </Route>
     </Routes>
   );
@@ -69,9 +90,7 @@ export default function App() {
           animations pilotées par Motion plutôt que par des keyframes CSS. */}
       <MotionConfig reducedMotion="user">
         <HashRouter>
-          <AuthProvider>
-            <Router />
-          </AuthProvider>
+          <Router />
         </HashRouter>
       </MotionConfig>
     </ErrorBoundary>
