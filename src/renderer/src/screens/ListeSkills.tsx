@@ -80,7 +80,7 @@ export default function ListeSkills() {
           <button
             onClick={() => setTag(null)}
             aria-pressed={tag === null}
-            className={`font-data text-xs px-3 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+            className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
           >
             Tous les tags
           </button>
@@ -89,7 +89,7 @@ export default function ListeSkills() {
               key={t}
               onClick={() => setTag(tag === t ? null : t)}
               aria-pressed={tag === t}
-              className={`font-data text-xs px-3 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
             >
               #{t}
             </button>
@@ -106,7 +106,7 @@ export default function ListeSkills() {
             <Link
               key={skill.id}
               to={`/skills/${skill.id}`}
-              className={`flex items-center gap-5 bg-ink-800 px-[22px] py-5 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
+              className={`flex items-center gap-5 bg-ink-800 px-[22px] py-5 transition-colors duration-200 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
               style={{ animationDelay: `${i * 40}ms` }}
             >
               <ProgressRing

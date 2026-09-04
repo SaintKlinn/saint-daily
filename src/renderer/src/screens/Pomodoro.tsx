@@ -8,6 +8,7 @@ import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { SelectField } from '../components/FormField';
+import { colors } from '../theme/colors';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -16,7 +17,7 @@ export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
   const { skills } = useSkills();
-  const { session, durations, note, setNote, error, pinned, start, pause, resume, advance, stop, setPinned } =
+  const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
 
@@ -31,6 +32,14 @@ export default function Pomodoro() {
     const id = window.setInterval(() => forceTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [session?.status]);
+
+  const [showCycleComplete, setShowCycleComplete] = useState(false);
+  useEffect(() => {
+    if (!cycleCompletedAt) return;
+    setShowCycleComplete(true);
+    const id = setTimeout(() => setShowCycleComplete(false), 2000);
+    return () => clearTimeout(id);
+  }, [cycleCompletedAt]);
 
   if (!session) {
     return (
@@ -92,11 +101,37 @@ export default function Pomodoro() {
         {session.skillName} · cycle {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
       </p>
       <div className="relative flex flex-col items-center gap-2">
-        <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
+        <motion.div
+          className="flex items-center justify-center rounded-full"
+          animate={
+            showCycleComplete
+              ? { scale: [1, 1.06, 1], filter: `drop-shadow(0 0 18px ${colors.accent.bright}99)` }
+              : { scale: 1, filter: 'none' }
+          }
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
+        </motion.div>
         <p className="font-serif text-3xl text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
         <p className="font-data text-xs uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
+        {/* Toujours monté (jamais démonté/remonté) : sinon son apparition
+            pousserait la rangée de boutons Pause/Continuer/Arrêter/Épingler
+            plus bas dans la colonne flex, un reflow perceptible pile au
+            moment où l'utilisateur vise ces boutons. La visibilité passe par
+            `animate`, pas par le montage, pour aussi avoir une vraie
+            animation de sortie (le démontage React coupait le fade-in de
+            400ms net, sans transition retour). */}
+        <motion.p
+          initial={false}
+          animate={showCycleComplete ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          role="status"
+          className="font-data text-xs uppercase tracking-[0.1em] text-muted"
+        >
+          {showCycleComplete ? 'Cycle terminé' : ''}
+        </motion.p>
       </div>
 
       {error && (
@@ -117,14 +152,14 @@ export default function Pomodoro() {
         )}
         <button
           onClick={() => void stop()}
-          className={`border border-ink-700 px-5 py-3 font-sans text-sm text-muted hover:text-danger ${FOCUS_RING}`}
+          className={`border border-ink-700 px-5 py-3 font-sans text-sm text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] ${FOCUS_RING}`}
         >
           Arrêter
         </button>
         <button
           onClick={() => setPinned(!pinned)}
           aria-pressed={pinned}
-          className={`border px-5 py-3 font-sans text-sm ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
+          className={`border px-5 py-3 font-sans text-sm transition-[color,transform] duration-150 ease-out active:scale-[0.97] ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
         >
           {pinned ? 'Détacher' : 'Épingler'}
         </button>
