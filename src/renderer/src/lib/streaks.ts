@@ -52,6 +52,37 @@ export function daysSinceLastPractice(entries: PracticeEntryLike[], now: Date = 
   return Math.round((today.getTime() - last.getTime()) / msPerDay);
 }
 
+/** Skills actifs (jamais archivés) dont le nom correspond à la recherche,
+ *  insensible à la casse. Pas de recherche = tous les skills actifs. */
+export function filterSkillsForPicker<T extends { name: string; archivedAt: string | null }>(
+  skills: T[],
+  search: string
+): T[] {
+  const active = skills.filter((s) => !s.archivedAt);
+  if (!search.trim()) return active;
+  const needle = search.trim().toLowerCase();
+  return active.filter((s) => s.name.toLowerCase().includes(needle));
+}
+
+/** Dernière pratique la plus récente d'abord ; jamais pratiqués en
+ *  dernier. Égalité (y compris deux "jamais") départagée alphabétiquement
+ *  pour un ordre déterministe. */
+export function sortSkillsByRecentPractice<T extends { id: string; name: string }>(
+  skills: T[],
+  entriesBySkill: Record<string, PracticeEntryLike[]>,
+  now: Date = new Date()
+): T[] {
+  return [...skills].sort((x, y) => {
+    const xDays = daysSinceLastPractice(entriesBySkill[x.id] ?? [], now);
+    const yDays = daysSinceLastPractice(entriesBySkill[y.id] ?? [], now);
+    if (xDays === null && yDays === null) return x.name.localeCompare(y.name);
+    if (xDays === null) return 1;
+    if (yDays === null) return -1;
+    if (xDays !== yDays) return xDays - yDays;
+    return x.name.localeCompare(y.name);
+  });
+}
+
 /** Filtre par tag, correspondance exacte insensible à la casse. Pas de tag = liste inchangée. */
 export function filterByTag<T extends { tags: string[] }>(
   items: T[],
