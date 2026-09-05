@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.4.0](https://github.com/SaintKlinn/saint-daily/compare/v1.3.0...v1.4.0) (2026-09-04)
+
+
+### Nouveautés
+
+* add gold pulse feedback when a milestone is checked or a streak extends ([895127b](https://github.com/SaintKlinn/saint-daily/commit/895127b1a9f3819703e7762e52c51a0d4671ffb6))
+* add streakJustExtended helper for the streak reward pulse ([2c485b0](https://github.com/SaintKlinn/saint-daily/commit/2c485b0cd2963e4aac7384a6cbb86ab6932ef191))
+* gate auto-update downloads on consent, show real progress, restart silently ([9f04f0d](https://github.com/SaintKlinn/saint-daily/commit/9f04f0d33016b172aa2d6aaa4f08fae0cf6f3db4))
+* show a gold pulse and message when a full Pomodoro cycle completes ([dd7f76e](https://github.com/SaintKlinn/saint-daily/commit/dd7f76e9a83a09c35438573fc2dab0759136342c))
+* signal when a full Pomodoro cycle round completes ([5a7a858](https://github.com/SaintKlinn/saint-daily/commit/5a7a8586d6619657535a738cab0040f5ead08f21))
+
+
+### Corrections
+
+* add hover/press transitions to buttons, skill rows, and tag chips ([b072bc9](https://github.com/SaintKlinn/saint-daily/commit/b072bc9527c759487f790497b02ca60d62eb02f0))
+* address whole-branch review findings for streak pulse, cycle-complete UI, and hover feedback ([e33336f](https://github.com/SaintKlinn/saint-daily/commit/e33336ff75945f8b7ec4fa86dc56927cbf06b0ac))
+* gate streak pulse on entries loaded, reset ref on skill change ([8c6bcdb](https://github.com/SaintKlinn/saint-daily/commit/8c6bcdb282718adc782ffd39ae4d651e5c9dd00b))
+
+
+### Documentation
+
+* add design spec for making the app feel more alive (Phase 1) ([c306a41](https://github.com/SaintKlinn/saint-daily/commit/c306a415f7a9af83d8310e8f8a3d7f8aafe1a2fc))
+* bring liveliness Phase 1 spec and plan into this worktree ([720ec5b](https://github.com/SaintKlinn/saint-daily/commit/720ec5bed5e288560ede1c99369a0f1560057b71))
+* reserve feat: for major updates, fix: covers bug fixes and small additions ([15b01f0](https://github.com/SaintKlinn/saint-daily/commit/15b01f0d353ceee72eb9e9d9d4f7eb0c81822f4a))
+
 ## [1.3.0](https://github.com/SaintKlinn/saint-daily/compare/v1.2.0...v1.3.0) (2026-09-04)
 
 
