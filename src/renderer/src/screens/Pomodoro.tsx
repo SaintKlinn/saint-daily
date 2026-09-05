@@ -14,6 +14,8 @@ import { colors } from '../theme/colors';
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
+const PRESET_WORK_MINUTES = [15, 25, 50];
+
 export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
@@ -22,6 +24,12 @@ export default function Pomodoro() {
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
+  // null = pas encore touché par l'utilisateur ; résout alors sur la durée
+  // des Réglages dès qu'elle est connue (voir effectiveWorkMinutes) — donc
+  // rien ne change tant que personne ne choisit explicitement un preset.
+  const [workMinutesChoice, setWorkMinutesChoice] = useState<number | null>(null);
+  const [customMinutesInput, setCustomMinutesInput] = useState('');
+  const effectiveWorkMinutes = workMinutesChoice ?? durations?.workMinutes ?? null;
 
   // PomodoroProvider ne pousse un nouvel état qu'aux transitions de phase,
   // pas à chaque tick (voir lib/pomodoro.tsx) — donc rien d'autre ne force
@@ -58,12 +66,47 @@ export default function Pomodoro() {
           </p>
         )}
         <SkillPicker skills={skills} entriesBySkill={entriesBySkill} value={skillId} onChange={setSkillId} />
+        {skillId && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Durée de travail</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {PRESET_WORK_MINUTES.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => {
+                    setWorkMinutesChoice(preset);
+                    setCustomMinutesInput('');
+                  }}
+                  aria-pressed={effectiveWorkMinutes === preset}
+                  className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                >
+                  {preset} min
+                </button>
+              ))}
+              <input
+                type="number"
+                min={1}
+                value={customMinutesInput}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setCustomMinutesInput(raw);
+                  const parsed = Number(raw);
+                  if (raw.trim() !== '' && Number.isFinite(parsed) && parsed > 0) setWorkMinutesChoice(parsed);
+                }}
+                placeholder="Personnalisé"
+                aria-label="Durée de travail personnalisée en minutes"
+                className={`w-28 border bg-ink-800 px-3 py-1.5 font-data text-xs normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
+              />
+            </div>
+          </div>
+        )}
         <Button
           variant="primary"
-          disabled={!skillId || !durations}
+          disabled={!skillId || effectiveWorkMinutes === null}
           onClick={() => {
             const skill = skills.find((s) => s.id === skillId);
-            if (skill) start(skill.id, skill.name);
+            if (skill && effectiveWorkMinutes !== null) start(skill.id, skill.name, effectiveWorkMinutes);
           }}
         >
           Démarrer
