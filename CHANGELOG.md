@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.5.0](https://github.com/SaintKlinn/saint-daily/compare/v1.4.0...v1.5.0) (2026-09-05)
+
+
+### Nouveautés
+
+* add filterSkillsForPicker and sortSkillsByRecentPractice helpers ([79df5bc](https://github.com/SaintKlinn/saint-daily/commit/79df5bc1753661dda2ae9e18e31b600653fb2c07))
+* fix a Pomodoro session's work duration for its whole lifetime ([cf75302](https://github.com/SaintKlinn/saint-daily/commit/cf753024f920d023a9b5d8eceb0a539b797eaf4f))
+* let a Pomodoro session's work duration be chosen at launch ([8d701dd](https://github.com/SaintKlinn/saint-daily/commit/8d701dd1d19c224d1a9daed2401eddb9ab18ac4b))
+* replace the Pomodoro skill select with a searchable, streak-aware picker ([046d980](https://github.com/SaintKlinn/saint-daily/commit/046d980d0c9cfdcf808da4fefaca224adefcd17f))
+
+
+### Corrections
+
+* address whole-branch review findings for Pomodoro skill picker and duration input ([41d3c06](https://github.com/SaintKlinn/saint-daily/commit/41d3c061d5cc10c318daf903556c99a4a3364390))
+
+
+### Documentation
+
+* add design spec for the Pomodoro launch-screen improvements (Phase A) ([3d5bd20](https://github.com/SaintKlinn/saint-daily/commit/3d5bd205dbbe54069c229dd35f95597144bcb582))
+* bring Pomodoro Phase A spec and plan into this worktree ([eefbda3](https://github.com/SaintKlinn/saint-daily/commit/eefbda34627cdf3401a104c1cc77f59e890246de))
+
 ## [1.4.0](https://github.com/SaintKlinn/saint-daily/compare/v1.3.0...v1.4.0) (2026-09-04)
 
 
