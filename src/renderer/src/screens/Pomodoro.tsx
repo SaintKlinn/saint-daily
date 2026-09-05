@@ -19,11 +19,16 @@ const PRESET_WORK_MINUTES = [15, 25, 50];
 export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
-  const { skills } = useSkills();
-  const { entriesBySkill } = useAllPracticeEntries(skills.map((s) => s.id));
+  const { skills, loading: skillsLoading } = useSkills();
+  const activeSkills = skills.filter((s) => !s.archivedAt);
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
+  // Un lien profond (ex. depuis DetailSkill) peut pointer vers un skill
+  // archivé — le picker les exclut déjà, donc `skillId` seul ne suffit
+  // pas à savoir si une sélection réelle et affichée existe.
+  const selectedSkill = skills.find((s) => s.id === skillId && !s.archivedAt) ?? null;
   // null = pas encore touché par l'utilisateur ; résout alors sur la durée
   // des Réglages dès qu'elle est connue (voir effectiveWorkMinutes) — donc
   // rien ne change tant que personne ne choisit explicitement un preset.
@@ -65,8 +70,19 @@ export default function Pomodoro() {
             {error}
           </p>
         )}
-        <SkillPicker skills={skills} entriesBySkill={entriesBySkill} value={skillId} onChange={setSkillId} />
-        {skillId && (
+        <SkillPicker
+          skills={activeSkills}
+          entriesBySkill={entriesBySkill}
+          value={skillId}
+          onChange={setSkillId}
+          loading={skillsLoading}
+        />
+        {entriesError && (
+          <p role="alert" className="text-sm text-danger">
+            {entriesError}
+          </p>
+        )}
+        {selectedSkill && (
           <div className="flex flex-col gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Durée de travail</p>
             <div className="flex flex-wrap items-center gap-2">
@@ -87,12 +103,23 @@ export default function Pomodoro() {
               <input
                 type="number"
                 min={1}
-                value={customMinutesInput}
+                max={240}
+                value={
+                  customMinutesInput !== ''
+                    ? customMinutesInput
+                    : effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes)
+                      ? String(effectiveWorkMinutes)
+                      : ''
+                }
                 onChange={(e) => {
                   const raw = e.target.value;
                   setCustomMinutesInput(raw);
-                  const parsed = Number(raw);
-                  if (raw.trim() !== '' && Number.isFinite(parsed) && parsed > 0) setWorkMinutesChoice(parsed);
+                  if (raw.trim() === '') {
+                    setWorkMinutesChoice(null);
+                    return;
+                  }
+                  const parsed = Math.floor(Number(raw));
+                  if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 240) setWorkMinutesChoice(parsed);
                 }}
                 placeholder="Personnalisé"
                 aria-label="Durée de travail personnalisée en minutes"
@@ -103,10 +130,9 @@ export default function Pomodoro() {
         )}
         <Button
           variant="primary"
-          disabled={!skillId || effectiveWorkMinutes === null}
+          disabled={!selectedSkill || !durations || effectiveWorkMinutes === null}
           onClick={() => {
-            const skill = skills.find((s) => s.id === skillId);
-            if (skill && effectiveWorkMinutes !== null) start(skill.id, skill.name, effectiveWorkMinutes);
+            if (selectedSkill && effectiveWorkMinutes !== null) start(selectedSkill.id, selectedSkill.name, effectiveWorkMinutes);
           }}
         >
           Démarrer

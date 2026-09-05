@@ -11,11 +11,13 @@ export default function SkillPicker({
   entriesBySkill,
   value,
   onChange,
+  loading = false,
 }: {
   skills: Skill[];
   entriesBySkill: Record<string, PracticeEntry[]>;
   value: string;
   onChange: (skillId: string) => void;
+  loading?: boolean;
 }) {
   const [search, setSearch] = useState('');
 
@@ -38,7 +40,11 @@ export default function SkillPicker({
         />
       </div>
       <div className="max-h-56 overflow-y-auto border border-ink-700">
-        {visible.length === 0 && <p className="px-3.5 py-3 text-sm normal-case tracking-normal text-muted">Aucun skill ne correspond.</p>}
+        {visible.length === 0 && (
+          <p className="px-3.5 py-3 text-sm normal-case tracking-normal text-muted">
+            {loading ? 'Chargement…' : 'Aucun skill ne correspond.'}
+          </p>
+        )}
         {visible.map((skill) => {
           const entries = entriesBySkill[skill.id] ?? [];
           const streak = calculateStreak(entries);
@@ -50,13 +56,13 @@ export default function SkillPicker({
               type="button"
               onClick={() => onChange(skill.id)}
               aria-pressed={selected}
-              className={`flex w-full items-center justify-between gap-3 border-b border-ink-700 px-3.5 py-2.5 text-left normal-case tracking-normal transition-colors duration-150 last:border-b-0 ${FOCUS_RING} ${selected ? 'bg-ink-700' : 'hover:bg-ink-800'}`}
+              className={`flex w-full items-center justify-between gap-3 border-b border-l-2 border-ink-700 bg-ink-800 px-3.5 py-2.5 text-left normal-case tracking-normal transition-colors duration-150 last:border-b-0 ${FOCUS_RING} ${selected ? 'border-l-accent-bright bg-ink-700' : 'border-l-transparent hover:bg-ink-700'}`}
             >
-              <span className="font-serif text-[15px] text-champagne">{skill.name}</span>
+              <span className={`font-serif text-[15px] ${selected ? 'text-accent-bright' : 'text-champagne'}`}>{skill.name}</span>
               <span className="font-data text-right text-xs text-muted">
-                série de {streak} j
+                dernière · {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
                 <br />
-                {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
+                série de {streak} j
               </span>
             </button>
           );

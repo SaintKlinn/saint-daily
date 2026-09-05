@@ -239,6 +239,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     const currentAuthSession = authSessionRef.current;
     if (!current || !currentAuthSession || !currentDurations) {
       setSession(null);
+      setSessionDurations(null);
       return;
     }
     setError(null);
