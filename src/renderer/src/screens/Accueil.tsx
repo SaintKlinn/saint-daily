@@ -2,14 +2,14 @@ import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
-import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
+import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import { buttonClassName } from '../components/Button';
-import { PlusIcon } from '../components/icons';
+import { CheckIcon, PlusIcon } from '../components/icons';
 import { colors } from '../theme/colors';
 
 const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
@@ -24,8 +24,22 @@ export default function Accueil() {
   const { engagements, error: skillsError } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
   const { settings } = useSettings();
-  const activeSkills = useMemo(() => skills.filter((s) => !s.archivedAt), [skills]);
-  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
+  const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
+  const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt), [activeEngagements]);
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
+  const { logEntry } = usePracticeEntries(null);
+
+  const tasks = useMemo(
+    () =>
+      activeEngagements
+        .filter((e) => e.scheduledAt && (entriesBySkill[e.id] ?? []).length === 0)
+        .sort((a, b) => new Date(a.scheduledAt as string).getTime() - new Date(b.scheduledAt as string).getTime()),
+    [activeEngagements, entriesBySkill]
+  );
+
+  async function handleCompleteTask(taskId: string) {
+    await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
+  }
 
   const stats = useMemo(
     () =>
@@ -169,6 +183,65 @@ export default function Accueil() {
                 <Link to={`/entree/nouvelle?skillId=${skill.id}`} className={buttonClassName('accent-outline', 'sm')}>
                   Logger
                 </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </section>
+
+      <section className="flex min-h-0 flex-1 flex-col gap-3.5">
+        <div className="flex items-center justify-between">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+            className="font-sans text-[15px] font-semibold text-champagne"
+          >
+            Tâches à faire
+          </motion.h2>
+          <Link to="/taches/nouvelle" className="text-sm text-accent-bright underline">
+            + Nouvelle tâche
+          </Link>
+        </div>
+        {tasks.length === 0 ? (
+          <EmptyState>Aucune tâche planifiée.</EmptyState>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.55 }}
+            className="flex flex-col"
+          >
+            {tasks.map((task, i) => (
+              <motion.div
+                key={task.id}
+                variants={itemVariants}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-center gap-[18px] border border-ink-700 bg-ink-800 p-[18px] ${i > 0 ? 'border-t-0' : ''}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleCompleteTask(task.id)}
+                  aria-label={`Marquer "${task.name}" comme faite`}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center border border-ink-700 text-muted transition-colors duration-150 hover:border-accent-bright hover:text-accent-bright"
+                >
+                  <CheckIcon size={12} />
+                </button>
+                <div className="flex-1">
+                  <p className="font-serif text-lg text-champagne">{task.name}</p>
+                  {task.tags.length > 0 && (
+                    <p className="mt-0.5 text-[13px] text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
+                  )}
+                </div>
+                <p className="font-data text-[13px] text-muted">
+                  {new Date(task.scheduledAt as string).toLocaleString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
               </motion.div>
             ))}
           </motion.div>
