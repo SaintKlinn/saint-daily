@@ -1,6 +1,6 @@
 export type GenericLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
 
-export interface Skill {
+export interface Engagement {
   id: string;
   userId: string;
   name: string;
@@ -8,12 +8,13 @@ export interface Skill {
   tags: string[];
   genericLevel: GenericLevel;
   archivedAt: string | null;
+  scheduledAt: string | null;
   createdAt: string;
 }
 
-export interface SkillMilestone {
+export interface EngagementMilestone {
   id: string;
-  skillId: string;
+  engagementId: string;
   label: string;
   completedAt: string | null;
   position: number;
@@ -22,7 +23,7 @@ export interface SkillMilestone {
 
 export interface PracticeEntry {
   id: string;
-  skillId: string;
+  engagementId: string;
   userId: string;
   durationMinutes: number;
   note: string | null;
