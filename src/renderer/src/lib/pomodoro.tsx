@@ -108,7 +108,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       const { data, error: insertError } = await getSupabaseClient()
         .from('practice_entry')
         .insert({
-          skill_id: skillId,
+          engagement_id: skillId,
           user_id: authSession.user.id,
           duration_minutes: minutes,
           note: checkpointNoteLabel(cycleIndex, cyclesBeforeLongBreak),
@@ -253,7 +253,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       const { data, error: insertError } = await getSupabaseClient()
         .from('practice_entry')
         .insert({
-          skill_id: current.skillId,
+          engagement_id: current.skillId,
           user_id: currentAuthSession.user.id,
           duration_minutes: partialMinutes,
           note: checkpointNoteLabel(current.cycleIndex, currentDurations.cyclesBeforeLongBreak),
@@ -285,7 +285,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         const total = consolidateDuration((rows as { duration_minutes: number }[]).map((r) => r.duration_minutes));
         const noteAtStop = noteRef.current.trim();
         const { error: insertError } = await supabase.from('practice_entry').insert({
-          skill_id: current.skillId,
+          engagement_id: current.skillId,
           user_id: currentAuthSession.user.id,
           duration_minutes: total,
           note: noteAtStop ? noteAtStop : null,

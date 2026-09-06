@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { calculateStreak, daysSinceLastPractice, filterSkillsForPicker, sortSkillsByRecentPractice } from '../lib/streaks';
 import { SearchIcon } from './icons';
-import type { PracticeEntry, Skill } from '../lib/types';
+import type { Engagement, PracticeEntry } from '../lib/types';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -13,7 +13,7 @@ export default function SkillPicker({
   onChange,
   loading = false,
 }: {
-  skills: Skill[];
+  skills: Engagement[];
   entriesBySkill: Record<string, PracticeEntry[]>;
   value: string;
   onChange: (skillId: string) => void;

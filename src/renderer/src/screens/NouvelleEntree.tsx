@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
@@ -14,7 +14,8 @@ export default function NouvelleEntree() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
 
-  const { skills } = useSkills();
+  const { engagements } = useEngagements();
+  const skills = engagements.filter((e) => !e.scheduledAt);
   const { logEntry } = usePracticeEntries(null);
 
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
@@ -36,7 +37,7 @@ export default function NouvelleEntree() {
     }
     setSubmitting(true);
     setError(null);
-    const { error: logError } = await logEntry({ skillId, durationMinutes, note: note || null });
+    const { error: logError } = await logEntry({ engagementId: skillId, durationMinutes, note: note || null });
     setSubmitting(false);
     if (logError) {
       // La saisie reste dans le formulaire — pas de perte, retry manuel.

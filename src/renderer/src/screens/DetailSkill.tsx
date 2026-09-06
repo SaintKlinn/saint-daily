@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
@@ -30,7 +30,8 @@ const knownStreakBySkillId = new Map<string, number>();
 
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
-  const { skills, loading, error: skillsError, updateSkill, setArchived } = useSkills();
+  const { engagements, loading, error: skillsError, updateEngagement, setArchived } = useEngagements();
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
   const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 
@@ -97,7 +98,7 @@ export default function DetailSkill() {
   async function handleLevelChange(e: ChangeEvent<HTMLSelectElement>) {
     if (!skill) return;
     setActionError(null);
-    const { error } = await updateSkill(skill.id, { genericLevel: e.target.value as GenericLevel });
+    const { error } = await updateEngagement(skill.id, { genericLevel: e.target.value as GenericLevel });
     if (error) setActionError(error);
   }
 
@@ -299,7 +300,7 @@ export default function DetailSkill() {
             {/* Partie « second cerveau » de la spec : les réflexions libres
                 sur un skill étaient saisies à la création et cherchables,
                 mais jamais réaffichées ni modifiables ensuite. */}
-            <NotesSection key={skill.id} notes={skill.notes} onSave={(notes) => updateSkill(skill.id, { notes })} />
+            <NotesSection key={skill.id} notes={skill.notes} onSave={(notes) => updateEngagement(skill.id, { notes })} />
           </section>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { filterByTag, calculateStreak, daysSinceLastPractice } from '../lib/streaks';
@@ -20,7 +20,8 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
 };
 
 export default function ListeSkills() {
-  const { skills, error } = useSkills();
+  const { engagements, error } = useEngagements();
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
   const { settings } = useSettings();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState<string | null>(null);

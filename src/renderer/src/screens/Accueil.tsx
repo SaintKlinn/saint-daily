@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
@@ -21,7 +21,8 @@ const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 
 const notifiedSkillIds = new Set<string>();
 
 export default function Accueil() {
-  const { skills, error: skillsError } = useSkills();
+  const { engagements, error: skillsError } = useEngagements();
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
   const { settings } = useSettings();
   const activeSkills = useMemo(() => skills.filter((s) => !s.archivedAt), [skills]);
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));

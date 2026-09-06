@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { usePomodoro } from '../lib/pomodoro';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { phaseDurationMinutes } from '../lib/pomodoroLogic';
 import ProgressRing from '../components/ProgressRing';
@@ -19,7 +19,8 @@ const PRESET_WORK_MINUTES = [15, 25, 50];
 export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
-  const { skills, loading: skillsLoading } = useSkills();
+  const { engagements, loading: skillsLoading } = useEngagements();
+  const skills = engagements.filter((e) => !e.scheduledAt);
   const activeSkills = skills.filter((s) => !s.archivedAt);
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSkills } from '../hooks/useSkills';
+import { useEngagements } from '../hooks/useEngagements';
 import type { GenericLevel } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
@@ -8,7 +8,7 @@ import { FormField, SelectField, TextAreaField } from '../components/FormField';
 
 export default function NouveauSkill() {
   const navigate = useNavigate();
-  const { createSkill } = useSkills();
+  const { createEngagement } = useEngagements();
   const [name, setName] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [genericLevel, setGenericLevel] = useState<GenericLevel>('debutant');
@@ -28,7 +28,7 @@ export default function NouveauSkill() {
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
-    const { error: createError } = await createSkill({ name: name.trim(), tags, genericLevel, notes: notes || null });
+    const { error: createError } = await createEngagement({ name: name.trim(), tags, genericLevel, notes: notes || null });
     setSubmitting(false);
     if (createError) {
       setError(createError);
