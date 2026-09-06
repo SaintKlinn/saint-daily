@@ -20,6 +20,10 @@ export default function NouvelleTache() {
       setError('Le titre est obligatoire.');
       return;
     }
+    if (!scheduledAt) {
+      setError('La planification est obligatoire.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     const tags = tagsInput
@@ -49,13 +53,13 @@ export default function NouvelleTache() {
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <FormField label="Titre" value={name} onChange={(e) => setName(e.target.value)} />
         <FormField
-          label="Tags (séparés par des virgules)"
+          label="Tags (optionnels, séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
           placeholder="Perso, Urgent"
         />
         <FormField
-          label="Planification (optionnelle)"
+          label="Planification"
           type="datetime-local"
           value={scheduledAt}
           onChange={(e) => setScheduledAt(e.target.value)}

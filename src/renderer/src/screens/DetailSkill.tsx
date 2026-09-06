@@ -123,7 +123,7 @@ export default function DetailSkill() {
   // chargement terminé, un id qui ne correspond à rien = deep link cassé
   // (skill supprimé, lien périmé) : c'est l'écran « introuvable » prévu
   // par la spec, pas un « Chargement… » qui ne finit jamais.
-  // `skills.length === 0` en plus de `loading` : useSkills repasse
+  // `skills.length === 0` en plus de `loading` : useEngagements repasse
   // loading à true à CHAQUE refresh, y compris celui qui suit une
   // modification (niveau, notes, archivage). Sans cette condition, tout
   // l'écran clignoterait sur « Chargement… » à chaque édition.

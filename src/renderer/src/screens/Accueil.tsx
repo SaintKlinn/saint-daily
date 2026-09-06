@@ -21,13 +21,14 @@ const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 
 const notifiedSkillIds = new Set<string>();
 
 export default function Accueil() {
-  const { engagements, error: skillsError } = useEngagements();
+  const { engagements, error: skillsError, setArchived } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
   const { settings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt), [activeEngagements]);
   const {
     entriesBySkill,
+    loading: entriesLoading,
     error: entriesError,
     refresh: refreshEntries,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
@@ -46,6 +47,15 @@ export default function Accueil() {
     const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
     if (error) {
       setCompleteTaskError(error);
+      return;
+    }
+    // Une tâche faite n'est jamais « pratiquée à nouveau » comme un skill —
+    // sans l'archiver ici, elle resterait pour toujours dans
+    // activeEngagements et la requête .in() de useAllPracticeEntries
+    // grossirait d'un id à chaque tâche créée (voir revue finale de branche).
+    const { error: archiveError } = await setArchived(taskId, true);
+    if (archiveError) {
+      setCompleteTaskError(archiveError);
       return;
     }
     setCompleteTaskError(null);
@@ -219,7 +229,13 @@ export default function Accueil() {
             + Nouvelle tâche
           </Link>
         </div>
-        {tasks.length === 0 ? (
+        {entriesLoading ? (
+          // `entriesBySkill` vaut encore `{}` tant que useAllPracticeEntries
+          // n'a pas résolu : sans cette garde, toute tâche déjà faite
+          // passerait le test « aucune entrée » et apparaîtrait un instant
+          // avant de disparaître une fois les vraies données chargées.
+          <EmptyState role="status">Chargement…</EmptyState>
+        ) : tasks.length === 0 ? (
           <EmptyState>Aucune tâche planifiée.</EmptyState>
         ) : (
           <motion.div

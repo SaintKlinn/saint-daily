@@ -15,7 +15,7 @@ export interface PomodoroDurations {
 
 export interface PomodoroSession {
   skillId: string;
-  skillName: string; // dénormalisé pour l'overlay, qui n'a pas accès à useSkills
+  skillName: string; // dénormalisé pour l'overlay, qui n'a pas accès à useEngagements
   phase: PomodoroPhase;
   status: PomodoroStatus;
   cycleIndex: number; // 0-based, remis à 0 après chaque pause longue
