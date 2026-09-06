@@ -91,43 +91,40 @@ export function useAllPracticeEntries(engagementIds: string[]) {
   const [error, setError] = useState<string | null>(null);
   const key = engagementIds.join(',');
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (engagementIds.length === 0) {
-        setEntriesBySkill({});
-        setError(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
+  const refresh = useCallback(async () => {
+    if (engagementIds.length === 0) {
+      setEntriesBySkill({});
       setError(null);
-      // L'erreur DOIT être capturée : sans elle, un échec de cette requête
-      // affichait silencieusement tous les skills avec streak 0 et aucun
-      // rappel « dû », sans le moindre indice que quelque chose a raté.
-      const { data, error: fetchError } = await getSupabaseClient()
-        .from('practice_entry')
-        .select('*')
-        .in('engagement_id', engagementIds);
-      if (cancelled) return;
-      setError(fetchError ? toFrenchError(fetchError.message) : null);
-      const bySkill: Record<string, PracticeEntry[]> = {};
-      for (const row of (data ?? []) as PracticeEntryRow[]) {
-        const entry = fromRow(row);
-        (bySkill[entry.engagementId] ??= []).push(entry);
-      }
-      setEntriesBySkill(bySkill);
       setLoading(false);
+      return;
     }
-    load();
-    return () => {
-      cancelled = true;
-    };
-    // key (la liste d'ids jointe) est la vraie dépendance : évite un
-    // effet qui re-fetch à chaque re-render sur une nouvelle identité de
-    // tableau sans changement de contenu.
+    setLoading(true);
+    setError(null);
+    // L'erreur DOIT être capturée : sans elle, un échec de cette requête
+    // affichait silencieusement tous les skills avec streak 0 et aucun
+    // rappel « dû », sans le moindre indice que quelque chose a raté.
+    const { data, error: fetchError } = await getSupabaseClient()
+      .from('practice_entry')
+      .select('*')
+      .in('engagement_id', engagementIds);
+    setError(fetchError ? toFrenchError(fetchError.message) : null);
+    const bySkill: Record<string, PracticeEntry[]> = {};
+    for (const row of (data ?? []) as PracticeEntryRow[]) {
+      const entry = fromRow(row);
+      (bySkill[entry.engagementId] ??= []).push(entry);
+    }
+    setEntriesBySkill(bySkill);
+    setLoading(false);
+    // key (la liste d'ids jointe) est la vraie dépendance : évite de
+    // recréer cette fonction (et donc de re-déclencher l'effet ci-dessous)
+    // à chaque re-render sur une nouvelle identité de tableau sans
+    // changement de contenu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return { entriesBySkill, loading, error };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { entriesBySkill, loading, error, refresh };
 }

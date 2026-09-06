@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
@@ -26,8 +26,13 @@ export default function Accueil() {
   const { settings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt), [activeEngagements]);
-  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
+  const {
+    entriesBySkill,
+    error: entriesError,
+    refresh: refreshEntries,
+  } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
 
   const tasks = useMemo(
     () =>
@@ -38,7 +43,13 @@ export default function Accueil() {
   );
 
   async function handleCompleteTask(taskId: string) {
-    await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
+    const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
+    if (error) {
+      setCompleteTaskError(error);
+      return;
+    }
+    setCompleteTaskError(null);
+    await refreshEntries();
   }
 
   const stats = useMemo(
@@ -114,6 +125,11 @@ export default function Accueil() {
       {entriesError && (
         <p role="alert" className="text-sm text-danger">
           {entriesError}
+        </p>
+      )}
+      {completeTaskError && (
+        <p role="alert" className="text-sm text-danger">
+          {completeTaskError}
         </p>
       )}
 
