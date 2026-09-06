@@ -6,7 +6,7 @@ import type { PracticeEntry } from '../lib/types';
 
 interface PracticeEntryRow {
   id: string;
-  skill_id: string;
+  engagement_id: string;
   user_id: string;
   duration_minutes: number;
   note: string | null;
@@ -17,7 +17,7 @@ interface PracticeEntryRow {
 function fromRow(row: PracticeEntryRow): PracticeEntry {
   return {
     id: row.id,
-    skillId: row.skill_id,
+    engagementId: row.engagement_id,
     userId: row.user_id,
     durationMinutes: row.duration_minutes,
     note: row.note,
@@ -26,14 +26,14 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
   };
 }
 
-export function usePracticeEntries(skillId: string | null) {
+export function usePracticeEntries(engagementId: string | null) {
   const { session } = useAuth();
   const [entries, setEntries] = useState<PracticeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!skillId) {
+    if (!engagementId) {
       setEntries([]);
       setLoading(false);
       return;
@@ -43,7 +43,7 @@ export function usePracticeEntries(skillId: string | null) {
     const { data, error: fetchError } = await getSupabaseClient()
       .from('practice_entry')
       .select('*')
-      .eq('skill_id', skillId)
+      .eq('engagement_id', engagementId)
       .order('practiced_at', { ascending: false });
     if (fetchError) {
       setError(toFrenchError(fetchError.message));
@@ -51,28 +51,28 @@ export function usePracticeEntries(skillId: string | null) {
       setEntries((data as PracticeEntryRow[]).map(fromRow));
     }
     setLoading(false);
-  }, [skillId]);
+  }, [engagementId]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   async function logEntry(input: {
-    skillId: string;
+    engagementId: string;
     durationMinutes: number;
     note?: string | null;
     practicedAt?: string;
   }) {
     if (!session) return { error: 'Non connecté' };
     const { error: insertError } = await getSupabaseClient().from('practice_entry').insert({
-      skill_id: input.skillId,
+      engagement_id: input.engagementId,
       user_id: session.user.id,
       duration_minutes: input.durationMinutes,
       note: input.note ?? null,
       practiced_at: input.practicedAt ?? new Date().toISOString(),
     });
     if (insertError) return { error: toFrenchError(insertError.message) };
-    if (input.skillId === skillId) await refresh();
+    if (input.engagementId === engagementId) await refresh();
     return { error: null };
   }
 
@@ -80,20 +80,21 @@ export function usePracticeEntries(skillId: string | null) {
 }
 
 /**
- * Toutes les entrées de plusieurs skills en une seule requête — utilisé par
- * l'Accueil pour calculer streak/régularité de chaque skill actif sans une
- * requête par skill.
+ * Toutes les entrées de plusieurs engagements en une seule requête —
+ * utilisé par l'Accueil pour calculer streak/régularité de chaque skill
+ * actif et pour savoir quelles tâches ont déjà une entrée, sans une
+ * requête par engagement.
  */
-export function useAllPracticeEntries(skillIds: string[]) {
+export function useAllPracticeEntries(engagementIds: string[]) {
   const [entriesBySkill, setEntriesBySkill] = useState<Record<string, PracticeEntry[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const key = skillIds.join(',');
+  const key = engagementIds.join(',');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (skillIds.length === 0) {
+      if (engagementIds.length === 0) {
         setEntriesBySkill({});
         setError(null);
         setLoading(false);
@@ -107,13 +108,13 @@ export function useAllPracticeEntries(skillIds: string[]) {
       const { data, error: fetchError } = await getSupabaseClient()
         .from('practice_entry')
         .select('*')
-        .in('skill_id', skillIds);
+        .in('engagement_id', engagementIds);
       if (cancelled) return;
       setError(fetchError ? toFrenchError(fetchError.message) : null);
       const bySkill: Record<string, PracticeEntry[]> = {};
       for (const row of (data ?? []) as PracticeEntryRow[]) {
         const entry = fromRow(row);
-        (bySkill[entry.skillId] ??= []).push(entry);
+        (bySkill[entry.engagementId] ??= []).push(entry);
       }
       setEntriesBySkill(bySkill);
       setLoading(false);
