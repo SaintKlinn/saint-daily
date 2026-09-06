@@ -11,6 +11,7 @@ import PomodoroOverlay from './screens/PomodoroOverlay';
 import Accueil from './screens/Accueil';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
+import NouvelleTache from './screens/NouvelleTache';
 import DetailSkill from './screens/DetailSkill';
 import ListeSkills from './screens/ListeSkills';
 import NouveauSkill from './screens/NouveauSkill';
@@ -71,6 +72,7 @@ function Router() {
           <Route path="skills/nouveau" element={<NouveauSkill />} />
           <Route path="skills/:id" element={<DetailSkill />} />
           <Route path="entree/nouvelle" element={<NouvelleEntree />} />
+          <Route path="taches/nouvelle" element={<NouvelleTache />} />
           <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="reglages" element={<Reglages />} />
           <Route path="*" element={<Introuvable />} />
