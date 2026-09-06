@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/SaintKlinn/saint-daily/compare/v1.5.0...v1.5.1) (2026-09-05)
+
+
+### Corrections
+
+* upgrade Electron to 44.2.0 and electron-builder to 26.15.3, CI to Node 22 ([70a4340](https://github.com/SaintKlinn/saint-daily/commit/70a4340b428188aebbf96ef887f543aaa1e14c98))
+
 ## [1.5.0](https://github.com/SaintKlinn/saint-daily/compare/v1.4.0...v1.5.0) (2026-09-05)
 
 
