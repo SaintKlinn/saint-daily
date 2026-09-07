@@ -28,7 +28,7 @@ alter table saint_daily.engagement add column scheduled_ends_at timestamptz;
 alter table saint_daily.engagement add constraint engagement_scheduled_ends_at_check
   check (scheduled_ends_at is null or (scheduled_at is not null and scheduled_ends_at > scheduled_at));
 
-alter table saint_daily.skill_app_settings add column show_practice_in_calendar boolean not null default false;
+alter table saint_daily.app_settings add column show_practice_in_calendar boolean not null default false;
 ```
 
 `scheduled_ends_at` est nullable : les tâches créées avant ce sous-projet
@@ -41,8 +41,8 @@ toujours renseignée (voir "Mise à jour du formulaire" plus bas) — un
 "vrai créneau" a un début et une fin.
 
 `show_practice_in_calendar` rejoint les préférences déjà existantes sur
-`skill_app_settings` (`reminder_threshold_days`,
-`notifications_enabled`, `auto_launch_enabled`) — synchronisée entre
+`app_settings` (`reminder_threshold_days`, `notifications_enabled`,
+`auto_launch_enabled`, et les réglages Pomodoro) — synchronisée entre
 appareils, pas de nouvel état local.
 
 ## Écran calendrier
