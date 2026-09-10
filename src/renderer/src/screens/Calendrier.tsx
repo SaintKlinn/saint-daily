@@ -16,13 +16,17 @@ const HOUR_ROW_PX = 64; // doit rester en phase avec la classe Tailwind h-16 ci-
 export default function Calendrier() {
   const navigate = useNavigate();
   const { engagements, error: engagementsError, setArchived } = useEngagements();
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const scheduledTasks = useMemo(
     () => activeEngagements.filter((e) => e.scheduledAt && e.scheduledEndsAt),
     [activeEngagements]
   );
-  const { entriesBySkill, refresh: refreshEntries } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
+  const {
+    entriesBySkill,
+    refresh: refreshEntries,
+    error: entriesError,
+  } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
@@ -87,6 +91,11 @@ export default function Calendrier() {
     navigate(`/taches/nouvelle?scheduledAt=${encodeURIComponent(start.toISOString())}`);
   }
 
+  async function handleTogglePracticeInCalendar(checked: boolean) {
+    const { error } = await updateSettings({ showPracticeInCalendar: checked });
+    if (error) setActionError(error);
+  }
+
   async function handleCompleteTask(taskId: string) {
     setCompleting(true);
     const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
@@ -118,7 +127,7 @@ export default function Calendrier() {
             <input
               type="checkbox"
               checked={settings?.showPracticeInCalendar ?? false}
-              onChange={(e) => updateSettings({ showPracticeInCalendar: e.target.checked })}
+              onChange={(e) => handleTogglePracticeInCalendar(e.target.checked)}
             />
             Inclure l'historique de pratique
           </label>
@@ -149,24 +158,31 @@ export default function Calendrier() {
           {engagementsError}
         </p>
       )}
+      {entriesError && (
+        <p role="alert" className="text-sm text-danger">
+          {entriesError}
+        </p>
+      )}
+      {settingsError && (
+        <p role="alert" className="text-sm text-danger">
+          {settingsError}
+        </p>
+      )}
       {actionError && (
         <p role="alert" className="text-sm text-danger">
           {actionError}
         </p>
       )}
 
-      <div className="grid grid-cols-[50px_repeat(7,1fr)] border border-ink-700">
-        <div />
-        {weekDaysList.map((day, i) => (
-          <div key={i} className="border-l border-ink-700 py-2 text-center">
-            <p className="font-data text-[11px] uppercase text-muted">{DAY_LABELS[i]}</p>
-            <p className="font-serif text-lg text-champagne">{day.getDate()}</p>
-          </div>
-        ))}
-      </div>
-
-      <div ref={scrollContainerRef} className="max-h-[600px] overflow-y-auto border border-t-0 border-ink-700">
+      <div ref={scrollContainerRef} className="max-h-[600px] overflow-y-auto border border-ink-700">
         <div className="grid grid-cols-[50px_repeat(7,1fr)]">
+          <div className="sticky top-0 z-10 bg-ink-900" />
+          {weekDaysList.map((day, i) => (
+            <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
+              <p className="font-data text-[11px] uppercase text-muted">{DAY_LABELS[i]}</p>
+              <p className="font-serif text-lg text-champagne">{day.getDate()}</p>
+            </div>
+          ))}
           <div>
             {HOURS.map((h) => (
               <div key={h} className="h-16 border-b border-ink-800 pr-2 text-right font-data text-[11px] text-muted">
@@ -205,7 +221,7 @@ export default function Calendrier() {
                 return (
                   <div
                     key={entry.id}
-                    className="absolute inset-x-0.5 overflow-hidden border border-ink-600 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70"
+                    className="absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70"
                     style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
                   >
                     <p className="truncate font-data text-[10px] text-muted">{entry.skillName}</p>
