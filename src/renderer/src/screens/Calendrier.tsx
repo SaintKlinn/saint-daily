@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
-import { addDays, blockPositionFromRange, dayIndexInWeek, startOfWeek } from '../lib/calendarLayout';
+import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
+import { useSettings } from '../hooks/useSettings';
+import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfWeek } from '../lib/calendarLayout';
 import Button from '../components/Button';
+import TaskPopover from '../components/TaskPopover';
 import { ChevronLeftIcon } from '../components/icons';
+import type { Engagement } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -11,12 +15,18 @@ const HOUR_ROW_PX = 64; // doit rester en phase avec la classe Tailwind h-16 ci-
 
 export default function Calendrier() {
   const navigate = useNavigate();
-  const { engagements, error: engagementsError } = useEngagements();
+  const { engagements, error: engagementsError, setArchived } = useEngagements();
+  const { settings, updateSettings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const scheduledTasks = useMemo(
     () => activeEngagements.filter((e) => e.scheduledAt && e.scheduledEndsAt),
     [activeEngagements]
   );
+  const { entriesBySkill, refresh: refreshEntries } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
+  const { logEntry } = usePracticeEntries(null);
+  const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -29,6 +39,34 @@ export default function Calendrier() {
     }
     return byDay;
   }, [scheduledTasks, weekStart]);
+
+  const practiceEntriesByDay = useMemo(() => {
+    const byDay: Record<number, { id: string; skillName: string; practicedAt: string; durationMinutes: number }[]> = {
+      0: [],
+      1: [],
+      2: [],
+      3: [],
+      4: [],
+      5: [],
+      6: [],
+    };
+    if (!settings?.showPracticeInCalendar) return byDay;
+    for (const skill of activeEngagements) {
+      if (skill.scheduledAt) continue; // seuls les skills ont un historique de pratique, pas les tâches
+      for (const entry of entriesBySkill[skill.id] ?? []) {
+        const index = dayIndexInWeek(weekStart, entry.practicedAt);
+        if (index !== null) {
+          byDay[index].push({
+            id: entry.id,
+            skillName: skill.name,
+            practicedAt: entry.practicedAt,
+            durationMinutes: entry.durationMinutes,
+          });
+        }
+      }
+    }
+    return byDay;
+  }, [activeEngagements, entriesBySkill, settings?.showPracticeInCalendar, weekStart]);
 
   const weekRangeLabel = useMemo(() => {
     const end = addDays(weekStart, 6);
@@ -49,6 +87,25 @@ export default function Calendrier() {
     navigate(`/taches/nouvelle?scheduledAt=${encodeURIComponent(start.toISOString())}`);
   }
 
+  async function handleCompleteTask(taskId: string) {
+    setCompleting(true);
+    const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
+    if (error) {
+      setActionError(error);
+      setCompleting(false);
+      return;
+    }
+    const { error: archiveError } = await setArchived(taskId, true);
+    setCompleting(false);
+    if (archiveError) {
+      setActionError(archiveError);
+      return;
+    }
+    setActionError(null);
+    setPopoverTask(null);
+    await refreshEntries();
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
@@ -57,6 +114,14 @@ export default function Calendrier() {
           <p className="mt-1 font-data text-[13px] text-muted">{weekRangeLabel}</p>
         </div>
         <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-muted">
+            <input
+              type="checkbox"
+              checked={settings?.showPracticeInCalendar ?? false}
+              onChange={(e) => updateSettings({ showPracticeInCalendar: e.target.checked })}
+            />
+            Inclure l'historique de pratique
+          </label>
           <Button variant="secondary" onClick={() => setWeekStart(startOfWeek(new Date()))}>
             Aujourd'hui
           </Button>
@@ -82,6 +147,11 @@ export default function Calendrier() {
       {engagementsError && (
         <p role="alert" className="text-sm text-danger">
           {engagementsError}
+        </p>
+      )}
+      {actionError && (
+        <p role="alert" className="text-sm text-danger">
+          {actionError}
         </p>
       )}
 
@@ -119,12 +189,26 @@ export default function Calendrier() {
                   task.scheduledEndsAt as string
                 );
                 return (
-                  <div
+                  <button
                     key={task.id}
+                    type="button"
+                    onClick={() => setPopoverTask(task)}
                     className="absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left"
                     style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
                   >
                     <p className="truncate font-sans text-[11px] font-semibold text-champagne">{task.name}</p>
+                  </button>
+                );
+              })}
+              {practiceEntriesByDay[dayIndex].map((entry) => {
+                const { topPercent, heightPercent } = blockPositionFromDuration(entry.practicedAt, entry.durationMinutes);
+                return (
+                  <div
+                    key={entry.id}
+                    className="absolute inset-x-0.5 overflow-hidden border border-ink-600 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70"
+                    style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
+                  >
+                    <p className="truncate font-data text-[10px] text-muted">{entry.skillName}</p>
                   </div>
                 );
               })}
@@ -132,6 +216,14 @@ export default function Calendrier() {
           ))}
         </div>
       </div>
+      {popoverTask && (
+        <TaskPopover
+          task={popoverTask}
+          onClose={() => setPopoverTask(null)}
+          onComplete={() => handleCompleteTask(popoverTask.id)}
+          completing={completing}
+        />
+      )}
     </div>
   );
 }
