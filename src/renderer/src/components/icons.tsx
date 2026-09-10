@@ -162,3 +162,24 @@ export function CheckIcon({ size = 11, className }: IconProps) {
     </svg>
   );
 }
+
+export function CalendarIcon({ size = 20, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="4" y="5.5" width="16" height="15" rx="1.5" />
+      <path d="M4 10h16" />
+      <path d="M8 3.5v3.5M16 3.5v3.5" />
+    </svg>
+  );
+}

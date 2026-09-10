@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
-import { HomeIcon, ListIcon, GearIcon } from './icons';
+import { HomeIcon, ListIcon, CalendarIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
 
 // Rail à icônes (maquettes : nav 72px, pas de libellé texte) — remplace la
@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 const navItems = [
   { to: '/', label: 'Accueil', Icon: HomeIcon },
   { to: '/skills', label: 'Skills', Icon: ListIcon },
+  { to: '/calendrier', label: 'Calendrier', Icon: CalendarIcon },
   { to: '/reglages', label: 'Réglages', Icon: GearIcon },
 ];
 
