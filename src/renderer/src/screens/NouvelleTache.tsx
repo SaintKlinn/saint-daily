@@ -1,16 +1,34 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { FormField } from '../components/FormField';
 
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+const DURATION_PRESETS = [15, 30, 45, 60, 90];
+
+// datetime-local exige "YYYY-MM-DDTHH:mm" en heure locale, sans le "Z" ni le
+// décalage qu'a un ISO string — cette conversion n'est nécessaire que quand
+// on arrive ici via un clic sur un créneau du calendrier (Task 4).
+function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function NouvelleTache() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { createEngagement } = useEngagements();
   const [name, setName] = useState('');
   const [tagsInput, setTagsInput] = useState('');
-  const [scheduledAt, setScheduledAt] = useState('');
+  const preselectedScheduledAt = searchParams.get('scheduledAt');
+  const [scheduledAt, setScheduledAt] = useState(
+    preselectedScheduledAt ? toDatetimeLocalValue(preselectedScheduledAt) : ''
+  );
+  const [durationMinutes, setDurationMinutes] = useState(30);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,10 +48,13 @@ export default function NouvelleTache() {
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
+    const startDate = new Date(scheduledAt);
+    const scheduledEndsAt = new Date(startDate.getTime() + durationMinutes * 60_000).toISOString();
     const { error: createError } = await createEngagement({
       name: name.trim(),
       tags,
-      scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+      scheduledAt: startDate.toISOString(),
+      scheduledEndsAt,
     });
     setSubmitting(false);
     if (createError) {
@@ -64,6 +85,22 @@ export default function NouvelleTache() {
           value={scheduledAt}
           onChange={(e) => setScheduledAt(e.target.value)}
         />
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Durée</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {DURATION_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setDurationMinutes(preset)}
+                aria-pressed={durationMinutes === preset}
+                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              >
+                {preset} min
+              </button>
+            ))}
+          </div>
+        </div>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
