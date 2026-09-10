@@ -1,6 +1,10 @@
 import RayCorner from './RayCorner';
 import Button from './Button';
-import type { Engagement } from '../lib/types';
+import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
+import type { Engagement, Priority } from '../lib/types';
+
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 function formatSlot(startIso: string, endIso: string): string {
   const start = new Date(startIso);
@@ -15,11 +19,13 @@ export default function TaskPopover({
   onClose,
   onComplete,
   completing,
+  onPriorityChange,
 }: {
   task: Engagement;
   onClose: () => void;
   onComplete: () => void;
   completing: boolean;
+  onPriorityChange: (priority: Priority) => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60" onClick={onClose}>
@@ -37,6 +43,22 @@ export default function TaskPopover({
         <p className="relative font-data text-[13px] text-muted">
           {formatSlot(task.scheduledAt as string, task.scheduledEndsAt as string)}
         </p>
+        <div className="relative flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {PRIORITY_LEVELS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => onPriorityChange(level)}
+                aria-pressed={task.priority === level}
+                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${task.priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              >
+                {PRIORITY_LABELS[level]}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="relative mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer

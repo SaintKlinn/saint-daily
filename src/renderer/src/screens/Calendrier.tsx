@@ -4,10 +4,11 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfWeek } from '../lib/calendarLayout';
+import { PRIORITY_COLORS } from '../lib/priority';
 import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import { ChevronLeftIcon } from '../components/icons';
-import type { Engagement } from '../lib/types';
+import type { Engagement, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -15,7 +16,7 @@ const HOUR_ROW_PX = 64; // doit rester en phase avec la classe Tailwind h-16 ci-
 
 export default function Calendrier() {
   const navigate = useNavigate();
-  const { engagements, error: engagementsError, setArchived } = useEngagements();
+  const { engagements, error: engagementsError, setArchived, updateEngagement } = useEngagements();
   const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const scheduledTasks = useMemo(
@@ -94,6 +95,20 @@ export default function Calendrier() {
   async function handleTogglePracticeInCalendar(checked: boolean) {
     const { error } = await updateSettings({ showPracticeInCalendar: checked });
     if (error) setActionError(error);
+  }
+
+  async function handleChangePriority(taskId: string, priority: Priority) {
+    const { error } = await updateEngagement(taskId, { priority });
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    setActionError(null);
+    // `popoverTask` est un instantané local, pas dérivé de `engagements` —
+    // sans cette mise à jour, le sélecteur du popover resterait affiché
+    // sur l'ancienne priorité jusqu'à sa fermeture/réouverture, alors que
+    // l'écriture a bien réussi.
+    setPopoverTask((current) => (current && current.id === taskId ? { ...current, priority } : current));
   }
 
   async function handleCompleteTask(taskId: string) {
@@ -204,13 +219,18 @@ export default function Calendrier() {
                   task.scheduledAt as string,
                   task.scheduledEndsAt as string
                 );
+                const priorityColor = PRIORITY_COLORS[task.priority];
                 return (
                   <button
                     key={task.id}
                     type="button"
                     onClick={() => setPopoverTask(task)}
-                    className="absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left"
-                    style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
+                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''}`}
+                    style={{
+                      top: `${topPercent}%`,
+                      height: `${heightPercent}%`,
+                      ...(priorityColor ? { borderLeftColor: priorityColor } : {}),
+                    }}
                   >
                     <p className="truncate font-sans text-[11px] font-semibold text-champagne">{task.name}</p>
                   </button>
@@ -238,6 +258,7 @@ export default function Calendrier() {
           onClose={() => setPopoverTask(null)}
           onComplete={() => handleCompleteTask(popoverTask.id)}
           completing={completing}
+          onPriorityChange={(priority) => handleChangePriority(popoverTask.id, priority)}
         />
       )}
     </div>
