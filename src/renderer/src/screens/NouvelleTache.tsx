@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
+import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
+import type { Priority } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { FormField } from '../components/FormField';
@@ -29,6 +31,7 @@ export default function NouvelleTache() {
     preselectedScheduledAt ? toDatetimeLocalValue(preselectedScheduledAt) : ''
   );
   const [durationMinutes, setDurationMinutes] = useState(30);
+  const [priority, setPriority] = useState<Priority>('aucune');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,6 +58,7 @@ export default function NouvelleTache() {
       tags,
       scheduledAt: startDate.toISOString(),
       scheduledEndsAt,
+      priority,
     });
     setSubmitting(false);
     if (createError) {
@@ -97,6 +101,22 @@ export default function NouvelleTache() {
                 className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {preset} min
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {PRIORITY_LEVELS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setPriority(level)}
+                aria-pressed={priority === level}
+                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              >
+                {PRIORITY_LABELS[level]}
               </button>
             ))}
           </div>
