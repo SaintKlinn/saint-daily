@@ -1,4 +1,5 @@
 export type GenericLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
+export type Priority = 'aucune' | 'basse' | 'moyenne' | 'elevee';
 
 export interface Engagement {
   id: string;
@@ -10,6 +11,7 @@ export interface Engagement {
   archivedAt: string | null;
   scheduledAt: string | null;
   scheduledEndsAt: string | null;
+  priority: Priority;
   createdAt: string;
 }
 

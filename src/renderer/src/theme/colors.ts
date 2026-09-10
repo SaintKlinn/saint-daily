@@ -23,4 +23,14 @@ export const colors = {
     deep: '#8A5F1B',
   },
   danger: '#F87171',
+  // `elevee` reprend la valeur de `danger` telle quelle (même charge
+  // sémantique : urgence) — dupliquée ici plutôt que référencée, un
+  // objet littéral ne peut pas s'auto-référencer pendant sa propre
+  // évaluation. `moyenne`/`basse` évitent volontairement accent.bright,
+  // qui signale déjà "actif/primaire" ailleurs dans l'app (nav, boutons).
+  priority: {
+    elevee: '#F87171',
+    moyenne: '#D2894A',
+    basse: '#6FA8A3',
+  },
 } as const;

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
-import type { Engagement, GenericLevel } from '../lib/types';
+import type { Engagement, GenericLevel, Priority } from '../lib/types';
 
 interface EngagementRow {
   id: string;
@@ -14,6 +14,7 @@ interface EngagementRow {
   archived_at: string | null;
   scheduled_at: string | null;
   scheduled_ends_at: string | null;
+  priority: Priority;
   created_at: string;
 }
 
@@ -28,6 +29,7 @@ function fromRow(row: EngagementRow): Engagement {
     archivedAt: row.archived_at,
     scheduledAt: row.scheduled_at,
     scheduledEndsAt: row.scheduled_ends_at,
+    priority: row.priority,
     createdAt: row.created_at,
   };
 }
@@ -68,6 +70,7 @@ export function useEngagements() {
     notes?: string | null;
     scheduledAt?: string | null;
     scheduledEndsAt?: string | null;
+    priority?: Priority;
   }) {
     if (!session) return { error: 'Non connecté' };
     const { error: insertError } = await getSupabaseClient()
@@ -80,6 +83,7 @@ export function useEngagements() {
         notes: input.notes ?? null,
         scheduled_at: input.scheduledAt ?? null,
         scheduled_ends_at: input.scheduledEndsAt ?? null,
+        ...(input.priority ? { priority: input.priority } : {}),
       });
     if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
@@ -88,7 +92,7 @@ export function useEngagements() {
 
   async function updateEngagement(
     id: string,
-    patch: Partial<Pick<Engagement, 'name' | 'notes' | 'tags' | 'genericLevel'>>
+    patch: Partial<Pick<Engagement, 'name' | 'notes' | 'tags' | 'genericLevel' | 'priority'>>
   ) {
     const { error: updateError } = await getSupabaseClient()
       .from('engagement')
@@ -97,6 +101,7 @@ export function useEngagements() {
         ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
         ...(patch.genericLevel !== undefined ? { generic_level: patch.genericLevel } : {}),
+        ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };
