@@ -13,6 +13,7 @@ interface EngagementRow {
   generic_level: GenericLevel;
   archived_at: string | null;
   scheduled_at: string | null;
+  scheduled_ends_at: string | null;
   created_at: string;
 }
 
@@ -26,6 +27,7 @@ function fromRow(row: EngagementRow): Engagement {
     genericLevel: row.generic_level,
     archivedAt: row.archived_at,
     scheduledAt: row.scheduled_at,
+    scheduledEndsAt: row.scheduled_ends_at,
     createdAt: row.created_at,
   };
 }
@@ -65,6 +67,7 @@ export function useEngagements() {
     genericLevel?: GenericLevel;
     notes?: string | null;
     scheduledAt?: string | null;
+    scheduledEndsAt?: string | null;
   }) {
     if (!session) return { error: 'Non connecté' };
     const { error: insertError } = await getSupabaseClient()
@@ -76,6 +79,7 @@ export function useEngagements() {
         ...(input.genericLevel ? { generic_level: input.genericLevel } : {}),
         notes: input.notes ?? null,
         scheduled_at: input.scheduledAt ?? null,
+        scheduled_ends_at: input.scheduledEndsAt ?? null,
       });
     if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();

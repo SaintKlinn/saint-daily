@@ -9,6 +9,7 @@ export interface Engagement {
   genericLevel: GenericLevel;
   archivedAt: string | null;
   scheduledAt: string | null;
+  scheduledEndsAt: string | null;
   createdAt: string;
 }
 
@@ -41,4 +42,5 @@ export interface SkillAppSettings {
   pomodoroLongBreakMinutes: number;
   pomodoroCyclesBeforeLongBreak: number;
   pomodoroAutoAdvance: boolean;
+  showPracticeInCalendar: boolean;
 }

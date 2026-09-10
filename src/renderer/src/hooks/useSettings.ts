@@ -14,6 +14,7 @@ interface SettingsRow {
   pomodoro_long_break_minutes: number;
   pomodoro_cycles_before_long_break: number;
   pomodoro_auto_advance: boolean;
+  show_practice_in_calendar: boolean;
 }
 
 function fromRow(row: SettingsRow): SkillAppSettings {
@@ -27,6 +28,7 @@ function fromRow(row: SettingsRow): SkillAppSettings {
     pomodoroLongBreakMinutes: row.pomodoro_long_break_minutes,
     pomodoroCyclesBeforeLongBreak: row.pomodoro_cycles_before_long_break,
     pomodoroAutoAdvance: row.pomodoro_auto_advance,
+    showPracticeInCalendar: row.show_practice_in_calendar,
   };
 }
 
@@ -46,6 +48,9 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
       ? { pomodoro_cycles_before_long_break: patch.pomodoroCyclesBeforeLongBreak }
       : {}),
     ...(patch.pomodoroAutoAdvance !== undefined ? { pomodoro_auto_advance: patch.pomodoroAutoAdvance } : {}),
+    ...(patch.showPracticeInCalendar !== undefined
+      ? { show_practice_in_calendar: patch.showPracticeInCalendar }
+      : {}),
   };
 }
 
@@ -58,6 +63,7 @@ const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId'> = {
   pomodoroLongBreakMinutes: 15,
   pomodoroCyclesBeforeLongBreak: 4,
   pomodoroAutoAdvance: true,
+  showPracticeInCalendar: false,
 };
 
 export function useSettings() {
