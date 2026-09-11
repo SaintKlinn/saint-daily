@@ -225,7 +225,7 @@ export default function Calendrier() {
                     day: 'numeric',
                     month: 'long',
                   })} à ${String(h).padStart(2, '0')}:00`}
-                  className={`h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50 ${FOCUS_RING}`}
+                  className={`h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50 ${FOCUS_RING} focus-visible:relative focus-visible:z-20`}
                 />
               ))}
               {tasksByDay[dayIndex].map((task) => {

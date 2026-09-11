@@ -23,7 +23,7 @@ export function FormField({
           </span>
         )}
       </span>
-      <input required={required} {...props} className={`${FIELD} text-[15px] ${className}`.trim()} />
+      <input aria-required={required} {...props} className={`${FIELD} text-[15px] ${className}`.trim()} />
     </label>
   );
 }
