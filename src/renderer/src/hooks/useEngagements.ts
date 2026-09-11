@@ -92,7 +92,9 @@ export function useEngagements() {
 
   async function updateEngagement(
     id: string,
-    patch: Partial<Pick<Engagement, 'name' | 'notes' | 'tags' | 'genericLevel' | 'priority'>>
+    patch: Partial<
+      Pick<Engagement, 'name' | 'notes' | 'tags' | 'genericLevel' | 'priority' | 'scheduledAt' | 'scheduledEndsAt'>
+    >
   ) {
     const { error: updateError } = await getSupabaseClient()
       .from('engagement')
@@ -102,6 +104,8 @@ export function useEngagements() {
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
         ...(patch.genericLevel !== undefined ? { generic_level: patch.genericLevel } : {}),
         ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
+        ...(patch.scheduledAt !== undefined ? { scheduled_at: patch.scheduledAt } : {}),
+        ...(patch.scheduledEndsAt !== undefined ? { scheduled_ends_at: patch.scheduledEndsAt } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };

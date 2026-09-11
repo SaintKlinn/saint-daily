@@ -20,12 +20,14 @@ export default function TaskPopover({
   onComplete,
   completing,
   onPriorityChange,
+  onSnooze,
 }: {
   task: Engagement;
   onClose: () => void;
   onComplete: () => void;
   completing: boolean;
   onPriorityChange: (priority: Priority) => void;
+  onSnooze: (mode: 'aujourdhui' | 'demain') => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60" onClick={onClose}>
@@ -57,6 +59,25 @@ export default function TaskPopover({
                 {PRIORITY_LABELS[level]}
               </button>
             ))}
+          </div>
+        </div>
+        <div className="relative flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Reporter</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onSnooze('aujourdhui')}
+              className={`font-data text-xs px-3 py-1.5 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
+            >
+              Plus tard aujourd'hui
+            </button>
+            <button
+              type="button"
+              onClick={() => onSnooze('demain')}
+              className={`font-data text-xs px-3 py-1.5 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
+            >
+              Demain
+            </button>
           </div>
         </div>
         <div className="relative mt-2 flex justify-end gap-3">

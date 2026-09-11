@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfWeek } from '../lib/calendarLayout';
+import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
+import { findNextFreeSlot } from '../lib/scheduling';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
@@ -16,6 +17,15 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const HOUR_ROW_PX = 64; // doit rester en phase avec la classe Tailwind h-16 ci-dessous
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+
+const MAX_SNOOZE_DAYS_AHEAD = 30;
+
+function formatSnoozeConfirmation(iso: string): string {
+  const date = new Date(iso);
+  const day = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `Reporté au ${day}, ${time}`;
+}
 
 export default function Calendrier() {
   const navigate = useNavigate();
@@ -35,6 +45,7 @@ export default function Calendrier() {
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -114,6 +125,31 @@ export default function Calendrier() {
     setPopoverTask((current) => (current && current.id === taskId ? { ...current, priority } : current));
   }
 
+  async function handleSnooze(taskId: string, mode: 'aujourdhui' | 'demain') {
+    setSnoozeMessage(null);
+    const task = activeEngagements.find((e) => e.id === taskId);
+    if (!task || !task.scheduledAt || !task.scheduledEndsAt) return;
+    const durationMinutes = (new Date(task.scheduledEndsAt).getTime() - new Date(task.scheduledAt).getTime()) / 60_000;
+    const now = new Date();
+    const fromDate = mode === 'aujourdhui' ? now : startOfDay(addDays(now, 1));
+    const otherTasks = scheduledTasks
+      .filter((t) => t.id !== taskId)
+      .map((t) => ({ scheduledAt: t.scheduledAt as string, scheduledEndsAt: t.scheduledEndsAt as string }));
+    const slot = findNextFreeSlot(fromDate, durationMinutes, otherTasks, MAX_SNOOZE_DAYS_AHEAD);
+    if (!slot) {
+      setActionError(`Aucun créneau libre dans les ${MAX_SNOOZE_DAYS_AHEAD} prochains jours.`);
+      return;
+    }
+    const { error } = await updateEngagement(taskId, { scheduledAt: slot.scheduledAt, scheduledEndsAt: slot.scheduledEndsAt });
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    setActionError(null);
+    setPopoverTask(null);
+    setSnoozeMessage(formatSnoozeConfirmation(slot.scheduledAt));
+  }
+
   async function handleCompleteTask(taskId: string) {
     setCompleting(true);
     const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
@@ -187,6 +223,11 @@ export default function Calendrier() {
       {actionError && (
         <p role="alert" className="text-sm text-danger">
           {actionError}
+        </p>
+      )}
+      {snoozeMessage && (
+        <p role="status" className="text-sm text-accent-bright">
+          {snoozeMessage}
         </p>
       )}
 
@@ -274,6 +315,7 @@ export default function Calendrier() {
           onComplete={() => handleCompleteTask(popoverTask.id)}
           completing={completing}
           onPriorityChange={(priority) => handleChangePriority(popoverTask.id, priority)}
+          onSnooze={(mode) => handleSnooze(popoverTask.id, mode)}
         />
       )}
     </div>
