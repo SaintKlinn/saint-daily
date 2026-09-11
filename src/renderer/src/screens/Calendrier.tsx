@@ -13,6 +13,8 @@ import type { Engagement, Priority } from '../lib/types';
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const HOUR_ROW_PX = 64; // doit rester en phase avec la classe Tailwind h-16 ci-dessous
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export default function Calendrier() {
   const navigate = useNavigate();
@@ -210,8 +212,21 @@ export default function Calendrier() {
               {HOURS.map((h) => (
                 <div
                   key={h}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleEmptySlotClick(day, h)}
-                  className="h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleEmptySlotClick(day, h);
+                    }
+                  }}
+                  aria-label={`Créer une tâche le ${day.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })} à ${String(h).padStart(2, '0')}:00`}
+                  className={`h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50 ${FOCUS_RING}`}
                 />
               ))}
               {tasksByDay[dayIndex].map((task) => {
