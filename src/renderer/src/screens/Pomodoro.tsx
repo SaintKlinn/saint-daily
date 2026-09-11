@@ -20,7 +20,7 @@ export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
   const { engagements, loading: skillsLoading } = useEngagements();
-  const skills = engagements.filter((e) => !e.scheduledAt);
+  const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const activeSkills = skills.filter((s) => !s.archivedAt);
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =

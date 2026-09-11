@@ -21,7 +21,7 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
 
 export default function ListeSkills() {
   const { engagements, error } = useEngagements();
-  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { settings } = useSettings();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState<string | null>(null);

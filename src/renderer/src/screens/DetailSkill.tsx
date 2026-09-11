@@ -31,7 +31,7 @@ const knownStreakBySkillId = new Map<string, number>();
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const { engagements, loading, error: skillsError, updateEngagement, setArchived } = useEngagements();
-  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
   const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 

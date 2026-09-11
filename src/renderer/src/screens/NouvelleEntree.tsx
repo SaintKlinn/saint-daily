@@ -15,7 +15,7 @@ export default function NouvelleEntree() {
   const preselectedSkillId = searchParams.get('skillId');
 
   const { engagements } = useEngagements();
-  const skills = engagements.filter((e) => !e.scheduledAt);
+  const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const { logEntry } = usePracticeEntries(null);
 
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');

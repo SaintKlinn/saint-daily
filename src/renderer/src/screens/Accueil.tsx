@@ -23,10 +23,10 @@ const notifiedSkillIds = new Set<string>();
 
 export default function Accueil() {
   const { engagements, error: skillsError, setArchived } = useEngagements();
-  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt), [engagements]);
+  const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { settings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
-  const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt), [activeEngagements]);
+  const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt && !e.isProject), [activeEngagements]);
   const {
     entriesBySkill,
     loading: entriesLoading,
