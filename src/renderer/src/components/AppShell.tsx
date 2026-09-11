@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
@@ -5,6 +6,9 @@ import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import { HomeIcon, ListIcon, CalendarIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
+import { useEngagements } from '../hooks/useEngagements';
+import { addDays } from '../lib/calendarLayout';
+import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
 
 // Rail à icônes (maquettes : nav 72px, pas de libellé texte) — remplace la
 // nav large en texte de la v1 (audit ui-ux-pro-max, passe V2).
@@ -16,6 +20,37 @@ const navItems = [
 ];
 
 export default function AppShell() {
+  const { engagements, loading, createEngagement } = useEngagements();
+
+  useEffect(() => {
+    if (loading) return;
+    async function syncRecurringSeries() {
+      const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
+      const planned = planMissingOccurrences(engagements, windowEnd);
+      for (const occurrence of planned) {
+        const template = engagements.find((e) => e.id === occurrence.templateId);
+        if (!template) continue;
+        await createEngagement({
+          name: template.name,
+          tags: template.tags,
+          priority: template.priority,
+          scheduledAt: occurrence.scheduledAt,
+          scheduledEndsAt: occurrence.scheduledEndsAt,
+          recurrenceSeriesId: occurrence.seriesId,
+          recurrenceType: template.recurrenceType,
+          recurrenceInterval: template.recurrenceInterval,
+          recurrenceWeekdays: template.recurrenceWeekdays,
+        });
+      }
+    }
+    syncRecurringSeries();
+    // Ne dépend que de `loading` : ne doit tourner qu'une fois par
+    // chargement de l'app, pas à chaque render où `engagements` change —
+    // y compris à cause des créations que cette synchronisation fait
+    // elle-même, ce qui boucherait sinon. Ce projet n'a pas d'eslint (voir
+    // package.json) — rien à désactiver, juste une omission volontaire.
+  }, [loading]);
+
   return (
     <div className="flex h-screen flex-col bg-ink-900 text-champagne">
       <UpdateBanner />
