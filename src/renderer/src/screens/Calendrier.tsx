@@ -7,6 +7,7 @@ import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInW
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
+import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
 import type { Engagement, Priority } from '../lib/types';
 
@@ -140,14 +141,12 @@ export default function Calendrier() {
           <p className="mt-1 font-data text-[13px] text-muted">{weekRangeLabel}</p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted">
-            <input
-              type="checkbox"
-              checked={settings?.showPracticeInCalendar ?? false}
-              onChange={(e) => handleTogglePracticeInCalendar(e.target.checked)}
-            />
-            Inclure l'historique de pratique
-          </label>
+          <Toggle
+            checked={settings?.showPracticeInCalendar ?? false}
+            onChange={handleTogglePracticeInCalendar}
+            label="Inclure l'historique de pratique"
+            bordered={false}
+          />
           <Button variant="secondary" onClick={() => setWeekStart(startOfWeek(new Date()))}>
             Aujourd'hui
           </Button>
