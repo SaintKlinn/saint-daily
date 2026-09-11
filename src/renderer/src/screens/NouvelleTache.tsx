@@ -40,7 +40,7 @@ function toDatetimeLocalValue(iso: string): string {
 export default function NouvelleTache() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { engagements, createEngagement } = useEngagements();
+  const { engagements, createEngagement, createEngagements } = useEngagements();
   const [name, setName] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const preselectedScheduledAt = searchParams.get('scheduledAt');
@@ -55,9 +55,11 @@ export default function NouvelleTache() {
   const [error, setError] = useState<string | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (created) return;
     if (!name.trim()) {
       setError('Le titre est obligatoire.');
       return;
@@ -98,6 +100,7 @@ export default function NouvelleTache() {
       setError(createError);
       return;
     }
+    setCreated(true);
 
     if (recurrenceType !== 'aucune' && recurrenceSeriesId) {
       const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
@@ -108,19 +111,21 @@ export default function NouvelleTache() {
         scheduledAt: date.toISOString(),
         scheduledEndsAt: new Date(date.getTime() + durationMs).toISOString(),
       }));
-      const conflicts = detectConflicts(occurrenceSlots, engagements);
-      for (const slot of occurrenceSlots) {
-        await createEngagement({
-          name: name.trim(),
-          tags,
-          scheduledAt: slot.scheduledAt,
-          scheduledEndsAt: slot.scheduledEndsAt,
-          priority,
-          recurrenceSeriesId,
-          recurrenceType,
-          recurrenceInterval: rule.interval,
-          recurrenceWeekdays: rule.weekdays,
-        });
+      const conflicts = detectConflicts(occurrenceSlots, engagements.filter((e) => !e.archivedAt));
+      if (occurrenceSlots.length > 0) {
+        await createEngagements(
+          occurrenceSlots.map((slot) => ({
+            name: name.trim(),
+            tags,
+            scheduledAt: slot.scheduledAt,
+            scheduledEndsAt: slot.scheduledEndsAt,
+            priority,
+            recurrenceSeriesId,
+            recurrenceType,
+            recurrenceInterval: rule.interval,
+            recurrenceWeekdays: rule.weekdays,
+          }))
+        );
       }
       if (conflicts.length > 0) {
         setSubmitting(false);
@@ -253,7 +258,7 @@ export default function NouvelleTache() {
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
             Annuler
           </Button>
-          <Button type="submit" variant="primary" disabled={submitting}>
+          <Button type="submit" variant="primary" disabled={submitting || created}>
             {submitting ? 'Création…' : 'Créer'}
           </Button>
         </div>

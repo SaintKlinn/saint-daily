@@ -106,6 +106,53 @@ export function useEngagements() {
     return { error: null };
   }
 
+  async function createEngagements(
+    inputs: Array<{
+      name: string;
+      tags: string[];
+      genericLevel?: GenericLevel;
+      notes?: string | null;
+      scheduledAt?: string | null;
+      scheduledEndsAt?: string | null;
+      priority?: Priority;
+      recurrenceSeriesId?: string | null;
+      recurrenceType?: RecurrenceType;
+      recurrenceInterval?: number | null;
+      recurrenceWeekdays?: number[] | null;
+    }>
+  ) {
+    if (!session) return { error: 'Non connecté' };
+    if (inputs.length === 0) return { error: null };
+    const rows = inputs.map((input) => ({
+      user_id: session.user.id,
+      name: input.name,
+      tags: input.tags,
+      ...(input.genericLevel ? { generic_level: input.genericLevel } : {}),
+      notes: input.notes ?? null,
+      scheduled_at: input.scheduledAt ?? null,
+      scheduled_ends_at: input.scheduledEndsAt ?? null,
+      ...(input.priority ? { priority: input.priority } : {}),
+      ...(input.recurrenceSeriesId !== undefined ? { recurrence_series_id: input.recurrenceSeriesId } : {}),
+      ...(input.recurrenceType ? { recurrence_type: input.recurrenceType } : {}),
+      ...(input.recurrenceInterval !== undefined ? { recurrence_interval: input.recurrenceInterval } : {}),
+      ...(input.recurrenceWeekdays !== undefined ? { recurrence_weekdays: input.recurrenceWeekdays } : {}),
+    }));
+    const { error: insertError } = await getSupabaseClient().from('engagement').insert(rows);
+    if (insertError) return { error: toFrenchError(insertError.message) };
+    await refresh();
+    return { error: null };
+  }
+
+  // Contrepartie en lot de `deleteEngagement` — même portée volontaire
+  // (occurrences de récurrence auto-générées, jamais échues).
+  async function deleteEngagements(ids: string[]) {
+    if (ids.length === 0) return { error: null };
+    const { error: deleteError } = await getSupabaseClient().from('engagement').delete().in('id', ids);
+    if (deleteError) return { error: toFrenchError(deleteError.message) };
+    await refresh();
+    return { error: null };
+  }
+
   async function updateEngagement(
     id: string,
     patch: Partial<
@@ -166,5 +213,16 @@ export function useEngagements() {
     return { error: null };
   }
 
-  return { engagements, loading, error, refresh, createEngagement, updateEngagement, setArchived, deleteEngagement };
+  return {
+    engagements,
+    loading,
+    error,
+    refresh,
+    createEngagement,
+    createEngagements,
+    updateEngagement,
+    setArchived,
+    deleteEngagement,
+    deleteEngagements,
+  };
 }

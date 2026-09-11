@@ -26,11 +26,13 @@ export default function RecurrenceEditor({
   interval,
   weekdays,
   onChange,
+  disabled,
 }: {
   type: RecurrenceType;
   interval: number | null;
   weekdays: number[] | null;
   onChange: (rule: RecurrenceRule) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="relative flex flex-col gap-1.5">
@@ -40,6 +42,7 @@ export default function RecurrenceEditor({
           <button
             key={option.value}
             type="button"
+            disabled={disabled}
             onClick={() =>
               onChange({
                 type: option.value,
@@ -62,6 +65,7 @@ export default function RecurrenceEditor({
               <button
                 key={day.value}
                 type="button"
+                disabled={disabled}
                 onClick={() =>
                   onChange({
                     type,
@@ -84,6 +88,7 @@ export default function RecurrenceEditor({
             type="number"
             min={2}
             value={interval ?? 2}
+            disabled={disabled}
             onChange={(e) => onChange({ type, interval: Math.max(2, Number(e.target.value) || 2), weekdays })}
             className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-xs text-champagne ${FOCUS_RING}`}
           />

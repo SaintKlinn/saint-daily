@@ -37,7 +37,7 @@ function formatSnoozeConfirmation(iso: string): string {
 
 export default function Calendrier() {
   const navigate = useNavigate();
-  const { engagements, error: engagementsError, setArchived, updateEngagement, createEngagement, deleteEngagement } = useEngagements();
+  const { engagements, error: engagementsError, setArchived, updateEngagement, createEngagements, deleteEngagements } = useEngagements();
   const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const scheduledTasks = useMemo(
@@ -55,6 +55,7 @@ export default function Calendrier() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
   const [recurrenceMessage, setRecurrenceMessage] = useState<string | null>(null);
+  const [recurrenceBusy, setRecurrenceBusy] = useState(false);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -161,21 +162,25 @@ export default function Calendrier() {
   }
 
   async function handleChangeRecurrence(taskId: string, rule: RecurrenceRule) {
+    if (recurrenceBusy) return;
+    setRecurrenceBusy(true);
     setActionError(null);
     setRecurrenceMessage(null);
     const task = activeEngagements.find((e) => e.id === taskId);
-    if (!task || !task.scheduledAt || !task.scheduledEndsAt) return;
+    if (!task || !task.scheduledAt || !task.scheduledEndsAt) {
+      setRecurrenceBusy(false);
+      return;
+    }
 
     if (task.recurrenceSeriesId) {
-      const siblings = activeEngagements.filter(
-        (e) => e.recurrenceSeriesId === task.recurrenceSeriesId && e.id !== taskId
-      );
-      for (const sibling of siblings) {
-        const { error: deleteError } = await deleteEngagement(sibling.id);
-        if (deleteError) {
-          setActionError(deleteError);
-          return;
-        }
+      const siblingIds = activeEngagements
+        .filter((e) => e.recurrenceSeriesId === task.recurrenceSeriesId && e.id !== taskId)
+        .map((e) => e.id);
+      const { error: deleteError } = await deleteEngagements(siblingIds);
+      if (deleteError) {
+        setActionError(deleteError);
+        setRecurrenceBusy(false);
+        return;
       }
     }
 
@@ -188,6 +193,7 @@ export default function Calendrier() {
     });
     if (updateError) {
       setActionError(updateError);
+      setRecurrenceBusy(false);
       return;
     }
 
@@ -197,7 +203,10 @@ export default function Calendrier() {
         : current
     );
 
-    if (rule.type === 'aucune') return;
+    if (rule.type === 'aucune') {
+      setRecurrenceBusy(false);
+      return;
+    }
 
     const durationMs = new Date(task.scheduledEndsAt).getTime() - new Date(task.scheduledAt).getTime();
     const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
@@ -210,24 +219,27 @@ export default function Calendrier() {
     }));
     const otherTasks = activeEngagements.filter((e) => e.id !== taskId && e.recurrenceSeriesId !== seriesId);
     const conflicts = detectConflicts(occurrenceSlots, otherTasks);
-    for (const slot of occurrenceSlots) {
-      await createEngagement({
-        name: task.name,
-        tags: task.tags,
-        priority: task.priority,
-        scheduledAt: slot.scheduledAt,
-        scheduledEndsAt: slot.scheduledEndsAt,
-        recurrenceSeriesId: seriesId,
-        recurrenceType: rule.type,
-        recurrenceInterval: rule.interval,
-        recurrenceWeekdays: rule.weekdays,
-      });
+    if (occurrenceSlots.length > 0) {
+      await createEngagements(
+        occurrenceSlots.map((slot) => ({
+          name: task.name,
+          tags: task.tags,
+          priority: task.priority,
+          scheduledAt: slot.scheduledAt,
+          scheduledEndsAt: slot.scheduledEndsAt,
+          recurrenceSeriesId: seriesId,
+          recurrenceType: rule.type,
+          recurrenceInterval: rule.interval,
+          recurrenceWeekdays: rule.weekdays,
+        }))
+      );
     }
     if (conflicts.length > 0) {
       setRecurrenceMessage(
         `${conflicts.length} occurrence${conflicts.length > 1 ? 's' : ''} en conflit avec une autre tâche déjà planifiée.`
       );
     }
+    setRecurrenceBusy(false);
   }
 
   async function handleCompleteTask(taskId: string) {
@@ -403,6 +415,7 @@ export default function Calendrier() {
           onSnooze={(mode) => handleSnooze(popoverTask.id, mode)}
           canEditRecurrence={isNextOccurrenceInSeries(popoverTask, activeEngagements)}
           onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
+          recurrenceBusy={recurrenceBusy}
           error={actionError}
         />
       )}

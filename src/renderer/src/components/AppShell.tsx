@@ -20,7 +20,7 @@ const navItems = [
 ];
 
 export default function AppShell() {
-  const { engagements, loading, createEngagement } = useEngagements();
+  const { engagements, loading, createEngagements } = useEngagements();
   const hasSyncedRecurrenceRef = useRef(false);
 
   useEffect(() => {
@@ -29,10 +29,11 @@ export default function AppShell() {
     async function syncRecurringSeries() {
       const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
       const planned = planMissingOccurrences(engagements, windowEnd);
+      const inputs = [];
       for (const occurrence of planned) {
         const template = engagements.find((e) => e.id === occurrence.templateId);
         if (!template) continue;
-        await createEngagement({
+        inputs.push({
           name: template.name,
           tags: template.tags,
           priority: template.priority,
@@ -43,6 +44,9 @@ export default function AppShell() {
           recurrenceInterval: template.recurrenceInterval,
           recurrenceWeekdays: template.recurrenceWeekdays,
         });
+      }
+      if (inputs.length > 0) {
+        await createEngagements(inputs);
       }
     }
     syncRecurringSeries();

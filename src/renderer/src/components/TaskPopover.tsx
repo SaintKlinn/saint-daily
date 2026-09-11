@@ -25,6 +25,7 @@ export default function TaskPopover({
   onSnooze,
   canEditRecurrence,
   onRecurrenceChange,
+  recurrenceBusy,
   error,
 }: {
   task: Engagement;
@@ -35,6 +36,7 @@ export default function TaskPopover({
   onSnooze: (mode: 'aujourdhui' | 'demain') => void;
   canEditRecurrence: boolean;
   onRecurrenceChange: (rule: RecurrenceRule) => void;
+  recurrenceBusy: boolean;
   error: string | null;
 }) {
   return (
@@ -94,6 +96,7 @@ export default function TaskPopover({
             interval={task.recurrenceInterval}
             weekdays={task.recurrenceWeekdays}
             onChange={onRecurrenceChange}
+            disabled={recurrenceBusy}
           />
         )}
         {error && (
