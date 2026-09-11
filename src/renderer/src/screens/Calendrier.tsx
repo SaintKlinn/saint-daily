@@ -5,6 +5,14 @@ import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeE
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot } from '../lib/scheduling';
+import {
+  RECURRENCE_WINDOW_DAYS,
+  detectConflicts,
+  generateOccurrences,
+  isNextOccurrenceInSeries,
+  nextAnchorDate,
+  type RecurrenceRule,
+} from '../lib/recurrence';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
@@ -29,7 +37,7 @@ function formatSnoozeConfirmation(iso: string): string {
 
 export default function Calendrier() {
   const navigate = useNavigate();
-  const { engagements, error: engagementsError, setArchived, updateEngagement } = useEngagements();
+  const { engagements, error: engagementsError, setArchived, updateEngagement, createEngagement, deleteEngagement } = useEngagements();
   const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const scheduledTasks = useMemo(
@@ -46,6 +54,7 @@ export default function Calendrier() {
   const [completing, setCompleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
+  const [recurrenceMessage, setRecurrenceMessage] = useState<string | null>(null);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -151,6 +160,76 @@ export default function Calendrier() {
     setSnoozeMessage(formatSnoozeConfirmation(slot.scheduledAt));
   }
 
+  async function handleChangeRecurrence(taskId: string, rule: RecurrenceRule) {
+    setActionError(null);
+    setRecurrenceMessage(null);
+    const task = activeEngagements.find((e) => e.id === taskId);
+    if (!task || !task.scheduledAt || !task.scheduledEndsAt) return;
+
+    if (task.recurrenceSeriesId) {
+      const siblings = activeEngagements.filter(
+        (e) => e.recurrenceSeriesId === task.recurrenceSeriesId && e.id !== taskId
+      );
+      for (const sibling of siblings) {
+        const { error: deleteError } = await deleteEngagement(sibling.id);
+        if (deleteError) {
+          setActionError(deleteError);
+          return;
+        }
+      }
+    }
+
+    const seriesId = task.recurrenceSeriesId ?? crypto.randomUUID();
+    const { error: updateError } = await updateEngagement(taskId, {
+      recurrenceSeriesId: seriesId,
+      recurrenceType: rule.type,
+      recurrenceInterval: rule.interval,
+      recurrenceWeekdays: rule.weekdays,
+    });
+    if (updateError) {
+      setActionError(updateError);
+      return;
+    }
+
+    setPopoverTask((current) =>
+      current && current.id === taskId
+        ? { ...current, recurrenceSeriesId: seriesId, recurrenceType: rule.type, recurrenceInterval: rule.interval, recurrenceWeekdays: rule.weekdays }
+        : current
+    );
+
+    if (rule.type === 'aucune') return;
+
+    const durationMs = new Date(task.scheduledEndsAt).getTime() - new Date(task.scheduledAt).getTime();
+    const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
+    const anchor = nextAnchorDate(rule, new Date(task.scheduledAt));
+    const dates = generateOccurrences(rule, anchor, windowEnd);
+    const occurrenceSlots = dates.map((date) => ({
+      seriesId,
+      scheduledAt: date.toISOString(),
+      scheduledEndsAt: new Date(date.getTime() + durationMs).toISOString(),
+    }));
+    const otherTasks = activeEngagements.filter((e) => e.id !== taskId && e.recurrenceSeriesId !== seriesId);
+    const conflicts = detectConflicts(occurrenceSlots, otherTasks);
+    for (const slot of occurrenceSlots) {
+      await createEngagement({
+        name: task.name,
+        tags: task.tags,
+        priority: task.priority,
+        scheduledAt: slot.scheduledAt,
+        scheduledEndsAt: slot.scheduledEndsAt,
+        recurrenceSeriesId: seriesId,
+        recurrenceType: rule.type,
+        recurrenceInterval: rule.interval,
+        recurrenceWeekdays: rule.weekdays,
+      });
+    }
+    if (conflicts.length > 0) {
+      setRecurrenceMessage(
+        `${conflicts.length} occurrence${conflicts.length > 1 ? 's' : ''} en conflit avec une autre tâche déjà planifiée.`
+      );
+    }
+  }
+
   async function handleCompleteTask(taskId: string) {
     setCompleting(true);
     const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
@@ -229,6 +308,11 @@ export default function Calendrier() {
       {snoozeMessage && (
         <p role="status" className="text-sm text-accent-bright">
           {snoozeMessage}
+        </p>
+      )}
+      {recurrenceMessage && (
+        <p role="alert" className="text-sm text-danger">
+          {recurrenceMessage}
         </p>
       )}
 
@@ -317,6 +401,8 @@ export default function Calendrier() {
           completing={completing}
           onPriorityChange={(priority) => handleChangePriority(popoverTask.id, priority)}
           onSnooze={(mode) => handleSnooze(popoverTask.id, mode)}
+          canEditRecurrence={isNextOccurrenceInSeries(popoverTask, activeEngagements)}
+          onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
           error={actionError}
         />
       )}

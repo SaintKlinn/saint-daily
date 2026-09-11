@@ -1,6 +1,8 @@
 import RayCorner from './RayCorner';
 import Button from './Button';
+import RecurrenceEditor from './RecurrenceEditor';
 import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
+import type { RecurrenceRule } from '../lib/recurrence';
 import type { Engagement, Priority } from '../lib/types';
 
 const FOCUS_RING =
@@ -21,6 +23,8 @@ export default function TaskPopover({
   completing,
   onPriorityChange,
   onSnooze,
+  canEditRecurrence,
+  onRecurrenceChange,
   error,
 }: {
   task: Engagement;
@@ -29,6 +33,8 @@ export default function TaskPopover({
   completing: boolean;
   onPriorityChange: (priority: Priority) => void;
   onSnooze: (mode: 'aujourdhui' | 'demain') => void;
+  canEditRecurrence: boolean;
+  onRecurrenceChange: (rule: RecurrenceRule) => void;
   error: string | null;
 }) {
   return (
@@ -82,6 +88,14 @@ export default function TaskPopover({
             </button>
           </div>
         </div>
+        {canEditRecurrence && (
+          <RecurrenceEditor
+            type={task.recurrenceType}
+            interval={task.recurrenceInterval}
+            weekdays={task.recurrenceWeekdays}
+            onChange={onRecurrenceChange}
+          />
+        )}
         {error && (
           <p role="alert" className="relative text-sm text-danger">
             {error}
