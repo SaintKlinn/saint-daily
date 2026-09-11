@@ -1,5 +1,6 @@
 export type GenericLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
 export type Priority = 'aucune' | 'basse' | 'moyenne' | 'elevee';
+export type RecurrenceType = 'aucune' | 'quotidien' | 'hebdomadaire' | 'tous_les_n_jours';
 
 export interface Engagement {
   id: string;
@@ -12,6 +13,10 @@ export interface Engagement {
   scheduledAt: string | null;
   scheduledEndsAt: string | null;
   priority: Priority;
+  recurrenceSeriesId: string | null;
+  recurrenceType: RecurrenceType;
+  recurrenceInterval: number | null;
+  recurrenceWeekdays: number[] | null;
   createdAt: string;
 }
 

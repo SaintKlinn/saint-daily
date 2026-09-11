@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
-import type { Engagement, GenericLevel, Priority } from '../lib/types';
+import type { Engagement, GenericLevel, Priority, RecurrenceType } from '../lib/types';
 
 interface EngagementRow {
   id: string;
@@ -15,6 +15,10 @@ interface EngagementRow {
   scheduled_at: string | null;
   scheduled_ends_at: string | null;
   priority: Priority;
+  recurrence_series_id: string | null;
+  recurrence_type: RecurrenceType;
+  recurrence_interval: number | null;
+  recurrence_weekdays: number[] | null;
   created_at: string;
 }
 
@@ -30,6 +34,10 @@ function fromRow(row: EngagementRow): Engagement {
     scheduledAt: row.scheduled_at,
     scheduledEndsAt: row.scheduled_ends_at,
     priority: row.priority,
+    recurrenceSeriesId: row.recurrence_series_id,
+    recurrenceType: row.recurrence_type,
+    recurrenceInterval: row.recurrence_interval,
+    recurrenceWeekdays: row.recurrence_weekdays,
     createdAt: row.created_at,
   };
 }
@@ -71,6 +79,10 @@ export function useEngagements() {
     scheduledAt?: string | null;
     scheduledEndsAt?: string | null;
     priority?: Priority;
+    recurrenceSeriesId?: string | null;
+    recurrenceType?: RecurrenceType;
+    recurrenceInterval?: number | null;
+    recurrenceWeekdays?: number[] | null;
   }) {
     if (!session) return { error: 'Non connecté' };
     const { error: insertError } = await getSupabaseClient()
@@ -84,6 +96,10 @@ export function useEngagements() {
         scheduled_at: input.scheduledAt ?? null,
         scheduled_ends_at: input.scheduledEndsAt ?? null,
         ...(input.priority ? { priority: input.priority } : {}),
+        ...(input.recurrenceSeriesId !== undefined ? { recurrence_series_id: input.recurrenceSeriesId } : {}),
+        ...(input.recurrenceType ? { recurrence_type: input.recurrenceType } : {}),
+        ...(input.recurrenceInterval !== undefined ? { recurrence_interval: input.recurrenceInterval } : {}),
+        ...(input.recurrenceWeekdays !== undefined ? { recurrence_weekdays: input.recurrenceWeekdays } : {}),
       });
     if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
@@ -93,7 +109,20 @@ export function useEngagements() {
   async function updateEngagement(
     id: string,
     patch: Partial<
-      Pick<Engagement, 'name' | 'notes' | 'tags' | 'genericLevel' | 'priority' | 'scheduledAt' | 'scheduledEndsAt'>
+      Pick<
+        Engagement,
+        | 'name'
+        | 'notes'
+        | 'tags'
+        | 'genericLevel'
+        | 'priority'
+        | 'scheduledAt'
+        | 'scheduledEndsAt'
+        | 'recurrenceSeriesId'
+        | 'recurrenceType'
+        | 'recurrenceInterval'
+        | 'recurrenceWeekdays'
+      >
     >
   ) {
     const { error: updateError } = await getSupabaseClient()
@@ -106,6 +135,10 @@ export function useEngagements() {
         ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
         ...(patch.scheduledAt !== undefined ? { scheduled_at: patch.scheduledAt } : {}),
         ...(patch.scheduledEndsAt !== undefined ? { scheduled_ends_at: patch.scheduledEndsAt } : {}),
+        ...(patch.recurrenceSeriesId !== undefined ? { recurrence_series_id: patch.recurrenceSeriesId } : {}),
+        ...(patch.recurrenceType !== undefined ? { recurrence_type: patch.recurrenceType } : {}),
+        ...(patch.recurrenceInterval !== undefined ? { recurrence_interval: patch.recurrenceInterval } : {}),
+        ...(patch.recurrenceWeekdays !== undefined ? { recurrence_weekdays: patch.recurrenceWeekdays } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };
@@ -123,5 +156,15 @@ export function useEngagements() {
     return { error: null };
   }
 
-  return { engagements, loading, error, refresh, createEngagement, updateEngagement, setArchived };
+  // Première suppression réelle de l'app — volontairement scopée aux
+  // occurrences de récurrence auto-générées et jamais échues (voir spec) :
+  // rien d'autre dans le codebase n'appelle cette fonction.
+  async function deleteEngagement(id: string) {
+    const { error: deleteError } = await getSupabaseClient().from('engagement').delete().eq('id', id);
+    if (deleteError) return { error: toFrenchError(deleteError.message) };
+    await refresh();
+    return { error: null };
+  }
+
+  return { engagements, loading, error, refresh, createEngagement, updateEngagement, setArchived, deleteEngagement };
 }
