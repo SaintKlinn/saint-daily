@@ -32,6 +32,7 @@ export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const { engagements, loading, error: skillsError, updateEngagement, setArchived } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
+  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
   const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 
@@ -99,6 +100,13 @@ export default function DetailSkill() {
     if (!skill) return;
     setActionError(null);
     const { error } = await updateEngagement(skill.id, { genericLevel: e.target.value as GenericLevel });
+    if (error) setActionError(error);
+  }
+
+  async function handleProjectChange(e: ChangeEvent<HTMLSelectElement>) {
+    if (!skill) return;
+    setActionError(null);
+    const { error } = await updateEngagement(skill.id, { projectId: e.target.value || null });
     if (error) setActionError(error);
   }
 
@@ -189,6 +197,23 @@ export default function DetailSkill() {
               {(Object.keys(LEVEL_LABELS) as GenericLevel[]).map((level) => (
                 <option key={level} value={level}>
                   {LEVEL_LABELS[level]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="relative flex items-center gap-1.5 border border-ink-700 px-3.5 py-2 font-data text-[11px] uppercase tracking-[0.08em] text-muted">
+            {skill.projectId ? (projects.find((p) => p.id === skill.projectId)?.name ?? 'Projet') : 'Aucun projet'}
+            <ChevronDownIcon />
+            <select
+              value={skill.projectId ?? ''}
+              onChange={handleProjectChange}
+              aria-label="Projet"
+              className="absolute inset-0 cursor-pointer opacity-0"
+            >
+              <option value="">Aucun projet</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
                 </option>
               ))}
             </select>

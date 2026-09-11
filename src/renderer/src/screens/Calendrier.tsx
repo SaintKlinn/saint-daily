@@ -40,6 +40,7 @@ export default function Calendrier() {
   const { engagements, error: engagementsError, setArchived, updateEngagement, createEngagements, deleteEngagements } = useEngagements();
   const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
+  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const scheduledTasks = useMemo(
     () => activeEngagements.filter((e) => e.scheduledAt && e.scheduledEndsAt),
     [activeEngagements]
@@ -133,6 +134,16 @@ export default function Calendrier() {
     // sur l'ancienne priorité jusqu'à sa fermeture/réouverture, alors que
     // l'écriture a bien réussi.
     setPopoverTask((current) => (current && current.id === taskId ? { ...current, priority } : current));
+  }
+
+  async function handleChangeProject(taskId: string, projectId: string | null) {
+    const { error } = await updateEngagement(taskId, { projectId });
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    setActionError(null);
+    setPopoverTask((current) => (current && current.id === taskId ? { ...current, projectId } : current));
   }
 
   async function handleSnooze(taskId: string, mode: 'aujourdhui' | 'demain') {
@@ -416,6 +427,8 @@ export default function Calendrier() {
           canEditRecurrence={isNextOccurrenceInSeries(popoverTask, activeEngagements)}
           onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
           recurrenceBusy={recurrenceBusy}
+          projects={projects}
+          onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
           error={actionError}
         />
       )}

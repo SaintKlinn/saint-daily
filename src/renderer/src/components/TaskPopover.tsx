@@ -28,6 +28,8 @@ export default function TaskPopover({
   canEditRecurrence,
   onRecurrenceChange,
   recurrenceBusy,
+  projects,
+  onProjectChange,
   error,
 }: {
   task: Engagement;
@@ -39,6 +41,8 @@ export default function TaskPopover({
   canEditRecurrence: boolean;
   onRecurrenceChange: (rule: RecurrenceRule) => void;
   recurrenceBusy: boolean;
+  projects: Engagement[];
+  onProjectChange: (projectId: string | null) => void;
   error: string | null;
 }) {
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(task.id);
@@ -100,6 +104,21 @@ export default function TaskPopover({
           onAdd={addMilestone}
           error={milestonesError}
         />
+        <div className="relative flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Projet</p>
+          <select
+            value={task.projectId ?? ''}
+            onChange={(e) => onProjectChange(e.target.value || null)}
+            className={`border border-ink-700 bg-ink-800 px-2.5 py-1.5 text-sm text-champagne ${FOCUS_RING}`}
+          >
+            <option value="">Aucun</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
         {canEditRecurrence && (
           <RecurrenceEditor
             type={task.recurrenceType}
