@@ -131,7 +131,8 @@ export default function Calendrier() {
     if (!task || !task.scheduledAt || !task.scheduledEndsAt) return;
     const durationMinutes = (new Date(task.scheduledEndsAt).getTime() - new Date(task.scheduledAt).getTime()) / 60_000;
     const now = new Date();
-    const fromDate = mode === 'aujourdhui' ? now : startOfDay(addDays(now, 1));
+    const searchFrom = new Date(Math.max(now.getTime(), new Date(task.scheduledEndsAt).getTime()));
+    const fromDate = mode === 'aujourdhui' ? searchFrom : startOfDay(addDays(now, 1));
     const otherTasks = scheduledTasks
       .filter((t) => t.id !== taskId)
       .map((t) => ({ scheduledAt: t.scheduledAt as string, scheduledEndsAt: t.scheduledEndsAt as string }));
@@ -316,6 +317,7 @@ export default function Calendrier() {
           completing={completing}
           onPriorityChange={(priority) => handleChangePriority(popoverTask.id, priority)}
           onSnooze={(mode) => handleSnooze(popoverTask.id, mode)}
+          error={actionError}
         />
       )}
     </div>

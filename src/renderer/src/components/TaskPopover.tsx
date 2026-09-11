@@ -21,6 +21,7 @@ export default function TaskPopover({
   completing,
   onPriorityChange,
   onSnooze,
+  error,
 }: {
   task: Engagement;
   onClose: () => void;
@@ -28,6 +29,7 @@ export default function TaskPopover({
   completing: boolean;
   onPriorityChange: (priority: Priority) => void;
   onSnooze: (mode: 'aujourdhui' | 'demain') => void;
+  error: string | null;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60" onClick={onClose}>
@@ -80,6 +82,11 @@ export default function TaskPopover({
             </button>
           </div>
         </div>
+        {error && (
+          <p role="alert" className="relative text-sm text-danger">
+            {error}
+          </p>
+        )}
         <div className="relative mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer
