@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
@@ -7,7 +7,7 @@ import { RECURRENCE_WINDOW_DAYS, detectConflicts, generateOccurrences, nextAncho
 import type { Priority, RecurrenceType } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
-import { FormField } from '../components/FormField';
+import { FormField, SelectField } from '../components/FormField';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -57,6 +57,9 @@ export default function NouvelleTache() {
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
 
+  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
+  const [projectId, setProjectId] = useState('');
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (created) return;
@@ -94,6 +97,7 @@ export default function NouvelleTache() {
       recurrenceType,
       recurrenceInterval: rule.interval,
       recurrenceWeekdays: rule.weekdays,
+      projectId: projectId || null,
     });
     if (createError) {
       setSubmitting(false);
@@ -124,6 +128,7 @@ export default function NouvelleTache() {
             recurrenceType,
             recurrenceInterval: rule.interval,
             recurrenceWeekdays: rule.weekdays,
+            projectId: projectId || null,
           }))
         );
       }
@@ -244,6 +249,14 @@ export default function NouvelleTache() {
             </div>
           )}
         </div>
+        <SelectField label="Projet (optionnel)" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <option value="">Aucun</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </SelectField>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}

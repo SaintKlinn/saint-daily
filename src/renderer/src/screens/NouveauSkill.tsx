@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import type { GenericLevel } from '../lib/types';
@@ -8,13 +8,16 @@ import { FormField, SelectField, TextAreaField } from '../components/FormField';
 
 export default function NouveauSkill() {
   const navigate = useNavigate();
-  const { createEngagement } = useEngagements();
+  const { engagements, createEngagement } = useEngagements();
   const [name, setName] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [genericLevel, setGenericLevel] = useState<GenericLevel>('debutant');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
+  const [projectId, setProjectId] = useState('');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,7 +31,13 @@ export default function NouveauSkill() {
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
-    const { error: createError } = await createEngagement({ name: name.trim(), tags, genericLevel, notes: notes || null });
+    const { error: createError } = await createEngagement({
+      name: name.trim(),
+      tags,
+      genericLevel,
+      notes: notes || null,
+      projectId: projectId || null,
+    });
     setSubmitting(false);
     if (createError) {
       setError(createError);
@@ -59,6 +68,14 @@ export default function NouveauSkill() {
           <option value="expert">Expert</option>
         </SelectField>
         <TextAreaField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+        <SelectField label="Projet (optionnel)" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <option value="">Aucun</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </SelectField>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
