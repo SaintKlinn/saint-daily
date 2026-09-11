@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfWeek } from './calendarLayout';
+import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, endOfDay, startOfDay, startOfWeek } from './calendarLayout';
 
 describe('startOfWeek', () => {
   it('returns the same Monday when given a Monday', () => {
@@ -108,5 +108,32 @@ describe('blockPositionFromRange', () => {
     const fromDuration = blockPositionFromDuration(start.toISOString(), 30);
     expect(fromRange.topPercent).toBeCloseTo(fromDuration.topPercent, 5);
     expect(fromRange.heightPercent).toBeCloseTo(fromDuration.heightPercent, 5);
+  });
+});
+
+describe('startOfDay', () => {
+  it('zeroes the time components and keeps the same calendar day', () => {
+    const result = startOfDay(new Date(2026, 8, 7, 15, 42, 10));
+    expect(result.getFullYear()).toBe(2026);
+    expect(result.getMonth()).toBe(8);
+    expect(result.getDate()).toBe(7);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+    expect(result.getSeconds()).toBe(0);
+  });
+});
+
+describe('endOfDay', () => {
+  it('returns midnight at the start of the following day', () => {
+    const result = endOfDay(new Date(2026, 8, 7, 15, 42, 10));
+    expect(result.getMonth()).toBe(8);
+    expect(result.getDate()).toBe(8);
+    expect(result.getHours()).toBe(0);
+  });
+
+  it('rolls over into the next month at month end', () => {
+    const result = endOfDay(new Date(2026, 8, 30, 10, 0));
+    expect(result.getMonth()).toBe(9);
+    expect(result.getDate()).toBe(1);
   });
 });

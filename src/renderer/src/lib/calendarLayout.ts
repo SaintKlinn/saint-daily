@@ -13,6 +13,18 @@ export function addDays(date: Date, days: number): Date {
   return result;
 }
 
+export function startOfDay(date: Date): Date {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+export function endOfDay(date: Date): Date {
+  const result = new Date(date);
+  result.setHours(24, 0, 0, 0);
+  return result;
+}
+
 // Comparaison par composants de date locale plutôt que par arithmétique de
 // millisecondes : un jour peut faire 23h ou 25h lors d'un changement
 // d'heure, ce qui fausserait un simple `diffMs / DAY_MS`.
