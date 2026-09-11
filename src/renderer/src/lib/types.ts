@@ -17,6 +17,8 @@ export interface Engagement {
   recurrenceType: RecurrenceType;
   recurrenceInterval: number | null;
   recurrenceWeekdays: number[] | null;
+  isProject: boolean;
+  projectId: string | null;
   createdAt: string;
 }
 

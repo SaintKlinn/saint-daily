@@ -19,6 +19,8 @@ interface EngagementRow {
   recurrence_type: RecurrenceType;
   recurrence_interval: number | null;
   recurrence_weekdays: number[] | null;
+  is_project: boolean;
+  project_id: string | null;
   created_at: string;
 }
 
@@ -38,6 +40,8 @@ function fromRow(row: EngagementRow): Engagement {
     recurrenceType: row.recurrence_type,
     recurrenceInterval: row.recurrence_interval,
     recurrenceWeekdays: row.recurrence_weekdays,
+    isProject: row.is_project,
+    projectId: row.project_id,
     createdAt: row.created_at,
   };
 }
@@ -83,6 +87,8 @@ export function useEngagements() {
     recurrenceType?: RecurrenceType;
     recurrenceInterval?: number | null;
     recurrenceWeekdays?: number[] | null;
+    isProject?: boolean;
+    projectId?: string | null;
   }) {
     if (!session) return { error: 'Non connecté' };
     const { error: insertError } = await getSupabaseClient()
@@ -100,6 +106,8 @@ export function useEngagements() {
         ...(input.recurrenceType ? { recurrence_type: input.recurrenceType } : {}),
         ...(input.recurrenceInterval !== undefined ? { recurrence_interval: input.recurrenceInterval } : {}),
         ...(input.recurrenceWeekdays !== undefined ? { recurrence_weekdays: input.recurrenceWeekdays } : {}),
+        ...(input.isProject !== undefined ? { is_project: input.isProject } : {}),
+        ...(input.projectId !== undefined ? { project_id: input.projectId } : {}),
       });
     if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
@@ -119,6 +127,8 @@ export function useEngagements() {
       recurrenceType?: RecurrenceType;
       recurrenceInterval?: number | null;
       recurrenceWeekdays?: number[] | null;
+      isProject?: boolean;
+      projectId?: string | null;
     }>
   ) {
     if (!session) return { error: 'Non connecté' };
@@ -136,6 +146,8 @@ export function useEngagements() {
       ...(input.recurrenceType ? { recurrence_type: input.recurrenceType } : {}),
       ...(input.recurrenceInterval !== undefined ? { recurrence_interval: input.recurrenceInterval } : {}),
       ...(input.recurrenceWeekdays !== undefined ? { recurrence_weekdays: input.recurrenceWeekdays } : {}),
+      ...(input.isProject !== undefined ? { is_project: input.isProject } : {}),
+      ...(input.projectId !== undefined ? { project_id: input.projectId } : {}),
     }));
     const { error: insertError } = await getSupabaseClient().from('engagement').insert(rows);
     if (insertError) return { error: toFrenchError(insertError.message) };
@@ -169,6 +181,7 @@ export function useEngagements() {
         | 'recurrenceType'
         | 'recurrenceInterval'
         | 'recurrenceWeekdays'
+        | 'projectId'
       >
     >
   ) {
@@ -186,6 +199,7 @@ export function useEngagements() {
         ...(patch.recurrenceType !== undefined ? { recurrence_type: patch.recurrenceType } : {}),
         ...(patch.recurrenceInterval !== undefined ? { recurrence_interval: patch.recurrenceInterval } : {}),
         ...(patch.recurrenceWeekdays !== undefined ? { recurrence_weekdays: patch.recurrenceWeekdays } : {}),
+        ...(patch.projectId !== undefined ? { project_id: patch.projectId } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };
