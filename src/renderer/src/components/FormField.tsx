@@ -9,13 +9,21 @@ const FIELD =
 
 export function FormField({
   label,
+  required,
   className = '',
   ...props
-}: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; required?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={LABEL}>
-      {label}
-      <input {...props} className={`${FIELD} text-[15px] ${className}`.trim()} />
+      <span>
+        {label}
+        {required && (
+          <span aria-hidden="true" className="ml-1 text-danger">
+            *
+          </span>
+        )}
+      </span>
+      <input required={required} {...props} className={`${FIELD} text-[15px] ${className}`.trim()} />
     </label>
   );
 }

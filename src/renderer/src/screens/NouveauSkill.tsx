@@ -45,7 +45,7 @@ export default function NouveauSkill() {
         <h1 className="mt-1.5 font-serif text-2xl text-champagne">Commencer à suivre</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
-        <FormField label="Nom" value={name} onChange={(e) => setName(e.target.value)} />
+        <FormField label="Nom" required value={name} onChange={(e) => setName(e.target.value)} />
         <FormField
           label="Tags (séparés par des virgules)"
           value={tagsInput}
