@@ -2,7 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
-import type { Priority } from '../lib/types';
+import { addDays } from '../lib/calendarLayout';
+import { RECURRENCE_WINDOW_DAYS, detectConflicts, generateOccurrences, nextAnchorDate, type RecurrenceRule } from '../lib/recurrence';
+import type { Priority, RecurrenceType } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { FormField } from '../components/FormField';
@@ -10,6 +12,21 @@ import { FormField } from '../components/FormField';
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 const DURATION_PRESETS = [15, 30, 45, 60, 90];
+const RECURRENCE_TYPES: { value: RecurrenceType; label: string }[] = [
+  { value: 'aucune', label: 'Aucune' },
+  { value: 'quotidien', label: 'Quotidien' },
+  { value: 'hebdomadaire', label: 'Hebdomadaire' },
+  { value: 'tous_les_n_jours', label: 'Tous les N jours' },
+];
+const WEEKDAY_OPTIONS = [
+  { value: 1, label: 'Lun' },
+  { value: 2, label: 'Mar' },
+  { value: 3, label: 'Mer' },
+  { value: 4, label: 'Jeu' },
+  { value: 5, label: 'Ven' },
+  { value: 6, label: 'Sam' },
+  { value: 0, label: 'Dim' },
+];
 
 // datetime-local exige "YYYY-MM-DDTHH:mm" en heure locale, sans le "Z" ni le
 // décalage qu'a un ISO string — cette conversion n'est nécessaire que quand
@@ -23,7 +40,7 @@ function toDatetimeLocalValue(iso: string): string {
 export default function NouvelleTache() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { createEngagement } = useEngagements();
+  const { engagements, createEngagement } = useEngagements();
   const [name, setName] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const preselectedScheduledAt = searchParams.get('scheduledAt');
@@ -32,7 +49,11 @@ export default function NouvelleTache() {
   );
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [priority, setPriority] = useState<Priority>('aucune');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('aucune');
+  const [recurrenceInterval, setRecurrenceInterval] = useState(2);
+  const [recurrenceWeekdays, setRecurrenceWeekdays] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -47,24 +68,70 @@ export default function NouvelleTache() {
     }
     setSubmitting(true);
     setError(null);
+    setConflictMessage(null);
     const tags = tagsInput
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
     const startDate = new Date(scheduledAt);
-    const scheduledEndsAt = new Date(startDate.getTime() + durationMinutes * 60_000).toISOString();
+    const durationMs = durationMinutes * 60_000;
+    const scheduledEndsAt = new Date(startDate.getTime() + durationMs).toISOString();
+    const recurrenceSeriesId = recurrenceType !== 'aucune' ? crypto.randomUUID() : null;
+    const rule: RecurrenceRule = {
+      type: recurrenceType,
+      interval: recurrenceType === 'tous_les_n_jours' ? recurrenceInterval : null,
+      weekdays: recurrenceType === 'hebdomadaire' ? recurrenceWeekdays : null,
+    };
     const { error: createError } = await createEngagement({
       name: name.trim(),
       tags,
       scheduledAt: startDate.toISOString(),
       scheduledEndsAt,
       priority,
+      recurrenceSeriesId,
+      recurrenceType,
+      recurrenceInterval: rule.interval,
+      recurrenceWeekdays: rule.weekdays,
     });
-    setSubmitting(false);
     if (createError) {
+      setSubmitting(false);
       setError(createError);
       return;
     }
+
+    if (recurrenceType !== 'aucune' && recurrenceSeriesId) {
+      const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
+      const anchor = nextAnchorDate(rule, startDate);
+      const dates = generateOccurrences(rule, anchor, windowEnd);
+      const occurrenceSlots = dates.map((date) => ({
+        seriesId: recurrenceSeriesId,
+        scheduledAt: date.toISOString(),
+        scheduledEndsAt: new Date(date.getTime() + durationMs).toISOString(),
+      }));
+      const conflicts = detectConflicts(occurrenceSlots, engagements);
+      for (const slot of occurrenceSlots) {
+        await createEngagement({
+          name: name.trim(),
+          tags,
+          scheduledAt: slot.scheduledAt,
+          scheduledEndsAt: slot.scheduledEndsAt,
+          priority,
+          recurrenceSeriesId,
+          recurrenceType,
+          recurrenceInterval: rule.interval,
+          recurrenceWeekdays: rule.weekdays,
+        });
+      }
+      if (conflicts.length > 0) {
+        setSubmitting(false);
+        setConflictMessage(
+          `${conflicts.length} occurrence${conflicts.length > 1 ? 's' : ''} en conflit avec une autre tâche déjà planifiée.`
+        );
+        return;
+      }
+    }
+
+    setSubmitting(false);
     navigate('/');
   }
 
@@ -122,9 +189,64 @@ export default function NouvelleTache() {
             ))}
           </div>
         </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {RECURRENCE_TYPES.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setRecurrenceType(option.value)}
+                aria-pressed={recurrenceType === option.value}
+                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {recurrenceType === 'hebdomadaire' && (
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {WEEKDAY_OPTIONS.map((day) => {
+                const selected = recurrenceWeekdays.includes(day.value);
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() =>
+                      setRecurrenceWeekdays((current) =>
+                        selected ? current.filter((d) => d !== day.value) : [...current, day.value]
+                      )
+                    }
+                    aria-pressed={selected}
+                    className={`font-data text-xs px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {recurrenceType === 'tous_les_n_jours' && (
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="number"
+                min={2}
+                value={recurrenceInterval}
+                onChange={(e) => setRecurrenceInterval(Math.max(2, Number(e.target.value) || 2))}
+                className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-xs text-champagne ${FOCUS_RING}`}
+              />
+              <span className="text-xs text-muted">jours</span>
+            </div>
+          )}
+        </div>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
+          </p>
+        )}
+        {conflictMessage && (
+          <p role="alert" className="text-sm text-danger">
+            {conflictMessage}
           </p>
         )}
         <div className="mt-1 flex justify-end gap-3">
