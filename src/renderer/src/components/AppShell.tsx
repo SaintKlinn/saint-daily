@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
@@ -21,9 +21,11 @@ const navItems = [
 
 export default function AppShell() {
   const { engagements, loading, createEngagement } = useEngagements();
+  const hasSyncedRecurrenceRef = useRef(false);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || hasSyncedRecurrenceRef.current) return;
+    hasSyncedRecurrenceRef.current = true;
     async function syncRecurringSeries() {
       const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
       const planned = planMissingOccurrences(engagements, windowEnd);
@@ -44,11 +46,14 @@ export default function AppShell() {
       }
     }
     syncRecurringSeries();
-    // Ne dépend que de `loading` : ne doit tourner qu'une fois par
-    // chargement de l'app, pas à chaque render où `engagements` change —
-    // y compris à cause des créations que cette synchronisation fait
-    // elle-même, ce qui boucherait sinon. Ce projet n'a pas d'eslint (voir
-    // package.json) — rien à désactiver, juste une omission volontaire.
+    // `hasSyncedRecurrenceRef` (pas seulement `loading` en dépendance) est
+    // ce qui garantit un seul passage : `createEngagement` appelle son
+    // propre `refresh()` en interne, qui fait basculer `loading` à chaque
+    // occurrence créée (false -> true -> false), donc `[loading]` seul
+    // aurait refait tourner cet effet en pleine boucle et pu créer des
+    // occurrences en double pour une série avec plusieurs occurrences de
+    // retard (le cas normal, la fenêtre fait 56 jours). Le ref bloque tout
+    // second déclenchement indépendamment de ces bascules ultérieures.
   }, [loading]);
 
   return (
