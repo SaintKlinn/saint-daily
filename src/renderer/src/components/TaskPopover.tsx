@@ -1,6 +1,8 @@
 import RayCorner from './RayCorner';
 import Button from './Button';
 import RecurrenceEditor from './RecurrenceEditor';
+import MilestoneChecklist from './MilestoneChecklist';
+import { useMilestones } from '../hooks/useMilestones';
 import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
 import type { RecurrenceRule } from '../lib/recurrence';
 import type { Engagement, Priority } from '../lib/types';
@@ -39,6 +41,8 @@ export default function TaskPopover({
   recurrenceBusy: boolean;
   error: string | null;
 }) {
+  const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(task.id);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60" onClick={onClose}>
       <div
@@ -90,6 +94,12 @@ export default function TaskPopover({
             </button>
           </div>
         </div>
+        <MilestoneChecklist
+          milestones={milestones}
+          onToggle={toggleMilestone}
+          onAdd={addMilestone}
+          error={milestonesError}
+        />
         {canEditRecurrence && (
           <RecurrenceEditor
             type={task.recurrenceType}
