@@ -16,6 +16,9 @@ import Calendrier from './screens/Calendrier';
 import DetailSkill from './screens/DetailSkill';
 import ListeSkills from './screens/ListeSkills';
 import NouveauSkill from './screens/NouveauSkill';
+import NouveauProjet from './screens/NouveauProjet';
+import ListeProjets from './screens/ListeProjets';
+import DetailProjet from './screens/DetailProjet';
 import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
 
@@ -75,6 +78,9 @@ function Router() {
           <Route path="entree/nouvelle" element={<NouvelleEntree />} />
           <Route path="taches/nouvelle" element={<NouvelleTache />} />
           <Route path="calendrier" element={<Calendrier />} />
+          <Route path="projets" element={<ListeProjets />} />
+          <Route path="projets/nouveau" element={<NouveauProjet />} />
+          <Route path="projets/:id" element={<DetailProjet />} />
           <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="reglages" element={<Reglages />} />
           <Route path="*" element={<Introuvable />} />

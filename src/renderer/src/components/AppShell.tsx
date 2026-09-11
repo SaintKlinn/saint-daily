@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
-import { HomeIcon, ListIcon, CalendarIcon, GearIcon } from './icons';
+import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
@@ -16,6 +16,7 @@ const navItems = [
   { to: '/', label: 'Accueil', Icon: HomeIcon },
   { to: '/skills', label: 'Skills', Icon: ListIcon },
   { to: '/calendrier', label: 'Calendrier', Icon: CalendarIcon },
+  { to: '/projets', label: 'Projets', Icon: FolderIcon },
   { to: '/reglages', label: 'Réglages', Icon: GearIcon },
 ];
 
