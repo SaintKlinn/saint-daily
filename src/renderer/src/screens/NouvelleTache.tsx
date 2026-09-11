@@ -76,7 +76,7 @@ export default function NouvelleTache() {
         <h1 className="mt-1.5 font-serif text-2xl text-champagne">Ajouter une tâche</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
-        <FormField label="Titre" value={name} onChange={(e) => setName(e.target.value)} />
+        <FormField label="Titre" required value={name} onChange={(e) => setName(e.target.value)} />
         <FormField
           label="Tags (optionnels, séparés par des virgules)"
           value={tagsInput}
@@ -85,6 +85,7 @@ export default function NouvelleTache() {
         />
         <FormField
           label="Planification"
+          required
           type="datetime-local"
           value={scheduledAt}
           onChange={(e) => setScheduledAt(e.target.value)}
