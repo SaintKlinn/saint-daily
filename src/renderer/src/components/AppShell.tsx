@@ -38,6 +38,7 @@ export default function AppShell() {
           name: template.name,
           tags: template.tags,
           priority: template.priority,
+          projectId: template.projectId,
           scheduledAt: occurrence.scheduledAt,
           scheduledEndsAt: occurrence.scheduledEndsAt,
           recurrenceSeriesId: occurrence.seriesId,

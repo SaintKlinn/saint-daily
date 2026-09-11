@@ -236,6 +236,7 @@ export default function Calendrier() {
           name: task.name,
           tags: task.tags,
           priority: task.priority,
+          projectId: task.projectId,
           scheduledAt: slot.scheduledAt,
           scheduledEndsAt: slot.scheduledEndsAt,
           recurrenceSeriesId: seriesId,
