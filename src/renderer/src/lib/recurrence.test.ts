@@ -56,6 +56,12 @@ describe('generateOccurrences', () => {
     const rule: RecurrenceRule = { type: 'quotidien', interval: null, weekdays: null };
     expect(generateOccurrences(rule, new Date(2026, 8, 10, 9, 0), new Date(2026, 8, 7, 9, 0))).toEqual([]);
   });
+
+  it('treats a non-positive interval as 1 day, never hanging', () => {
+    const rule: RecurrenceRule = { type: 'tous_les_n_jours', interval: 0, weekdays: null };
+    const result = generateOccurrences(rule, new Date(2026, 8, 7, 9, 0), new Date(2026, 8, 9, 9, 0));
+    expect(result.map((d) => d.getDate())).toEqual([7, 8, 9]);
+  });
 });
 
 describe('nextAnchorDate', () => {

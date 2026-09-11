@@ -13,7 +13,7 @@ export interface RecurrenceRule {
 // garder la cadence ; quotidien/hebdomadaire avancent toujours d'un jour (le
 // filtre du jour de la semaine fait le tri pour hebdomadaire).
 export function nextAnchorDate(rule: RecurrenceRule, lastOccurrenceDate: Date): Date {
-  if (rule.type === 'tous_les_n_jours') return addDays(lastOccurrenceDate, rule.interval ?? 1);
+  if (rule.type === 'tous_les_n_jours') return addDays(lastOccurrenceDate, Math.max(1, rule.interval ?? 1));
   return addDays(lastOccurrenceDate, 1);
 }
 
@@ -23,7 +23,7 @@ export function nextAnchorDate(rule: RecurrenceRule, lastOccurrenceDate: Date): 
 export function generateOccurrences(rule: RecurrenceRule, fromDate: Date, untilDate: Date): Date[] {
   if (rule.type === 'aucune') return [];
   const occurrences: Date[] = [];
-  const step = rule.type === 'tous_les_n_jours' ? rule.interval ?? 1 : 1;
+  const step = rule.type === 'tous_les_n_jours' ? Math.max(1, rule.interval ?? 1) : 1;
   let cursor = new Date(fromDate);
   while (cursor.getTime() <= untilDate.getTime()) {
     if (rule.type === 'hebdomadaire') {
