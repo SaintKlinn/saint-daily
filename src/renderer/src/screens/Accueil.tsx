@@ -10,7 +10,7 @@ import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import { buttonClassName } from '../components/Button';
 import { CheckIcon, PlusIcon } from '../components/icons';
-import { PRIORITY_COLORS } from '../lib/priority';
+import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import { colors } from '../theme/colors';
 
 const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
@@ -265,6 +265,8 @@ export default function Accueil() {
                   <p className="flex items-center gap-2 font-serif text-lg text-champagne">
                     {PRIORITY_COLORS[task.priority] && (
                       <span
+                        role="img"
+                        aria-label={`Priorité : ${PRIORITY_LABELS[task.priority]}`}
                         className="h-[7px] w-[7px] shrink-0 rounded-full"
                         style={{ background: PRIORITY_COLORS[task.priority] as string }}
                       />

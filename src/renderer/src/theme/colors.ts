@@ -23,14 +23,22 @@ export const colors = {
     deep: '#8A5F1B',
   },
   danger: '#F87171',
-  // `elevee` reprend la valeur de `danger` telle quelle (même charge
-  // sémantique : urgence) — dupliquée ici plutôt que référencée, un
-  // objet littéral ne peut pas s'auto-référencer pendant sa propre
-  // évaluation. `moyenne`/`basse` évitent volontairement accent.bright,
-  // qui signale déjà "actif/primaire" ailleurs dans l'app (nav, boutons).
+  // La palette d'origine (élevée = `danger`, moyenne #D2894A, basse #6FA8A3)
+  // passait sous 3:1 (WCAG 1.4.11, contraste non-textuel) sur le fond
+  // ink-800 du Calendrier — vérifiée uniquement sur ink-900 à l'origine
+  // (audit ui-ux-pro-max, 2026-09-11). Nouvelles valeurs, avec marge au-dessus
+  // de 3:1 sur les DEUX fonds où la palette s'affiche réellement :
+  //   élevée  4.59:1 sur ink-900 / 3.61:1 sur ink-800
+  //   moyenne 4.89:1 sur ink-900 / 3.85:1 sur ink-800
+  //   basse   4.91:1 sur ink-900 / 3.86:1 sur ink-800
+  // `elevee` ne réutilise plus `danger` : `danger` sert aussi au texte
+  // d'erreur (role="alert") ailleurs dans l'app, l'éclaircir aurait changé
+  // ce rendu partout — `elevee` reçoit sa propre valeur, même famille de
+  // rouge. `moyenne`/`basse` évitent volontairement accent.bright, qui
+  // signale déjà "actif/primaire" ailleurs dans l'app (nav, boutons).
   priority: {
-    elevee: '#F87171',
-    moyenne: '#D2894A',
-    basse: '#6FA8A3',
+    elevee: '#FF9494',
+    moyenne: '#E6AD70',
+    basse: '#8FC2BC',
   },
 } as const;

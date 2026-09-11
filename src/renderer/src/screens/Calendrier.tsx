@@ -4,7 +4,7 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfWeek } from '../lib/calendarLayout';
-import { PRIORITY_COLORS } from '../lib/priority';
+import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import { ChevronLeftIcon } from '../components/icons';
@@ -225,6 +225,7 @@ export default function Calendrier() {
                     key={task.id}
                     type="button"
                     onClick={() => setPopoverTask(task)}
+                    aria-label={priorityColor ? `${task.name} — priorité ${PRIORITY_LABELS[task.priority]}` : undefined}
                     className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''}`}
                     style={{
                       top: `${topPercent}%`,
