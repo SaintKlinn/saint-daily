@@ -244,7 +244,11 @@ export default function Pomodoro() {
         )}
         <button
           onClick={() => void stop()}
-          className={`border border-ink-700 px-5 py-3 font-sans text-sm text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] ${FOCUS_RING}`}
+          // Pendant une bascule d'engagement, `stop()` est bloqué par le
+          // verrou de solde et ne ferait rien : mieux vaut un bouton
+          // visiblement indisponible qu'un bouton qui ignore le clic.
+          disabled={switching}
+          className={`border border-ink-700 px-5 py-3 font-sans text-sm text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] disabled:opacity-60 disabled:hover:text-muted ${FOCUS_RING}`}
         >
           Arrêter
         </button>
