@@ -10,6 +10,7 @@ export interface Engagement {
   tags: string[];
   genericLevel: GenericLevel;
   archivedAt: string | null;
+  deletedAt: string | null;
   scheduledAt: string | null;
   scheduledEndsAt: string | null;
   priority: Priority;

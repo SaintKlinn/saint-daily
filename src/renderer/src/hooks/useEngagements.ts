@@ -12,6 +12,7 @@ interface EngagementRow {
   tags: string[];
   generic_level: GenericLevel;
   archived_at: string | null;
+  deleted_at: string | null;
   scheduled_at: string | null;
   scheduled_ends_at: string | null;
   priority: Priority;
@@ -33,6 +34,12 @@ function fromRow(row: EngagementRow): Engagement {
     tags: row.tags,
     genericLevel: row.generic_level,
     archivedAt: row.archived_at,
+    // `?? null` volontaire : la migration qui ajoute cette colonne est
+    // appliquée à la base live après le déploiement du code. Entre les
+    // deux, la propriété est absente de la ligne et vaudrait `undefined`,
+    // ce que le filtre ci-dessous traiterait correctement mais que le type
+    // `string | null` ne décrit pas.
+    deletedAt: row.deleted_at ?? null,
     scheduledAt: row.scheduled_at,
     scheduledEndsAt: row.scheduled_ends_at,
     priority: row.priority,
@@ -49,6 +56,7 @@ function fromRow(row: EngagementRow): Engagement {
 export function useEngagements() {
   const { session } = useAuth();
   const [engagements, setEngagements] = useState<Engagement[]>([]);
+  const [deletedEngagements, setDeletedEngagements] = useState<Engagement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +71,18 @@ export function useEngagements() {
     if (fetchError) {
       setError(toFrenchError(fetchError.message));
     } else {
-      setEngagements((data as EngagementRow[]).map(fromRow));
+      const all = (data as EngagementRow[]).map(fromRow);
+      // Point de filtrage unique de toute l'application : aucun écran n'a
+      // à se souvenir d'exclure la corbeille, et aucun futur écran ne
+      // pourra afficher un élément supprimé par accident. Le tri est
+      // côté client et non dans la requête, pour que le code fonctionne
+      // aussi tant que la colonne n'existe pas (voir l'en-tête du plan).
+      setEngagements(all.filter((engagement) => !engagement.deletedAt));
+      setDeletedEngagements(
+        all
+          .filter((engagement) => engagement.deletedAt)
+          .sort((a, b) => (b.deletedAt as string).localeCompare(a.deletedAt as string))
+      );
     }
     setLoading(false);
   }, [session]);
@@ -217,6 +236,82 @@ export function useEngagements() {
     return { error: null };
   }
 
+  /**
+   * Envoie un engagement à la corbeille. Pour un projet, ses enfants
+   * encore vivants y partent avec lui, **avec exactement le même
+   * horodatage** : c'est ce qui permet ensuite à `restore` de ne remonter
+   * que ceux qui sont partis à ce moment-là, et pas un enfant supprimé
+   * séparément plus tôt.
+   */
+  async function softDelete(id: string, isProject: boolean) {
+    const supabase = getSupabaseClient();
+    const deletedAt = new Date().toISOString();
+    if (isProject) {
+      const { error: childrenError } = await supabase
+        .from('engagement')
+        .update({ deleted_at: deletedAt })
+        .eq('project_id', id)
+        .is('deleted_at', null);
+      if (childrenError) return { error: toFrenchError(childrenError.message) };
+    }
+    const { error: updateError } = await supabase
+      .from('engagement')
+      .update({ deleted_at: deletedAt })
+      .eq('id', id);
+    if (updateError) return { error: toFrenchError(updateError.message) };
+    await refresh();
+    return { error: null };
+  }
+
+  async function restore(id: string, deletedAt: string, isProject: boolean) {
+    const supabase = getSupabaseClient();
+    if (isProject) {
+      const { error: childrenError } = await supabase
+        .from('engagement')
+        .update({ deleted_at: null })
+        .eq('project_id', id)
+        .eq('deleted_at', deletedAt);
+      if (childrenError) return { error: toFrenchError(childrenError.message) };
+    }
+    const { error: updateError } = await supabase
+      .from('engagement')
+      .update({ deleted_at: null })
+      .eq('id', id);
+    if (updateError) return { error: toFrenchError(updateError.message) };
+    await refresh();
+    return { error: null };
+  }
+
+  /**
+   * Suppression réelle et irréversible. Les entrées de pratique et les
+   * jalons partent d'eux-mêmes (`on delete cascade`), mais `project_id`
+   * n'a aucune clause `on delete` : sans les deux passes ci-dessous, la
+   * base refuserait de supprimer un projet encore référencé.
+   */
+  async function purge(id: string, isProject: boolean) {
+    const supabase = getSupabaseClient();
+    if (isProject) {
+      const { error: childrenError } = await supabase
+        .from('engagement')
+        .delete()
+        .eq('project_id', id)
+        .not('deleted_at', 'is', null);
+      if (childrenError) return { error: toFrenchError(childrenError.message) };
+      // Un enfant restauré entre-temps pointe encore vers le projet : il
+      // survit, mais perd son rattachement, sans quoi la clé étrangère
+      // bloquerait la suppression du parent.
+      const { error: detachError } = await supabase
+        .from('engagement')
+        .update({ project_id: null })
+        .eq('project_id', id);
+      if (detachError) return { error: toFrenchError(detachError.message) };
+    }
+    const { error: deleteError } = await supabase.from('engagement').delete().eq('id', id);
+    if (deleteError) return { error: toFrenchError(deleteError.message) };
+    await refresh();
+    return { error: null };
+  }
+
   // Première suppression réelle de l'app — volontairement scopée aux
   // occurrences de récurrence auto-générées et jamais échues (voir spec) :
   // rien d'autre dans le codebase n'appelle cette fonction.
@@ -229,6 +324,7 @@ export function useEngagements() {
 
   return {
     engagements,
+    deletedEngagements,
     loading,
     error,
     refresh,
@@ -238,5 +334,8 @@ export function useEngagements() {
     setArchived,
     deleteEngagement,
     deleteEngagements,
+    softDelete,
+    restore,
+    purge,
   };
 }
