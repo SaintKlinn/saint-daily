@@ -1,51 +1,136 @@
 import { useEffect, useRef } from 'react';
-import { dueReminders, reminderMessage, type ReminderEngagement } from '../lib/reminders';
+import { useAuth } from '../lib/auth';
+import { getSupabaseClient } from '../lib/supabase';
+import { dueReminders, reminderMessage, REMINDER_TOLERANCE_MS, type ReminderEngagement } from '../lib/reminders';
 
-// Vingt secondes : assez fin pour qu'un rappel parte bien dans sa fenêtre
-// de tolérance de deux minutes, assez espacé pour rester négligeable.
-const CHECK_INTERVAL_MS = 20_000;
+// Chaque tick coûte désormais des lectures réseau plutôt qu'un simple
+// calcul local : 60 s reste largement assez fin pour une fonctionnalité
+// qui ne joue que quelques fois par jour, et combiné à la tolérance de
+// trois minutes de `lib/reminders.ts`, garantit qu'aucun déclencheur ne
+// passe entre deux vérifications.
+const CHECK_INTERVAL_MS = 60_000;
+
+interface EngagementReminderRow {
+  id: string;
+  name: string;
+  scheduled_at: string | null;
+  archived_at: string | null;
+}
+
+interface SettingsReminderRow {
+  notifications_enabled: boolean;
+  // Optionnel : la migration qui ajoute cette colonne est appliquée à la
+  // base live après le déploiement du code (voir `useSettings`). Tant
+  // qu'elle n'est pas passée, `select('*')` renvoie simplement une ligne
+  // sans ce champ plutôt que d'échouer.
+  reminder_lead_minutes: number | undefined;
+}
 
 /**
  * Surveille les tâches planifiées et pousse une notification native au
  * moment voulu. Monté une seule fois, dans `AppShell`.
  *
+ * Ne reçoit rien en argument : `useEngagements` et `useAllPracticeEntries`
+ * n'ont ni store partagé ni realtime, chaque appelant garde un état privé
+ * qui n'est rafraîchi que par ses propres mutations. `AppShell` est une
+ * route de layout montée une seule fois pour une session qui tourne des
+ * jours dans le tray et n'effectue plus aucune mutation après sa synchro
+ * de récurrence initiale — des props figées à ce moment-là auraient deux
+ * conséquences : une tâche créée après le lancement ne rappellerait
+ * jamais, et une tâche cochée depuis l'Accueil continuerait de déclencher
+ * ses rappels (fausse notification). Ce hook relit donc lui-même Supabase
+ * à chaque tick, ce qui a aussi pour effet qu'un changement du réglage
+ * « Notifications natives » prend effet dans la minute plutôt qu'au
+ * prochain redémarrage.
+ *
  * La fenêtre principale tourne avec `backgroundThrottling: false` (voir
  * `src/main/index.ts`), donc cet intervalle continue de tourner même
  * fenêtre masquée dans le tray — c'est précisément le cas d'usage.
  */
-export function useEngagementReminders(
-  engagements: ReminderEngagement[],
-  entryCountByEngagement: Record<string, number>,
-  notificationsEnabled: boolean,
-  leadMinutes: number
-): void {
+export function useEngagementReminders(): void {
   const firedRef = useRef<Set<string>>(new Set());
-  // Les données changent à chaque rafraîchissement des engagements. Les
-  // lire dans une ref plutôt qu'en dépendance de l'effet évite de
-  // reconstruire l'intervalle à chaque re-render, ce qui repousserait
-  // indéfiniment la prochaine vérification.
-  const dataRef = useRef({ engagements, entryCountByEngagement, leadMinutes });
-  dataRef.current = { engagements, entryCountByEngagement, leadMinutes };
+  const { session } = useAuth();
+  // Lue dans une ref plutôt qu'en dépendance de l'effet : la session peut
+  // changer (connexion/déconnexion) sans reconstruire l'intervalle, ce qui
+  // repousserait indéfiniment la prochaine vérification.
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   useEffect(() => {
-    if (!notificationsEnabled) return;
     if (typeof Notification === 'undefined') return;
     if (Notification.permission === 'default') void Notification.requestPermission();
 
-    const interval = setInterval(() => {
-      if (Notification.permission !== 'granted') return;
-      const { engagements: list, entryCountByEngagement: counts, leadMinutes: lead } = dataRef.current;
-      for (const reminder of dueReminders(list, counts, new Date(), lead, firedRef.current)) {
+    async function checkOnce() {
+      // 1. Ni permission ni Notification : on ne touche pas au réseau.
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      const currentSession = sessionRef.current;
+      if (!currentSession) return;
+
+      const supabase = getSupabaseClient();
+
+      // 2. Réglages : même table et même forme de requête que
+      // `useSettings` (select('*') plutôt que des colonnes nommées, pour
+      // rester silencieux si la migration n'est pas encore passée).
+      const { data: settingsRow } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('user_id', currentSession.user.id)
+        .maybeSingle();
+      const settings = settingsRow as SettingsReminderRow | null;
+      if (!settings || !settings.notifications_enabled) return;
+      const leadMinutes = settings.reminder_lead_minutes ?? 10;
+
+      // 3. Fenêtre étroite : seuls les engagements dont un déclencheur
+      // peut plausiblement tomber maintenant (normalement zéro à deux
+      // lignes), jamais tout le catalogue.
+      const now = new Date();
+      const nowMs = now.getTime();
+      const windowStart = new Date(nowMs - REMINDER_TOLERANCE_MS).toISOString();
+      const windowEnd = new Date(nowMs + leadMinutes * 60_000 + REMINDER_TOLERANCE_MS).toISOString();
+      const { data: engagementRows } = await supabase
+        .from('engagement')
+        .select('id, name, scheduled_at, archived_at')
+        .is('archived_at', null)
+        .gte('scheduled_at', windowStart)
+        .lte('scheduled_at', windowEnd);
+      if (!engagementRows || engagementRows.length === 0) return;
+
+      // 4. Seulement les entrées de ces engagements-là, pour savoir
+      // lesquels sont déjà faits.
+      const engagementIds = (engagementRows as EngagementReminderRow[]).map((row) => row.id);
+      const { data: entryRows } = await supabase
+        .from('practice_entry')
+        .select('engagement_id')
+        .in('engagement_id', engagementIds);
+
+      const entryCountByEngagement: Record<string, number> = {};
+      for (const row of (entryRows as { engagement_id: string }[] | null) ?? []) {
+        entryCountByEngagement[row.engagement_id] = (entryCountByEngagement[row.engagement_id] ?? 0) + 1;
+      }
+
+      const engagements: ReminderEngagement[] = (engagementRows as EngagementReminderRow[]).map((row) => ({
+        id: row.id,
+        name: row.name,
+        scheduledAt: row.scheduled_at,
+        archivedAt: row.archived_at,
+      }));
+
+      // 5. Même clé de suivi, mêmes règles pures.
+      for (const reminder of dueReminders(engagements, entryCountByEngagement, now, leadMinutes, firedRef.current)) {
         // Marqué comme vu qu'il soit affiché ou périmé : sinon un rappel
         // manqué reviendrait à chaque vérification jusqu'à la fin des
         // temps.
         firedRef.current.add(reminder.key);
         if (reminder.stale) continue;
-        const notification = new Notification('Saint Daily', { body: reminderMessage(reminder, lead) });
+        const notification = new Notification('Saint Daily', { body: reminderMessage(reminder, leadMinutes) });
         notification.onclick = () => window.api?.focusWindow?.();
       }
+    }
+
+    const interval = setInterval(() => {
+      void checkOnce();
     }, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [notificationsEnabled]);
+  }, []);
 }

@@ -25,8 +25,13 @@ export interface DueReminder {
  * machine restée en veille, afficher d'un coup tous les rappels des
  * dernières heures est plus nuisible qu'utile — et un « dans 10 min »
  * arrivant deux heures trop tard est simplement faux.
+ *
+ * Trois minutes plutôt que deux : chaque tick de `useEngagementReminders`
+ * coûte maintenant des lectures réseau (voir ce hook), son intervalle est
+ * donc passé à 60 s. Une tolérance plus large que cet intervalle garantit
+ * qu'aucun déclencheur ne tombe entre deux vérifications.
  */
-export const REMINDER_TOLERANCE_MS = 2 * 60_000;
+export const REMINDER_TOLERANCE_MS = 3 * 60_000;
 
 export function reminderKey(engagementId: string, kind: ReminderKind): string {
   return `${engagementId}:${kind}`;

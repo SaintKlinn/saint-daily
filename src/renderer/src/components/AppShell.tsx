@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
@@ -7,8 +7,6 @@ import UpdateBanner from './UpdateBanner';
 import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, ChartIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
-import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
-import { useSettings } from '../hooks/useSettings';
 import { useEngagementReminders } from '../hooks/useEngagementReminders';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
@@ -28,28 +26,7 @@ export default function AppShell() {
   const { engagements, loading, createEngagements } = useEngagements();
   const hasSyncedRecurrenceRef = useRef(false);
 
-  const { settings } = useSettings();
-  // Seuls les engagements planifiés peuvent déclencher un rappel : on ne
-  // demande les entrées que pour ceux-là, pas pour tout le catalogue.
-  const scheduledEngagements = useMemo(
-    () => engagements.filter((e) => e.scheduledAt && !e.archivedAt),
-    [engagements]
-  );
-  const { entriesBySkill } = useAllPracticeEntries(scheduledEngagements.map((e) => e.id));
-  const entryCountByEngagement = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const [engagementId, entries] of Object.entries(entriesBySkill)) {
-      counts[engagementId] = entries.length;
-    }
-    return counts;
-  }, [entriesBySkill]);
-
-  useEngagementReminders(
-    scheduledEngagements,
-    entryCountByEngagement,
-    settings?.notificationsEnabled ?? false,
-    settings?.reminderLeadMinutes ?? 10
-  );
+  useEngagementReminders();
 
   useEffect(() => {
     if (loading || hasSyncedRecurrenceRef.current) return;
