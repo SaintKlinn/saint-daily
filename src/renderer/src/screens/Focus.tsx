@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePomodoro } from '../lib/pomodoro';
@@ -23,16 +23,32 @@ const PHASE_LABELS: Record<string, string> = {
 export default function Focus() {
   const { engagementId } = useParams<{ engagementId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { engagements, loading, error } = useEngagements();
   const engagement = engagements.find((e) => e.id === engagementId) ?? null;
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(engagementId ?? null);
-  const { session, durations, start } = usePomodoro();
+  const { session, durations, start, resume, advance } = usePomodoro();
   const [actionError, setActionError] = useState<string | null>(null);
   // Le compte à rebours est purement local : l'état Pomodoro n'est poussé
   // qu'aux transitions de phase, pas à chaque seconde.
   const [now, setNow] = useState(() => Date.now());
 
   const runningHere = session && session.skillId === engagementId ? session : null;
+  // Même calcul que Pomodoro.tsx et PomodoroOverlay.tsx : `phaseEndsAt - now`
+  // n'est valable que pendant que la phase tourne réellement.
+  // - En pause, `phaseEndsAt` est figé au moment de la pause alors que `now`
+  //   continue d'avancer : sans ce cas, l'affichage décompterait vers zéro
+  //   une valeur qui ne bouge plus vraiment côté minuteur.
+  // - En attente de reprise manuelle (`awaitingAdvance`, auto-avance
+  //   désactivée dans les Réglages), `phaseEndsAt` n'est pas recalculé tant
+  //   qu'on n'a pas cliqué "Continuer" (voir completePhase dans
+  //   pomodoroLogic.ts) : il reste dans le passé, donc `phaseEndsAt - now`
+  //   resterait bloqué à 0:00 indéfiniment.
+  const remainingMs = runningHere
+    ? runningHere.status === 'paused' && runningHere.remainingMsAtPause !== null
+      ? runningHere.remainingMsAtPause
+      : Math.max(0, runningHere.phaseEndsAt - now)
+    : 0;
 
   useEffect(() => {
     if (!runningHere) return;
@@ -41,7 +57,11 @@ export default function Focus() {
   }, [runningHere]);
 
   if (loading && engagements.length === 0) {
-    return <EmptyState role="status">Chargement…</EmptyState>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-ink-900">
+        <EmptyState role="status">Chargement…</EmptyState>
+      </div>
+    );
   }
 
   if (!engagement) {
@@ -88,13 +108,23 @@ export default function Focus() {
 
         <div className="border border-ink-700 bg-ink-800 px-6 py-5">
           {runningHere ? (
-            <div className="flex items-baseline gap-4">
+            <div className="flex flex-wrap items-baseline gap-4">
               <span className="font-serif text-[44px] tabular-nums text-accent-bright">
-                {formatRemaining(runningHere.phaseEndsAt - now)}
+                {formatRemaining(remainingMs)}
               </span>
               <span className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
                 {PHASE_LABELS[runningHere.phase] ?? runningHere.phase}
               </span>
+              {runningHere.status === 'paused' && (
+                <Button variant="secondary" size="sm" onClick={resume}>
+                  Reprendre
+                </Button>
+              )}
+              {runningHere.status === 'awaitingAdvance' && (
+                <Button variant="primary" size="sm" onClick={advance}>
+                  Continuer
+                </Button>
+              )}
             </div>
           ) : (
             <Button
@@ -109,7 +139,6 @@ export default function Focus() {
         </div>
 
         <div>
-          <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Sous-tâches</h2>
           <MilestoneChecklist
             milestones={milestones}
             onToggle={handleToggleMilestone}
@@ -119,7 +148,17 @@ export default function Focus() {
         </div>
 
         <div>
-          <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
+          {/* Un accès direct à /focus/:id (lien profond, rechargement) n'a
+              pas d'entrée d'historique à dépiler, et il n'y a pas de rail de
+              navigation ici pour s'échapper autrement : navigate(-1) ne
+              ferait alors rien. `location.key === 'default'` est le
+              signal React Router pour « ceci est la toute première entrée,
+              pas poussée par nous » (voir doc react-router). */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => (location.key === 'default' ? navigate('/') : navigate(-1))}
+          >
             Quitter le mode focus
           </Button>
         </div>
