@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
-import { calculateStreak, daysSinceLastPractice } from '../lib/streaks';
+import { calculateStreak, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
@@ -36,6 +36,10 @@ export default function Accueil() {
     refresh: refreshEntries,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const resumeSkill = useMemo(() => {
+    const id = lastPracticedEngagementId(entriesBySkill);
+    return id ? (activeSkills.find((s) => s.id === id) ?? null) : null;
+  }, [entriesBySkill, activeSkills]);
   const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
   // Persistance best-effort côté `updateSettings` (voir handleDismissWeeklyReview) :
   // tant que la migration `weekly_review_dismissed_at` n'est pas appliquée, cet
@@ -156,6 +160,15 @@ export default function Accueil() {
       >
         <h1 className="font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
         <div className="flex items-center gap-3">
+          {resumeSkill && (
+            <Link
+              to={`/pomodoro?skillId=${resumeSkill.id}`}
+              className={buttonClassName('secondary', 'sm')}
+              title={`Reprendre ${resumeSkill.name}`}
+            >
+              Reprendre {resumeSkill.name}
+            </Link>
+          )}
           <Link to="/pomodoro" className={buttonClassName('secondary')}>
             Démarrer un pomodoro
           </Link>

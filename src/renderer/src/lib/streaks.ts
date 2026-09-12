@@ -93,6 +93,26 @@ export function filterByTag<T extends { tags: string[] }>(
   return items.filter((s) => s.tags.some((t) => t.toLowerCase() === needle));
 }
 
+/** Engagement dont l'entrée la plus récente est la plus récente de toutes.
+ *  null si rien n'a jamais été pratiqué. */
+export function lastPracticedEngagementId(
+  entriesByEngagement: Record<string, PracticeEntryLike[]>
+): string | null {
+  let bestId: string | null = null;
+  let bestAt = '';
+  for (const [engagementId, entries] of Object.entries(entriesByEngagement)) {
+    for (const entry of entries) {
+      // Comparaison lexicographique d'ISO-8601 : équivalente à l'ordre
+      // chronologique et sans conversion de date à chaque entrée.
+      if (entry.practicedAt > bestAt) {
+        bestAt = entry.practicedAt;
+        bestId = engagementId;
+      }
+    }
+  }
+  return bestId;
+}
+
 function startOfUtcDay(date: Date): Date {
   const d = new Date(date);
   d.setUTCHours(0, 0, 0, 0);

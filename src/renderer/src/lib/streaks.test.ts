@@ -4,6 +4,7 @@ import {
   daysSinceLastPractice,
   filterByTag,
   filterSkillsForPicker,
+  lastPracticedEngagementId,
   sortSkillsByRecentPractice,
   streakJustExtended,
 } from './streaks';
@@ -132,5 +133,30 @@ describe('sortSkillsByRecentPractice', () => {
       b: [{ practicedAt: '2026-08-30T09:00:00Z' }],
     };
     expect(sortSkillsByRecentPractice([b, a], entriesBySkill, now)).toEqual([a, b]);
+  });
+});
+
+describe('lastPracticedEngagementId', () => {
+  it('returns null when nothing was ever practised', () => {
+    expect(lastPracticedEngagementId({})).toBeNull();
+    expect(lastPracticedEngagementId({ a: [] })).toBeNull();
+  });
+
+  it('returns the engagement holding the most recent entry', () => {
+    expect(
+      lastPracticedEngagementId({
+        a: [{ practicedAt: '2026-09-01T09:00:00Z' }, { practicedAt: '2026-09-05T09:00:00Z' }],
+        b: [{ practicedAt: '2026-09-03T09:00:00Z' }],
+      })
+    ).toBe('a');
+  });
+
+  it('is not fooled by the order the engagements are listed in', () => {
+    expect(
+      lastPracticedEngagementId({
+        b: [{ practicedAt: '2026-09-09T09:00:00Z' }],
+        a: [{ practicedAt: '2026-09-05T09:00:00Z' }],
+      })
+    ).toBe('b');
   });
 });
