@@ -1,6 +1,9 @@
 export type GenericLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
 export type Priority = 'aucune' | 'basse' | 'moyenne' | 'elevee';
 export type RecurrenceType = 'aucune' | 'quotidien' | 'hebdomadaire' | 'tous_les_n_jours';
+export type GoalPeriod = 'hebdomadaire' | 'mensuel';
+export type GoalMetric = 'heures' | 'seances';
+export type Mood = 'difficile' | 'moyen' | 'correct' | 'bien' | 'excellent';
 
 export interface Engagement {
   id: string;
@@ -20,6 +23,9 @@ export interface Engagement {
   recurrenceWeekdays: number[] | null;
   isProject: boolean;
   projectId: string | null;
+  goalPeriod: GoalPeriod | null;
+  goalMetric: GoalMetric | null;
+  goalTarget: number | null;
   createdAt: string;
 }
 
@@ -38,6 +44,7 @@ export interface PracticeEntry {
   userId: string;
   durationMinutes: number;
   note: string | null;
+  mood: Mood | null;
   practicedAt: string;
   createdAt: string;
 }

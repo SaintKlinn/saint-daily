@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
-import type { PracticeEntry } from '../lib/types';
+import type { Mood, PracticeEntry } from '../lib/types';
 
 interface PracticeEntryRow {
   id: string;
@@ -10,6 +10,7 @@ interface PracticeEntryRow {
   user_id: string;
   duration_minutes: number;
   note: string | null;
+  mood?: Mood | null;
   practiced_at: string;
   created_at: string;
 }
@@ -21,6 +22,10 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
     userId: row.user_id,
     durationMinutes: row.duration_minutes,
     note: row.note,
+    // `?? null` volontaire : la migration qui ajoute cette colonne n'est
+    // pas encore appliquée à la base live, donc la propriété peut être
+    // absente de la ligne.
+    mood: row.mood ?? null,
     practicedAt: row.practiced_at,
     createdAt: row.created_at,
   };
@@ -90,6 +95,7 @@ export function usePracticeEntries(engagementId: string | null) {
     engagementId: string;
     durationMinutes: number;
     note?: string | null;
+    mood?: Mood | null;
     practicedAt?: string;
   }) {
     if (!session) return { error: 'Non connecté' };
@@ -99,6 +105,11 @@ export function usePracticeEntries(engagementId: string | null) {
       duration_minutes: input.durationMinutes,
       note: input.note ?? null,
       practiced_at: input.practicedAt ?? new Date().toISOString(),
+      // Spread conditionnel, pas `mood: input.mood ?? null` : la colonne
+      // n'existe pas encore en base live, et la nommer ferait échouer
+      // TOUTES les écritures d'entrée — y compris cocher une tâche et
+      // terminer un Pomodoro, qui n'ont rien à voir avec l'humeur.
+      ...(input.mood ? { mood: input.mood } : {}),
     });
     if (insertError) return { error: toFrenchError(insertError.message) };
     if (input.engagementId === engagementId) await refresh();

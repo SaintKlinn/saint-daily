@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
-import type { Engagement, GenericLevel, Priority, RecurrenceType } from '../lib/types';
+import type { Engagement, GenericLevel, GoalMetric, GoalPeriod, Priority, RecurrenceType } from '../lib/types';
 
 interface EngagementRow {
   id: string;
@@ -22,6 +22,9 @@ interface EngagementRow {
   recurrence_weekdays: number[] | null;
   is_project: boolean;
   project_id: string | null;
+  goal_period?: GoalPeriod | null;
+  goal_metric?: GoalMetric | null;
+  goal_target?: number | null;
   created_at: string;
 }
 
@@ -49,6 +52,12 @@ function fromRow(row: EngagementRow): Engagement {
     recurrenceWeekdays: row.recurrence_weekdays,
     isProject: row.is_project,
     projectId: row.project_id,
+    // `?? null` volontaire, même raison que `deletedAt` ci-dessus : la
+    // migration qui ajoute ces colonnes n'est pas encore appliquée à la
+    // base live, donc la propriété peut être absente de la ligne.
+    goalPeriod: row.goal_period ?? null,
+    goalMetric: row.goal_metric ?? null,
+    goalTarget: row.goal_target ?? null,
     createdAt: row.created_at,
   };
 }
@@ -201,6 +210,9 @@ export function useEngagements() {
         | 'recurrenceInterval'
         | 'recurrenceWeekdays'
         | 'projectId'
+        | 'goalPeriod'
+        | 'goalMetric'
+        | 'goalTarget'
       >
     >
   ) {
@@ -219,6 +231,9 @@ export function useEngagements() {
         ...(patch.recurrenceInterval !== undefined ? { recurrence_interval: patch.recurrenceInterval } : {}),
         ...(patch.recurrenceWeekdays !== undefined ? { recurrence_weekdays: patch.recurrenceWeekdays } : {}),
         ...(patch.projectId !== undefined ? { project_id: patch.projectId } : {}),
+        ...(patch.goalPeriod !== undefined ? { goal_period: patch.goalPeriod } : {}),
+        ...(patch.goalMetric !== undefined ? { goal_metric: patch.goalMetric } : {}),
+        ...(patch.goalTarget !== undefined ? { goal_target: patch.goalTarget } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };
