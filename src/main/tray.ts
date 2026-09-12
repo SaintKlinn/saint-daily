@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, Tray } from 'electron';
 import { join } from 'node:path';
+import { toggleAgendaWidget } from './agendaWidget';
 
 let tray: Tray | null = null;
 
@@ -32,6 +33,14 @@ export function createTray(getWindow: () => BrowserWindow | null): void {
             win.show();
             win.focus();
           }
+        },
+      },
+      {
+        label: "Afficher l'agenda du jour",
+        type: 'checkbox',
+        checked: false,
+        click: (item) => {
+          item.checked = toggleAgendaWidget();
         },
       },
       { type: 'separator' },

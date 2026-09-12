@@ -5,6 +5,7 @@ import { createTray, setTrayNextEngagement } from './tray';
 import { registerAutoLaunchHandlers } from './autoLaunch';
 import { registerAutoUpdateHandlers } from './autoUpdate';
 import { createPomodoroOverlay } from './pomodoroOverlay';
+import { createAgendaWidget } from './agendaWidget';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
@@ -103,6 +104,7 @@ app
     registerAutoLaunchHandlers();
     registerAutoUpdateHandlers(() => mainWindow);
     createPomodoroOverlay(() => mainWindow);
+    createAgendaWidget();
     createTray(() => mainWindow);
 
     // Combinaison fixe pour ce premier jet. `register` renvoie false si une

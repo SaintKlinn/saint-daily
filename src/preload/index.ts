@@ -10,7 +10,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 // PomodoroDurations de src/renderer/src/lib/pomodoroLogic.ts si elles
 // changent : ce fichier est compilé sous tsconfig.node.json, dont
 // `include` ne couvre pas src/renderer/src/**, donc il ne peut rien
-// importer de ces types-là (voir la note de typage du Task 4).
+// importer de ces types-là. Même contrainte, même nécessité de resync
+// manuel, pour AgendaWidgetItem plus bas — copie de la forme produite par
+// src/renderer/src/hooks/useAgendaWidgetFeed.ts.
 interface PomodoroStateSnapshot {
   session: {
     skillId: string;
@@ -31,6 +33,13 @@ interface PomodoroStateSnapshot {
 }
 
 type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
+
+interface AgendaWidgetItem {
+  id: string;
+  name: string;
+  scheduledAt: string;
+  done: boolean;
+}
 
 interface AutoUpdateState {
   status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
@@ -80,6 +89,18 @@ const api = {
     // Fenêtre principale : montre/cache la fenêtre overlay.
     setPinned: (pinned: boolean): void => {
       ipcRenderer.send('pomodoro:set-pinned', pinned);
+    },
+  },
+  agenda: {
+    // Fenêtre principale -> main -> widget.
+    reportState: (items: AgendaWidgetItem[]): void => {
+      ipcRenderer.send('agenda:state-changed', items);
+    },
+    // Widget : écoute les instantanés relayés par main.
+    onState: (callback: (items: AgendaWidgetItem[]) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, items: AgendaWidgetItem[]) => callback(items);
+      ipcRenderer.on('agenda:state', listener);
+      return () => ipcRenderer.removeListener('agenda:state', listener);
     },
   },
   autoUpdate: {

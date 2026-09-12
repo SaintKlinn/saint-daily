@@ -12,6 +12,13 @@ export interface PomodoroStateSnapshot {
 
 export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
 
+export interface AgendaWidgetItem {
+  id: string;
+  name: string;
+  scheduledAt: string;
+  done: boolean;
+}
+
 export type AutoUpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
 
 export interface AutoUpdateState {
@@ -34,6 +41,10 @@ export interface SaintDailyApi {
     sendControl: (action: PomodoroControlAction) => void;
     onControl: (callback: (action: PomodoroControlAction) => void) => () => void;
     setPinned: (pinned: boolean) => void;
+  };
+  agenda: {
+    reportState: (items: AgendaWidgetItem[]) => void;
+    onState: (callback: (items: AgendaWidgetItem[]) => void) => () => void;
   };
   autoUpdate: {
     onStatus: (callback: (state: AutoUpdateState) => void) => () => void;

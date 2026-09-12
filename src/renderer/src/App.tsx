@@ -5,11 +5,13 @@ import { AuthProvider, useAuth } from './lib/auth';
 import { PomodoroProvider } from './lib/pomodoro';
 import { useEngagementReminders } from './hooks/useEngagementReminders';
 import { useTrayNextEngagement } from './hooks/useTrayNextEngagement';
+import { useAgendaWidgetFeed } from './hooks/useAgendaWidgetFeed';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
 import DevLogin from './screens/DevLogin';
 import PomodoroOverlay from './screens/PomodoroOverlay';
+import AgendaWidget from './screens/AgendaWidget';
 import Accueil from './screens/Accueil';
 import Introuvable from './screens/Introuvable';
 import NouvelleEntree from './screens/NouvelleEntree';
@@ -74,6 +76,7 @@ function AuthProviderLayout() {
 function EngagementWatchers() {
   useEngagementReminders();
   useTrayNextEngagement();
+  useAgendaWidgetFeed();
   const navigate = useNavigate();
   useEffect(() => window.api?.onNavigateRequest?.((path) => navigate(path)), [navigate]);
   return null;
@@ -100,6 +103,7 @@ function Router() {
   return (
     <Routes>
       <Route path="/pomodoro-overlay" element={<PomodoroOverlay />} />
+      <Route path="/agenda-widget" element={<AgendaWidget />} />
       <Route element={<AuthProviderLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/dev-login" element={<DevLogin />} />
