@@ -240,6 +240,9 @@ export default function DetailSkill() {
           <Link to={`/pomodoro?skillId=${skill.id}`} className={buttonClassName('secondary', 'sm')}>
             Démarrer un pomodoro
           </Link>
+          <Link to={`/focus/${skill.id}`} className={buttonClassName('secondary', 'sm')}>
+            Focus
+          </Link>
           <Button variant="secondary" size="sm" onClick={handleToggleArchived}>
             {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
           </Button>

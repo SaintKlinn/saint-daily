@@ -23,6 +23,7 @@ import Bilan from './screens/Bilan';
 import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
 import Corbeille from './screens/Corbeille';
+import Focus from './screens/Focus';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -57,6 +58,20 @@ function AuthProviderLayout() {
   );
 }
 
+// Sépare « être authentifié et connecté au Pomodoro » de « avoir le rail
+// de navigation », pour que le mode focus puisse être l'un sans l'autre.
+// Hisser `PomodoroProvider` ici lui fait aussi survivre à l'entrée et à la
+// sortie du mode focus : une session en cours n'est pas interrompue.
+function AppProvidersLayout() {
+  return (
+    <AuthGate>
+      <PomodoroProvider>
+        <Outlet />
+      </PomodoroProvider>
+    </AuthGate>
+  );
+}
+
 function Router() {
   return (
     <Routes>
@@ -64,30 +79,25 @@ function Router() {
       <Route element={<AuthProviderLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/dev-login" element={<DevLogin />} />
-        <Route
-          element={
-            <AuthGate>
-              <PomodoroProvider>
-                <AppShell />
-              </PomodoroProvider>
-            </AuthGate>
-          }
-        >
-          <Route index element={<Accueil />} />
-          <Route path="skills" element={<ListeSkills />} />
-          <Route path="skills/nouveau" element={<NouveauSkill />} />
-          <Route path="skills/:id" element={<DetailSkill />} />
-          <Route path="entree/nouvelle" element={<NouvelleEntree />} />
-          <Route path="taches/nouvelle" element={<NouvelleTache />} />
-          <Route path="calendrier" element={<Calendrier />} />
-          <Route path="projets" element={<ListeProjets />} />
-          <Route path="projets/nouveau" element={<NouveauProjet />} />
-          <Route path="projets/:id" element={<DetailProjet />} />
-          <Route path="bilan" element={<Bilan />} />
-          <Route path="pomodoro" element={<Pomodoro />} />
-          <Route path="reglages" element={<Reglages />} />
-          <Route path="corbeille" element={<Corbeille />} />
-          <Route path="*" element={<Introuvable />} />
+        <Route element={<AppProvidersLayout />}>
+          <Route path="focus/:engagementId" element={<Focus />} />
+          <Route element={<AppShell />}>
+            <Route index element={<Accueil />} />
+            <Route path="skills" element={<ListeSkills />} />
+            <Route path="skills/nouveau" element={<NouveauSkill />} />
+            <Route path="skills/:id" element={<DetailSkill />} />
+            <Route path="entree/nouvelle" element={<NouvelleEntree />} />
+            <Route path="taches/nouvelle" element={<NouvelleTache />} />
+            <Route path="calendrier" element={<Calendrier />} />
+            <Route path="projets" element={<ListeProjets />} />
+            <Route path="projets/nouveau" element={<NouveauProjet />} />
+            <Route path="projets/:id" element={<DetailProjet />} />
+            <Route path="bilan" element={<Bilan />} />
+            <Route path="pomodoro" element={<Pomodoro />} />
+            <Route path="reglages" element={<Reglages />} />
+            <Route path="corbeille" element={<Corbeille />} />
+            <Route path="*" element={<Introuvable />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

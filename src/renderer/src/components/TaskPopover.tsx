@@ -144,6 +144,9 @@ export default function TaskPopover({
           <Link to={`/pomodoro?skillId=${task.id}`} className={buttonClassName('secondary', 'sm')}>
             Démarrer un pomodoro
           </Link>
+          <Link to={`/focus/${task.id}`} className={buttonClassName('secondary', 'sm')}>
+            Focus
+          </Link>
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer
           </Button>
