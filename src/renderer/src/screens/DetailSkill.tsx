@@ -4,13 +4,15 @@ import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
-import { calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
-import type { GenericLevel } from '../lib/types';
+import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
+import { computeBadges, computeGoalProgress } from '../lib/motivation';
+import type { GenericLevel, GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
+import GoalProgress from '../components/GoalProgress';
 import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
 
 const FOCUS_RING =
@@ -94,6 +96,15 @@ export default function DetailSkill() {
     [entries]
   );
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
+  const bestStreak = useMemo(() => calculateBestStreak(entries), [entries]);
+  const badges = useMemo(() => computeBadges(entries), [entries]);
+  const goal = useMemo(
+    () =>
+      skill?.goalPeriod && skill.goalMetric && skill.goalTarget
+        ? computeGoalProgress(entries, skill.goalPeriod, skill.goalMetric, skill.goalTarget)
+        : null,
+    [entries, skill]
+  );
 
   async function handleToggleArchived() {
     if (!skill) return;
@@ -126,6 +137,17 @@ export default function DetailSkill() {
     if (!skill) return;
     setActionError(null);
     const { error } = await updateEngagement(skill.id, { projectId: e.target.value || null });
+    if (error) setActionError(error);
+  }
+
+  async function handleGoalChange(patch: {
+    goalPeriod?: GoalPeriod | null;
+    goalMetric?: GoalMetric | null;
+    goalTarget?: number | null;
+  }) {
+    if (!skill) return;
+    setActionError(null);
+    const { error } = await updateEngagement(skill.id, patch);
     if (error) setActionError(error);
   }
 
@@ -276,6 +298,48 @@ export default function DetailSkill() {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <section>
+            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Objectif</h2>
+            {goal ? (
+              <div className="flex flex-col gap-3">
+                <GoalProgress progress={goal} />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => handleGoalChange({ goalPeriod: null, goalMetric: null, goalTarget: null })}
+                >
+                  Retirer l'objectif
+                </Button>
+              </div>
+            ) : (
+              <GoalSetter onSubmit={handleGoalChange} />
+            )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Records</h2>
+            <p className="mb-3 text-sm text-muted">
+              Meilleur streak : <span className="text-champagne">{bestStreak} j</span> · Streak actuel :{' '}
+              <span className="text-champagne">{streak} j</span>
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {badges.map((badge) => (
+                <li
+                  key={badge.key}
+                  title={badge.hint}
+                  className={`border px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.08em] ${
+                    badge.unlocked ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
+                  }`}
+                >
+                  {badge.unlocked ? '' : '· '}
+                  {badge.label}
+                </li>
+              ))}
+            </ul>
+          </section>
+
           <section>
             <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Jalons</h2>
             {milestonesError && (
@@ -464,6 +528,68 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
         </p>
       )}
     </form>
+  );
+}
+
+function GoalSetter({
+  onSubmit,
+}: {
+  onSubmit: (patch: { goalPeriod: GoalPeriod; goalMetric: GoalMetric; goalTarget: number }) => Promise<unknown>;
+}) {
+  const [period, setPeriod] = useState<GoalPeriod>('hebdomadaire');
+  const [metric, setMetric] = useState<GoalMetric>('seances');
+  const [target, setTarget] = useState('3');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    const goalTarget = Number(target);
+    if (!Number.isFinite(goalTarget) || goalTarget <= 0) return;
+    setSubmitting(true);
+    await onSubmit({ goalPeriod: period, goalMetric: metric, goalTarget });
+    setSubmitting(false);
+  }
+
+  return (
+    <div className="flex flex-wrap items-end gap-3">
+      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+        Période
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
+          aria-label="Période de l'objectif"
+          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-[15px] text-champagne ${FOCUS_RING}`}
+        >
+          <option value="hebdomadaire">Hebdomadaire</option>
+          <option value="mensuel">Mensuel</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+        Métrique
+        <select
+          value={metric}
+          onChange={(e) => setMetric(e.target.value as GoalMetric)}
+          aria-label="Métrique de l'objectif"
+          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-[15px] text-champagne ${FOCUS_RING}`}
+        >
+          <option value="seances">Séances</option>
+          <option value="heures">Heures</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+        Cible
+        <input
+          type="number"
+          min={1}
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          aria-label="Cible de l'objectif"
+          className={`w-20 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-[15px] text-champagne ${FOCUS_RING}`}
+        />
+      </label>
+      <Button type="button" variant="secondary" size="sm" onClick={handleSubmit} disabled={submitting}>
+        Définir l'objectif
+      </Button>
+    </div>
   );
 }
 
