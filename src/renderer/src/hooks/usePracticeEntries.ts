@@ -35,16 +35,16 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
 // diverger sur cette logique : l'un des deux paginait déjà, l'autre non.
 const PRACTICE_ENTRIES_PAGE_SIZE = 1000;
 
-async function fetchAllPages(
+export async function fetchAllPages<TRow>(
   // `PromiseLike`, pas `Promise` : le query builder de supabase-js est
   // "thenable" mais n'implémente pas l'interface `Promise` complète
   // (`catch`/`finally`/`Symbol.toStringTag`) tant qu'on ne l'attend pas.
   fetchPage: (
     from: number,
     to: number
-  ) => PromiseLike<{ data: PracticeEntryRow[] | null; error: { message: string } | null }>
-): Promise<{ rows: PracticeEntryRow[]; error: string | null }> {
-  const rows: PracticeEntryRow[] = [];
+  ) => PromiseLike<{ data: TRow[] | null; error: { message: string } | null }>
+): Promise<{ rows: TRow[]; error: string | null }> {
+  const rows: TRow[] = [];
   for (let from = 0; ; from += PRACTICE_ENTRIES_PAGE_SIZE) {
     const { data, error } = await fetchPage(from, from + PRACTICE_ENTRIES_PAGE_SIZE - 1);
     if (error) return { rows, error: toFrenchError(error.message) };
@@ -132,7 +132,7 @@ export function useAllPracticeEntries(engagementIds: string[]) {
     // L'erreur DOIT être capturée : sans elle, un échec de cette requête
     // affichait silencieusement tous les skills avec streak 0 et aucun
     // rappel « dû », sans le moindre indice que quelque chose a raté.
-    const { rows, error: fetchError } = await fetchAllPages((from, to) =>
+    const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
       getSupabaseClient().from('practice_entry').select('*').in('engagement_id', engagementIds).range(from, to)
     );
     setError(fetchError);
@@ -173,7 +173,7 @@ export function useAllPracticeEntriesForUser() {
     if (!session) return;
     setLoading(true);
     setError(null);
-    const { rows, error: fetchError } = await fetchAllPages((from, to) =>
+    const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
       getSupabaseClient().from('practice_entry').select('*').order('practiced_at', { ascending: false }).range(from, to)
     );
     if (fetchError) {

@@ -7,6 +7,7 @@ import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
+import { downloadTextFile, exportFileName, fetchExportBundle, toCsv, toJson } from '../lib/exportData';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -77,6 +78,29 @@ export default function Reglages() {
     setActionError(null);
     const { error: updateError } = await updateSettings(patch);
     if (updateError) setActionError(updateError);
+  }
+
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+
+  async function handleExport(format: 'json' | 'csv') {
+    setActionError(null);
+    setExportMessage(null);
+    setExporting(true);
+    const { bundle, error: exportError } = await fetchExportBundle();
+    if (exportError || !bundle) {
+      setActionError(exportError ?? 'Export impossible.');
+      setExporting(false);
+      return;
+    }
+    const filename = exportFileName(format);
+    if (format === 'json') {
+      downloadTextFile(filename, toJson(bundle), 'application/json');
+    } else {
+      downloadTextFile(filename, toCsv(bundle), 'text/csv');
+    }
+    setExportMessage(`${filename} enregistré dans ton dossier Téléchargements.`);
+    setExporting(false);
   }
 
   // `!settings` en plus de `loading` : useSettings repasse loading à true
@@ -236,6 +260,33 @@ export default function Reglages() {
           label="Enchaînement automatique"
           description="Passer seul du travail à la pause (et inversement) plutôt que d'attendre un clic"
         />
+      </section>
+
+      <section className="flex flex-col">
+        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Données</h2>
+
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <div>
+            <p className="text-[15px] text-champagne">Exporter mes données</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              JSON pour tout conserver, CSV pour ouvrir les séances dans un tableur
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => handleExport('json')} disabled={exporting}>
+              JSON
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => handleExport('csv')} disabled={exporting}>
+              CSV
+            </Button>
+          </div>
+        </div>
+
+        {exportMessage && (
+          <p role="status" className="py-2 text-[13px] text-muted">
+            {exportMessage}
+          </p>
+        )}
       </section>
 
       <section className="flex flex-col gap-0">
