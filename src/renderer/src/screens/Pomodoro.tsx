@@ -26,10 +26,12 @@ export default function Pomodoro() {
   const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
     usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
-  // Un lien profond (ex. depuis DetailSkill) peut pointer vers un skill
-  // archivé — le picker les exclut déjà, donc `skillId` seul ne suffit
-  // pas à savoir si une sélection réelle et affichée existe.
-  const selectedSkill = skills.find((s) => s.id === skillId && !s.archivedAt) ?? null;
+  // Le sélecteur ne liste que des skills, mais une cible arrivée par lien
+  // profond peut être une tâche planifiée (« Démarrer un pomodoro » depuis
+  // le calendrier). On la résout donc dans l'ensemble des engagements
+  // praticables, projets exclus — ils n'ont pas d'historique de pratique.
+  const selectedSkill =
+    engagements.find((e) => e.id === skillId && !e.isProject && !e.archivedAt) ?? null;
   // null = pas encore touché par l'utilisateur ; résout alors sur la durée
   // des Réglages dès qu'elle est connue (voir effectiveWorkMinutes) — donc
   // rien ne change tant que personne ne choisit explicitement un preset.

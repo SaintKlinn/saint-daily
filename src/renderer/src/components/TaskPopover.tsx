@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 import RayCorner from './RayCorner';
-import Button from './Button';
+import Button, { buttonClassName } from './Button';
 import BoutonSuppression from './BoutonSuppression';
 import RecurrenceEditor from './RecurrenceEditor';
 import MilestoneChecklist from './MilestoneChecklist';
@@ -140,6 +141,9 @@ export default function TaskPopover({
         )}
         <div className="relative mt-2 flex justify-end gap-3">
           <BoutonSuppression onConfirm={onDelete} busy={deleting} />
+          <Link to={`/pomodoro?skillId=${task.id}`} className={buttonClassName('secondary', 'sm')}>
+            Démarrer un pomodoro
+          </Link>
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer
           </Button>
