@@ -50,8 +50,13 @@ export default function Reglages() {
   }
 
   async function handleReminderLeadChange(value: number) {
+    // `min={1}` sur le champ ne contraint que les flèches du spinner : un
+    // champ vidé au clavier vaut `0` (tue le rappel d'anticipation en
+    // silence) et une valeur négative fait tomber le déclencheur « avant »
+    // après le départ (corps du genre « dans -5 min »). On clampe donc ici.
+    const clamped = Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : 1;
     setActionError(null);
-    const { error: updateError } = await updateSettings({ reminderLeadMinutes: value });
+    const { error: updateError } = await updateSettings({ reminderLeadMinutes: clamped });
     if (updateError) setActionError(updateError);
   }
 
