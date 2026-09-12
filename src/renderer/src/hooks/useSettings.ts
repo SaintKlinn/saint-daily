@@ -7,6 +7,7 @@ import type { SkillAppSettings } from '../lib/types';
 interface SettingsRow {
   user_id: string;
   reminder_threshold_days: number;
+  reminder_lead_minutes: number;
   notifications_enabled: boolean;
   auto_launch_enabled: boolean;
   pomodoro_work_minutes: number;
@@ -21,6 +22,12 @@ function fromRow(row: SettingsRow): SkillAppSettings {
   return {
     userId: row.user_id,
     reminderThresholdDays: row.reminder_threshold_days,
+    // `?? 10` volontaire : la migration qui ajoute cette colonne est
+    // appliquée à la base live après le déploiement du code. Sans ce
+    // repli, `reminderLeadMinutes` vaudrait `undefined` entre les deux et
+    // l'instant du rappel se calculerait à NaN — aucun rappel ne partirait
+    // jamais, en silence.
+    reminderLeadMinutes: row.reminder_lead_minutes ?? 10,
     notificationsEnabled: row.notifications_enabled,
     autoLaunchEnabled: row.auto_launch_enabled,
     pomodoroWorkMinutes: row.pomodoro_work_minutes,
@@ -35,6 +42,7 @@ function fromRow(row: SettingsRow): SkillAppSettings {
 function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
   return {
     ...(patch.reminderThresholdDays !== undefined ? { reminder_threshold_days: patch.reminderThresholdDays } : {}),
+    ...(patch.reminderLeadMinutes !== undefined ? { reminder_lead_minutes: patch.reminderLeadMinutes } : {}),
     ...(patch.notificationsEnabled !== undefined ? { notifications_enabled: patch.notificationsEnabled } : {}),
     ...(patch.autoLaunchEnabled !== undefined ? { auto_launch_enabled: patch.autoLaunchEnabled } : {}),
     ...(patch.pomodoroWorkMinutes !== undefined ? { pomodoro_work_minutes: patch.pomodoroWorkMinutes } : {}),
@@ -56,6 +64,7 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
 
 const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId'> = {
   reminderThresholdDays: 5,
+  reminderLeadMinutes: 10,
   notificationsEnabled: true,
   autoLaunchEnabled: true,
   pomodoroWorkMinutes: 25,

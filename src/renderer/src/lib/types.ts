@@ -44,6 +44,7 @@ export interface PracticeEntry {
 export interface SkillAppSettings {
   userId: string;
   reminderThresholdDays: number;
+  reminderLeadMinutes: number;
   notificationsEnabled: boolean;
   autoLaunchEnabled: boolean;
   pomodoroWorkMinutes: number;

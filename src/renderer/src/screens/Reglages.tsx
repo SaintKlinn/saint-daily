@@ -49,6 +49,12 @@ export default function Reglages() {
     if (updateError) setActionError(updateError);
   }
 
+  async function handleReminderLeadChange(value: number) {
+    setActionError(null);
+    const { error: updateError } = await updateSettings({ reminderLeadMinutes: value });
+    if (updateError) setActionError(updateError);
+  }
+
   async function handleAutoLaunchChange(enabled: boolean) {
     // Pas de pont IPC : on ne persiste rien plutôt que d'écrire une
     // valeur fausse dans les réglages. État suffisamment inhabituel pour
@@ -122,6 +128,25 @@ export default function Reglages() {
           label="Notifications natives"
           description="Une notification quand un skill franchit son seuil de rappel"
         />
+        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+          <div>
+            <p className="text-[15px] text-champagne">Rappel avant une tâche planifiée</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              Combien de minutes à l'avance prévenir qu'une tâche planifiée approche
+            </p>
+          </div>
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+            <input
+              type="number"
+              min={1}
+              value={settings.reminderLeadMinutes}
+              onChange={(e) => handleReminderLeadChange(Number(e.target.value))}
+              aria-label="Délai du rappel avant une tâche, en minutes"
+              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+            />
+            <span className="font-data text-[15px] text-champagne">min</span>
+          </label>
+        </div>
         <Toggle
           checked={autoLaunch}
           onChange={handleAutoLaunchChange}
