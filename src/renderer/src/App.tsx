@@ -24,6 +24,7 @@ import NouveauProjet from './screens/NouveauProjet';
 import ListeProjets from './screens/ListeProjets';
 import DetailProjet from './screens/DetailProjet';
 import Bilan from './screens/Bilan';
+import Journal from './screens/Journal';
 import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
 import Corbeille from './screens/Corbeille';
@@ -121,6 +122,7 @@ function Router() {
             <Route path="projets/nouveau" element={<NouveauProjet />} />
             <Route path="projets/:id" element={<DetailProjet />} />
             <Route path="bilan" element={<Bilan />} />
+            <Route path="journal" element={<Journal />} />
             <Route path="pomodoro" element={<Pomodoro />} />
             <Route path="reglages" element={<Reglages />} />
             <Route path="corbeille" element={<Corbeille />} />
