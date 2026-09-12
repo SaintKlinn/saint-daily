@@ -3,6 +3,18 @@
 // (tâche 13) ne divergent jamais. Emerald Ink (#064E3B) et Champagne
 // (#F8E7C9) sont des ancrages de marque fixes ; les nuances ink/muted et
 // l'accent doré viennent du canvas de maquettes validé avec l'utilisateur.
+
+// Extrait en const nommée (plutôt qu'inline dans `colors`) pour que la
+// rampe `heatmap` ci-dessous puisse réutiliser ces mêmes valeurs sans les
+// recopier — un objet ne peut pas se référencer lui-même pendant sa propre
+// initialisation.
+const accent = {
+  bright: '#E7B94E',
+  hover: '#F3CE73',
+  mid: '#C08A2A',
+  deep: '#8A5F1B',
+} as const;
+
 export const colors = {
   ink: {
     950: '#03231A',
@@ -16,12 +28,7 @@ export const colors = {
   // deux fonds sans changer sa teinte (audit ui-ux-pro-max). Vérifié :
   // 5.81:1 sur ink-900, 4.57:1 sur ink-800.
   muted: '#BCCCC2',
-  accent: {
-    bright: '#E7B94E',
-    hover: '#F3CE73',
-    mid: '#C08A2A',
-    deep: '#8A5F1B',
-  },
+  accent,
   danger: '#F87171',
   // La palette d'origine (élevée = `danger`, moyenne #D2894A, basse #6FA8A3)
   // passait sous 3:1 (WCAG 1.4.11, contraste non-textuel) sur le fond
@@ -40,5 +47,32 @@ export const colors = {
     elevee: '#FF9494',
     moyenne: '#E6AD70',
     basse: '#8FC2BC',
+  },
+  // Rampe dédiée à la heatmap du Bilan (HeatmapCalendrier.tsx). La rampe
+  // d'origine (case vide = ink-700, niveaux 1-3 = accent.deep/mid/bright)
+  // ne donnait que 1.19:1 entre "aucune séance" et "une séance" sur le
+  // fond ink-800 de la carte — le signal principal du widget était
+  // invisible pour un utilisateur qui pratique tous les jours.
+  //
+  // Le niveau 0 est un puits volontairement plus sombre que la carte : il
+  // porte l'information "case vide mais existante", pas une donnée, donc
+  // il n'a pas besoin d'atteindre 3:1 lui-même — seulement d'être visible.
+  // Les niveaux 1 à 3 réutilisent tels quels accent.deep/mid/bright — déjà
+  // la rampe or de l'app — pour rester dans le monde émeraude/or plutôt
+  // que d'introduire une teinte étrangère, et parce que accent.bright au
+  // niveau 3 prolonge son usage existant de signal "actif/maximal".
+  //
+  // Contrastes (luminance relative WCAG 2.x), validés en reproduisant
+  // d'abord les deux ratios ci-dessus (muted 4.57:1, priority.elevee
+  // 3.61:1, tous deux sur ink-800) pour confirmer la formule :
+  //   niveau 0 (#02130E)       vs carte ink-800 : 2.49:1 (distinct, non-textuel)
+  //   niveau 1 (accent.deep)   vs niveau 0       : 3.39:1
+  //   niveau 2 (accent.mid)    vs niveau 0       : 6.27:1
+  //   niveau 3 (accent.bright) vs niveau 0       : 10.39:1
+  heatmap: {
+    0: '#02130E',
+    1: accent.deep,
+    2: accent.mid,
+    3: accent.bright,
   },
 } as const;

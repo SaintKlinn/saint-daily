@@ -11,6 +11,7 @@ const config: Config = {
         muted: colors.muted,
         accent: colors.accent,
         danger: colors.danger,
+        heatmap: colors.heatmap,
       },
       fontFamily: {
         serif: ['"IBM Plex Serif"', 'ui-serif', 'serif'],
