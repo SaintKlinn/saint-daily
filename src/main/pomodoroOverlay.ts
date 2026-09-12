@@ -6,6 +6,20 @@ const OVERLAY_HEIGHT = 84;
 
 let overlayWindow: BrowserWindow | null = null;
 
+// Deux raisons indépendantes d'afficher l'overlay : le bouton « épingler »
+// de la fenêtre principale, et la réduction de celle-ci pendant une
+// session. L'overlay est visible si l'une OU l'autre est vraie — sinon,
+// restaurer la fenêtre effacerait un épinglage manuel que l'utilisateur
+// vient de demander explicitement.
+let manuallyPinned = false;
+let autoShownByMinimize = false;
+let hasActiveSession = false;
+
+function applyOverlayVisibility(): void {
+  if (manuallyPinned || autoShownByMinimize) overlayWindow?.show();
+  else overlayWindow?.hide();
+}
+
 // Même garde que isQuitting dans src/main/index.ts : sans elle, le close
 // handler ci-dessous préviendrait indéfiniment sa propre fermeture, y
 // compris pendant une vraie séquence app.quit() (déclenchée depuis le tray)
@@ -72,6 +86,14 @@ export function createPomodoroOverlay(getMainWindow: () => BrowserWindow | null)
 
   // Fenêtre principale -> overlay : relaie chaque instantané d'état.
   ipcMain.on('pomodoro:state-changed', (_event, state) => {
+    hasActiveSession = state !== null && state?.session?.status !== 'idle';
+    // Une session qui se termine pendant que la fenêtre est réduite doit
+    // faire disparaître l'overlay : sans ça il resterait affiché, figé sur
+    // la dernière phase, jusqu'à la prochaine restauration de fenêtre.
+    if (!hasActiveSession && autoShownByMinimize) {
+      autoShownByMinimize = false;
+      applyOverlayVisibility();
+    }
     overlayWindow?.webContents.send('pomodoro:state', state);
   });
 
@@ -84,7 +106,35 @@ export function createPomodoroOverlay(getMainWindow: () => BrowserWindow | null)
   // Bouton "épingler" de la fenêtre principale : montre/cache l'overlay,
   // indépendamment de l'état réduit/visible de la fenêtre principale.
   ipcMain.on('pomodoro:set-pinned', (_event, pinned: boolean) => {
-    if (pinned) overlayWindow?.show();
-    else overlayWindow?.hide();
+    manuallyPinned = pinned;
+    applyOverlayVisibility();
   });
+
+  // `src/main/index.ts` appelle `createPomodoroOverlay` après
+  // `mainWindow = createWindow()`, donc la fenêtre existe forcément ici —
+  // le `if` n'est qu'un garde de typage, pas un cas de repli.
+  const mainWindow = getMainWindow();
+  if (mainWindow) {
+    mainWindow.on('minimize', () => {
+      if (!hasActiveSession) return;
+      autoShownByMinimize = true;
+      applyOverlayVisibility();
+    });
+    mainWindow.on('restore', () => {
+      autoShownByMinimize = false;
+      applyOverlayVisibility();
+    });
+    // `hide()` (fermeture interceptée, clic sur l'icône du tray) n'émet pas
+    // 'minimize' : sans ces deux-là, réduire l'app dans le tray pendant une
+    // session n'afficherait rien.
+    mainWindow.on('hide', () => {
+      if (!hasActiveSession) return;
+      autoShownByMinimize = true;
+      applyOverlayVisibility();
+    });
+    mainWindow.on('show', () => {
+      autoShownByMinimize = false;
+      applyOverlayVisibility();
+    });
+  }
 }
