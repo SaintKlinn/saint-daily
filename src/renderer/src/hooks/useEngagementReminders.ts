@@ -15,6 +15,10 @@ interface EngagementReminderRow {
   name: string;
   scheduled_at: string | null;
   archived_at: string | null;
+  // Optionnel comme dans `useEngagements` : la migration qui ajoute cette
+  // colonne n'est pas encore passée sur la base live, donc `select('*')`
+  // peut renvoyer la ligne sans ce champ plutôt que d'échouer.
+  deleted_at?: string | null;
 }
 
 interface SettingsReminderRow {
@@ -89,15 +93,24 @@ export function useEngagementReminders(): void {
       const windowEnd = new Date(nowMs + leadMinutes * 60_000 + REMINDER_TOLERANCE_MS).toISOString();
       const { data: engagementRows } = await supabase
         .from('engagement')
-        .select('id, name, scheduled_at, archived_at')
+        .select('*')
         .is('archived_at', null)
         .gte('scheduled_at', windowStart)
         .lte('scheduled_at', windowEnd);
       if (!engagementRows || engagementRows.length === 0) return;
 
+      // Filtre côté client, pas dans la requête : nommer `deleted_at` dans
+      // un `select()` ou un `.is()` ferait échouer la requête tant que la
+      // migration de la corbeille n'est pas passée sur la base live (même
+      // limite que `useEngagements.refresh`). Un engagement mis à la
+      // corbeille ne doit plus jamais notifier, même s'il reste échu dans
+      // la fenêtre ci-dessus.
+      const liveRows = (engagementRows as EngagementReminderRow[]).filter((row) => !row.deleted_at);
+      if (liveRows.length === 0) return;
+
       // 4. Seulement les entrées de ces engagements-là, pour savoir
       // lesquels sont déjà faits.
-      const engagementIds = (engagementRows as EngagementReminderRow[]).map((row) => row.id);
+      const engagementIds = liveRows.map((row) => row.id);
       const { data: entryRows } = await supabase
         .from('practice_entry')
         .select('engagement_id')
@@ -108,7 +121,7 @@ export function useEngagementReminders(): void {
         entryCountByEngagement[row.engagement_id] = (entryCountByEngagement[row.engagement_id] ?? 0) + 1;
       }
 
-      const engagements: ReminderEngagement[] = (engagementRows as EngagementReminderRow[]).map((row) => ({
+      const engagements: ReminderEngagement[] = liveRows.map((row) => ({
         id: row.id,
         name: row.name,
         scheduledAt: row.scheduled_at,
