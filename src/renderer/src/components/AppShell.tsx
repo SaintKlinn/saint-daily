@@ -7,8 +7,6 @@ import UpdateBanner from './UpdateBanner';
 import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, ChartIcon, GearIcon } from './icons';
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
-import { useEngagementReminders } from '../hooks/useEngagementReminders';
-import { useTrayNextEngagement } from '../hooks/useTrayNextEngagement';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
 
@@ -27,8 +25,12 @@ export default function AppShell() {
   const { engagements, loading, createEngagements } = useEngagements();
   const hasSyncedRecurrenceRef = useRef(false);
 
-  useEngagementReminders();
-  useTrayNextEngagement();
+  // useEngagementReminders et useTrayNextEngagement sont montés dans
+  // AppProvidersLayout (App.tsx), pas ici : ce sont des propriétés de « l'app
+  // est ouverte et authentifiée », pas de « le rail de navigation est
+  // affiché ». Les garder ici les aurait démontés en entrant en mode focus
+  // (route soeur, hors AppShell), et donc silencieusement fait manquer tout
+  // rappel ou mise à jour d'infobulle pendant la session focus.
 
   useEffect(() => {
     if (loading || hasSyncedRecurrenceRef.current) return;

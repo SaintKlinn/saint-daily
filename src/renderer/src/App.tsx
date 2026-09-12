@@ -3,6 +3,8 @@ import { HashRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-
 import { MotionConfig } from 'motion/react';
 import { AuthProvider, useAuth } from './lib/auth';
 import { PomodoroProvider } from './lib/pomodoro';
+import { useEngagementReminders } from './hooks/useEngagementReminders';
+import { useTrayNextEngagement } from './hooks/useTrayNextEngagement';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screens/Login';
@@ -58,13 +60,33 @@ function AuthProviderLayout() {
   );
 }
 
+// Petit composant sans rendu pour hisser useEngagementReminders/
+// useTrayNextEngagement au même niveau que PomodoroProvider ci-dessous, tout
+// en les gardant à l'intérieur d'AuthGate — comme avant ce hoist, ils ne
+// doivent tourner qu'une fois authentifié (useTrayNextEngagement ne fait
+// aucune vérification de session lui-même). Tant qu'ils étaient montés dans
+// `AppShell`, entrer en mode focus démontait ces deux hooks — un rappel dû ou
+// l'infobulle du tray restaient silencieux pendant toute la session focus,
+// et pire : au retour, le Set de déduplication de `useEngagementReminders`
+// repartait vide, donc un rappel dû pendant l'absence était classé périmé
+// (plus de 3 minutes de retard, voir REMINDER_TOLERANCE_MS) et marqué comme
+// vu sans jamais être montré — une perte silencieuse et définitive.
+function EngagementWatchers() {
+  useEngagementReminders();
+  useTrayNextEngagement();
+  return null;
+}
+
 // Sépare « être authentifié et connecté au Pomodoro » de « avoir le rail
 // de navigation », pour que le mode focus puisse être l'un sans l'autre.
 // Hisser `PomodoroProvider` ici lui fait aussi survivre à l'entrée et à la
-// sortie du mode focus : une session en cours n'est pas interrompue.
+// sortie du mode focus : une session en cours n'est pas interrompue. Même
+// raison pour `EngagementWatchers` : ce sont des propriétés de « l'app est
+// ouverte et authentifiée », pas de « le rail de navigation est affiché ».
 function AppProvidersLayout() {
   return (
     <AuthGate>
+      <EngagementWatchers />
       <PomodoroProvider>
         <Outlet />
       </PomodoroProvider>

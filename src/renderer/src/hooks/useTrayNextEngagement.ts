@@ -28,7 +28,8 @@ function formatLabel(row: NextEngagementRow): string {
 
 /**
  * Tient à jour l'infobulle de l'icône du tray avec le prochain engagement
- * planifié. Monté une seule fois, dans `AppShell`.
+ * planifié. Monté une seule fois, dans `AppProvidersLayout` (App.tsx) — pas
+ * dans `AppShell`, pour survivre à l'entrée et à la sortie du mode focus.
  */
 export function useTrayNextEngagement(): void {
   useEffect(() => {

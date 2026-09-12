@@ -32,20 +32,22 @@ interface SettingsReminderRow {
 
 /**
  * Surveille les tâches planifiées et pousse une notification native au
- * moment voulu. Monté une seule fois, dans `AppShell`.
+ * moment voulu. Monté une seule fois, dans `AppProvidersLayout` (App.tsx) —
+ * pas dans `AppShell`, pour survivre à l'entrée et à la sortie du mode
+ * focus (route soeur d'AppShell, en dehors du rail de navigation) sans que
+ * le Set de déduplication ci-dessous ne reparte de zéro à chaque passage.
  *
  * Ne reçoit rien en argument : `useEngagements` et `useAllPracticeEntries`
  * n'ont ni store partagé ni realtime, chaque appelant garde un état privé
- * qui n'est rafraîchi que par ses propres mutations. `AppShell` est une
- * route de layout montée une seule fois pour une session qui tourne des
- * jours dans le tray et n'effectue plus aucune mutation après sa synchro
- * de récurrence initiale — des props figées à ce moment-là auraient deux
- * conséquences : une tâche créée après le lancement ne rappellerait
- * jamais, et une tâche cochée depuis l'Accueil continuerait de déclencher
- * ses rappels (fausse notification). Ce hook relit donc lui-même Supabase
- * à chaque tick, ce qui a aussi pour effet qu'un changement du réglage
- * « Notifications natives » prend effet dans la minute plutôt qu'au
- * prochain redémarrage.
+ * qui n'est rafraîchi que par ses propres mutations. Ce hook est monté une
+ * seule fois pour une session qui tourne des jours dans le tray et
+ * n'effectue lui-même aucune mutation — des props figées à ce moment-là
+ * auraient deux conséquences : une tâche créée après le lancement ne
+ * rappellerait jamais, et une tâche cochée depuis l'Accueil continuerait de
+ * déclencher ses rappels (fausse notification). Ce hook relit donc
+ * lui-même Supabase à chaque tick, ce qui a aussi pour effet qu'un
+ * changement du réglage « Notifications natives » prend effet dans la
+ * minute plutôt qu'au prochain redémarrage.
  *
  * La fenêtre principale tourne avec `backgroundThrottling: false` (voir
  * `src/main/index.ts`), donc cet intervalle continue de tourner même
