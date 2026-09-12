@@ -19,6 +19,7 @@ import NouveauSkill from './screens/NouveauSkill';
 import NouveauProjet from './screens/NouveauProjet';
 import ListeProjets from './screens/ListeProjets';
 import DetailProjet from './screens/DetailProjet';
+import Bilan from './screens/Bilan';
 import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
 
@@ -81,6 +82,7 @@ function Router() {
           <Route path="projets" element={<ListeProjets />} />
           <Route path="projets/nouveau" element={<NouveauProjet />} />
           <Route path="projets/:id" element={<DetailProjet />} />
+          <Route path="bilan" element={<Bilan />} />
           <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="reglages" element={<Reglages />} />
           <Route path="*" element={<Introuvable />} />

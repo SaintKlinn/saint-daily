@@ -202,3 +202,23 @@ export function FolderIcon({ size = 20, className }: IconProps) {
     </svg>
   );
 }
+
+export function ChartIcon({ size = 20, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M4 19.5h16" />
+      <path d="M7 19.5v-6M12 19.5V7M17 19.5v-9" />
+    </svg>
+  );
+}
