@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { startOfWeek } from './calendarLayout';
 import { computeBadges, computeGoalProgress } from './motivation';
 
 function entry(practicedAt: string, durationMinutes = 30) {
@@ -65,5 +66,22 @@ describe('computeGoalProgress', () => {
 
   it('never divides by zero when the target is absurd', () => {
     expect(computeGoalProgress([], 'hebdomadaire', 'seances', 0, NOW).ratio).toBe(0);
+  });
+
+  // 178 min = 2.9666... h : `toFixed(1)` seul arrondirait à « 3.0 », un
+  // affichage qui dit l'objectif atteint alors que `current >= target`
+  // (comparé ailleurs sur la valeur brute) dirait le contraire. Tronquer
+  // avant d'arrondir garantit que le chiffre affiché ne peut jamais
+  // dépasser la progression réelle.
+  it('floors the displayed hours instead of rounding them up (178 min stays under 3 h)', () => {
+    const progress = computeGoalProgress([entry(new Date(2026, 8, 8, 9).toISOString(), 178)], 'hebdomadaire', 'heures', 3, NOW);
+    expect(progress.label).toBe('2.9 h sur 3 h');
+    expect(progress.current).toBeLessThan(progress.target);
+  });
+
+  it('counts an entry dated exactly at the start of the goal window', () => {
+    const windowStart = startOfWeek(NOW);
+    const entries = [entry(windowStart.toISOString())];
+    expect(computeGoalProgress(entries, 'hebdomadaire', 'seances', 1, NOW).current).toBe(1);
   });
 });

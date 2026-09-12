@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, endOfDay, startOfDay, startOfWeek } from './calendarLayout';
+import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, endOfDay, startOfDay, startOfMonth, startOfWeek } from './calendarLayout';
 
 describe('startOfWeek', () => {
   it('returns the same Monday when given a Monday', () => {
@@ -23,6 +23,25 @@ describe('startOfWeek', () => {
     const result = startOfWeek(sunday);
     expect(result.getDay()).toBe(1);
     expect(result.getDate()).toBe(7);
+  });
+});
+
+describe('startOfMonth', () => {
+  it('rolls back to the 1st at midnight from the last day of a 31-day month', () => {
+    const result = startOfMonth(new Date(2026, 7, 31, 23, 59)); // 31 août 2026
+    expect(result.getFullYear()).toBe(2026);
+    expect(result.getMonth()).toBe(7);
+    expect(result.getDate()).toBe(1);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+  });
+
+  it('rolls back to the 1st for a short month (February, 28 days in 2026)', () => {
+    const result = startOfMonth(new Date(2026, 1, 28, 10, 0));
+    expect(result.getFullYear()).toBe(2026);
+    expect(result.getMonth()).toBe(1);
+    expect(result.getDate()).toBe(1);
+    expect(result.getHours()).toBe(0);
   });
 });
 
