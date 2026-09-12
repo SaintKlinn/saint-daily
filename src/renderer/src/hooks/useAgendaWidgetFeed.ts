@@ -32,7 +32,11 @@ export function useAgendaWidgetFeed(): void {
         .select('*')
         .is('archived_at', null)
         .gte('scheduled_at', startOfDay(now).toISOString())
-        .lte('scheduled_at', endOfDay(now).toISOString())
+        // Borne stricte : endOfDay() vaut minuit du jour SUIVANT (voir
+        // calendarLayout.ts), donc un `.lte()` inclurait une tâche planifiée
+        // pile à 00:00 le lendemain — elle s'afficherait alors sur les deux
+        // jours.
+        .lt('scheduled_at', endOfDay(now).toISOString())
         .order('scheduled_at', { ascending: true });
       if (cancelled || error) return;
       const rows = ((data ?? []) as AgendaRow[]).filter((row) => !row.deleted_at);
@@ -42,11 +46,14 @@ export function useAgendaWidgetFeed(): void {
       }
       // « Fait » = possède au moins une entrée de pratique, la définition
       // qu'utilise déjà tout le reste de l'app.
-      const { data: entries } = await supabase
+      const { data: entries, error: entriesError } = await supabase
         .from('practice_entry')
         .select('engagement_id')
         .in('engagement_id', rows.map((row) => row.id));
-      if (cancelled) return;
+      // Sans ce garde-fou (même raison que useTrayNextEngagement), un échec
+      // silencieux de cette requête afficherait toutes les tâches du jour
+      // comme non faites, y compris celles déjà cochées.
+      if (cancelled || entriesError) return;
       const done = new Set(((entries ?? []) as { engagement_id: string }[]).map((e) => e.engagement_id));
       window.api?.agenda?.reportState?.(
         rows.map((row) => ({
@@ -63,6 +70,13 @@ export function useAgendaWidgetFeed(): void {
     return () => {
       cancelled = true;
       clearInterval(interval);
+      // Ce hook ne tourne que dans la fenêtre principale, authentifiée
+      // (voir doc plus haut) — son démontage (déconnexion) doit donc
+      // effacer l'agenda déjà relayé au widget, sinon celui-ci continue
+      // d'afficher les tâches du jour par-dessus l'écran de connexion.
+      // Même précaution que PomodoroProvider avec reportState(null) pour
+      // l'overlay Pomodoro.
+      window.api?.agenda?.reportState?.([]);
     };
   }, []);
 }

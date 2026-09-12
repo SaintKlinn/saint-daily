@@ -22,7 +22,12 @@ export default function AgendaWidget() {
       {items.length === 0 ? (
         <p className="text-[13px] text-muted">Rien de planifié aujourd'hui.</p>
       ) : (
-        <ul className="flex flex-col gap-1.5 overflow-y-auto">
+        // no-drag : sans lui, toute la fenêtre (y compris cette liste
+        // scrollable) est une zone de drag Electron — voir le div racine —
+        // et un geste de scroll dedans un jour chargé est avalé comme un
+        // déplacement de fenêtre au lieu de faire défiler. Même précaution
+        // que la bande de boutons de PomodoroOverlay.tsx.
+        <ul className="flex flex-col gap-1.5 overflow-y-auto [-webkit-app-region:no-drag]">
           {items.map((item) => (
             <li key={item.id} className="flex items-baseline gap-2.5">
               <span className="shrink-0 font-data text-[11px] tabular-nums text-muted">

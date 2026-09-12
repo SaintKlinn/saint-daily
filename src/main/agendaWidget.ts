@@ -82,14 +82,6 @@ export function createAgendaWidget(): void {
   ipcMain.on('agenda:state-changed', (_event, items) => {
     widgetWindow?.webContents.send('agenda:state', items);
   });
-
-  // Montre/cache la fenêtre widget, indépendamment de sa source (réservé
-  // pour un futur appelant côté renderer — le tray utilise directement
-  // toggleAgendaWidget ci-dessous).
-  ipcMain.on('agenda:set-visible', (_event, visible: boolean) => {
-    if (visible) widgetWindow?.show();
-    else widgetWindow?.hide();
-  });
 }
 
 /**
