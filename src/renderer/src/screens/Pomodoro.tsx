@@ -37,6 +37,7 @@ export default function Pomodoro() {
     advance,
     stop,
     switchEngagement,
+    switching,
     setPinned,
   } = usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
@@ -267,34 +268,46 @@ export default function Pomodoro() {
         />
       </label>
 
-      {session.status === 'awaitingAdvance' && (
-        <div className="relative mt-4 flex w-full flex-col gap-2 border-t border-ink-700 pt-4">
-          <label htmlFor="pomodoro-switch" className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
-            Enchaîner sur un autre engagement
-          </label>
-          <select
-            id="pomodoro-switch"
-            value=""
-            onChange={(e) => {
-              const next = activeSkills.find((s) => s.id === e.target.value);
-              if (next) void switchEngagement(next.id, next.name);
-            }}
-            className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-[13px] text-champagne ${FOCUS_RING}`}
-          >
-            <option value="">Continuer sur {session.skillName}</option>
-            {activeSkills
-              .filter((s) => s.id !== session.skillId)
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-          </select>
-          <p className="text-[12px] text-muted">
-            Le temps déjà fait est enregistré sur {session.skillName} avant de basculer.
-          </p>
-        </div>
-      )}
+      {
+        // Le statut awaitingAdvance couvre le cas manuel (pomodoroAutoAdvance
+        // = false), mais avec le réglage par défaut (true, voir Réglages) la
+        // session ne s'y arrête jamais — sans la condition sur la phase,
+        // personne ne verrait jamais ce sélecteur. Une pause (courte ou
+        // longue) est le second moment sûr : partialMinutesElapsed y vaut
+        // toujours 0 dans flushSession (voir lib/pomodoro.tsx), donc changer
+        // de cible n'y coupe jamais un cycle de travail en deux. Ne JAMAIS
+        // l'étendre à une phase 'work' en cours (status 'running' ou
+        // 'paused') — ce serait précisément le découpage qu'on évite.
+        (session.status === 'awaitingAdvance' || session.phase === 'shortBreak' || session.phase === 'longBreak') && (
+          <div className="relative mt-4 flex w-full flex-col gap-2 border-t border-ink-700 pt-4">
+            <label htmlFor="pomodoro-switch" className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+              Enchaîner sur un autre engagement
+            </label>
+            <select
+              id="pomodoro-switch"
+              value=""
+              disabled={switching}
+              onChange={(e) => {
+                const next = activeSkills.find((s) => s.id === e.target.value);
+                if (next) void switchEngagement(next.id, next.name);
+              }}
+              className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-[13px] text-champagne disabled:opacity-60 ${FOCUS_RING}`}
+            >
+              <option value="">Continuer sur {session.skillName}</option>
+              {activeSkills
+                .filter((s) => s.id !== session.skillId)
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+            </select>
+            <p className="text-[12px] text-muted">
+              Le temps déjà fait est enregistré sur {session.skillName} avant de basculer.
+            </p>
+          </div>
+        )
+      }
     </motion.div>
   );
 }

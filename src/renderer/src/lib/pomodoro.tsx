@@ -32,6 +32,7 @@ interface PomodoroContextValue {
   advance: () => void;
   stop: () => Promise<void>;
   switchEngagement: (skillId: string, skillName: string) => Promise<void>;
+  switching: boolean;
   setPinned: (pinned: boolean) => void;
 }
 
@@ -82,9 +83,24 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const noteRef = useRef(note);
   noteRef.current = note;
 
-  // Verrou de ré-entrance pour stop() — voir le commentaire sur stop()
-  // plus bas pour le scénario qu'il empêche.
-  const stoppingRef = useRef(false);
+  // Verrou de ré-entrance PARTAGÉ entre stop() et switchEngagement() — les
+  // deux soldent les checkpoints accumulés via flushSession() en lisant
+  // sessionRef.current avant leur premier await. Sans un verrou commun, un
+  // stop() et un switchEngagement() qui se chevauchent (ou deux
+  // switchEngagement() successifs — le sélecteur natif de Pomodoro.tsx est
+  // un <select> replié, et Chromium déclenche `change` à chaque flèche du
+  // clavier, donc deux appels peuvent partir dans le même aller-retour
+  // réseau) liraient tous deux le même sessionRef.current pas encore mis à
+  // jour et solderaient deux fois les mêmes checkpoints — minutes de
+  // pratique comptées en double, ou pire, une entrée de 0 minute si le
+  // second à démarrer voit ses checkpoints déjà supprimés par le premier
+  // (voir flushSession). Voir le commentaire sur stop() plus bas.
+  const flushLockRef = useRef(false);
+  // Reflet React de flushLockRef, uniquement pour désactiver le sélecteur
+  // « Enchaîner sur un autre engagement » pendant qu'un changement
+  // d'engagement est en vol (Pomodoro.tsx) — flushLockRef seul ne
+  // déclenche pas de re-render.
+  const [switching, setSwitching] = useState(false);
 
   // Notifie le process main à chaque transition, pour relais vers l'overlay
   // (voir Task 4) — pas à chaque tick, cf. Global Constraints.
@@ -156,11 +172,12 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       const current = sessionRef.current;
       const currentDurations = durationsRef.current;
       if (!current || current.status !== 'running' || !currentDurations) return;
-      // Empêche le tick de ressusciter une session que stop() est en train
-      // de nettoyer : sans ce garde-fou, un tick qui se déclenche entre les
-      // appels Supabase de stopInternal() et son setSession(null) final
+      // Empêche le tick de ressusciter une session que stop() (ou de
+      // court-circuiter un switchEngagement()) est en train de solder :
+      // sans ce garde-fou, un tick qui se déclenche entre les appels
+      // Supabase de flushSession() et la mise à jour finale de l'état
       // relirait un sessionRef.current sur le point d'être invalidé.
-      if (stoppingRef.current) return;
+      if (flushLockRef.current) return;
       // Number.isFinite d'abord : `now < NaN` vaut toujours false en JS, donc
       // sans ce garde-fou, un phaseEndsAt corrompu (settings dont les
       // colonnes Pomodoro manquent côté base, par ex.) ferait échouer la
@@ -297,18 +314,26 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         // Pire cas si la suppression échoue ensuite : un doublon visible et
         // corrigeable dans le journal, pas une perte.
         const total = consolidateDuration((rows as { duration_minutes: number }[]).map((r) => r.duration_minutes));
-        const noteAtStop = noteRef.current.trim();
-        const { error: insertError } = await supabase.from('practice_entry').insert({
-          engagement_id: current.skillId,
-          user_id: currentAuthSession.user.id,
-          duration_minutes: total,
-          note: noteAtStop ? noteAtStop : null,
-        });
-        if (insertError) {
-          setError(toFrenchError(insertError.message));
-        } else {
-          const { error: deleteError } = await supabase.from('practice_entry').delete().in('id', entryIds);
-          if (deleteError) setError(toFrenchError(deleteError.message));
+        // total === 0 signifie qu'il n'y a rien à consolider — soit
+        // entryIds pointait déjà vers des lignes supprimées par un autre
+        // flushSession() (deux appels qui se sont chevauchés malgré
+        // flushLockRef ; défense en profondeur), soit consolidateDuration([])
+        // sur un tableau vide. Insérer quand même produirait une entrée de
+        // pratique de 0 minute, visible et trompeuse dans le journal.
+        if (total > 0) {
+          const noteAtStop = noteRef.current.trim();
+          const { error: insertError } = await supabase.from('practice_entry').insert({
+            engagement_id: current.skillId,
+            user_id: currentAuthSession.user.id,
+            duration_minutes: total,
+            note: noteAtStop ? noteAtStop : null,
+          });
+          if (insertError) {
+            setError(toFrenchError(insertError.message));
+          } else {
+            const { error: deleteError } = await supabase.from('practice_entry').delete().in('id', entryIds);
+            if (deleteError) setError(toFrenchError(deleteError.message));
+          }
         }
       }
     }
@@ -348,27 +373,45 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     const currentAuthSession = authSessionRef.current;
     if (!current || !currentDurations || !currentAuthSession) return;
     if (current.skillId === skillId) return;
-    setError(null);
-    await flushSession(current, currentDurations, currentAuthSession);
-    setNote('');
-    setSession((session) =>
-      session ? { ...session, skillId, skillName, loggedEntryIds: [] } : session
-    );
+    // Même verrou que stop() (flushLockRef) et même raison : sans lui, deux
+    // switchEngagement() qui se chevauchent (deux flèches clavier sur le
+    // <select> dans le même aller-retour réseau) ou un switchEngagement()
+    // et un stop() concurrents liraient tous deux le même
+    // sessionRef.current pas encore mis à jour et solderaient deux fois les
+    // mêmes checkpoints. Un stop() qui arrive pendant qu'un
+    // switchEngagement() est en vol est donc silencieusement ignoré plutôt
+    // que de risquer la double consolidation — l'utilisateur peut recliquer
+    // Arrêter une fois le switch terminé.
+    if (flushLockRef.current) return;
+    flushLockRef.current = true;
+    setSwitching(true);
+    try {
+      setError(null);
+      await flushSession(current, currentDurations, currentAuthSession);
+      setNote('');
+      setSession((session) =>
+        session ? { ...session, skillId, skillName, loggedEntryIds: [] } : session
+      );
+    } finally {
+      flushLockRef.current = false;
+      setSwitching(false);
+    }
   }
 
   async function stop() {
     // Sans ce verrou, un double-clic sur Arrêter (ou une course entre la
-    // fenêtre principale et l'overlay) relirait le même sessionRef.current
-    // pas encore remis à null et consoliderait deux fois — une deuxième
-    // entrée consolidée, minutes comptées en double. pause/resume/advance
-    // n'ont pas besoin de ce verrou : ils passent par setSession(current
-    // => ...), qui se base sur l'état React réel, pas un ref figé.
-    if (stoppingRef.current) return;
-    stoppingRef.current = true;
+    // fenêtre principale et l'overlay, ou avec un switchEngagement() en
+    // vol) relirait le même sessionRef.current pas encore remis à null et
+    // consoliderait deux fois — une deuxième entrée consolidée, minutes
+    // comptées en double. pause/resume/advance n'ont pas besoin de ce
+    // verrou : ils passent par setSession(current => ...), qui se base sur
+    // l'état React réel, pas un ref figé.
+    if (flushLockRef.current) return;
+    flushLockRef.current = true;
     try {
       await stopInternal();
     } finally {
-      stoppingRef.current = false;
+      flushLockRef.current = false;
     }
   }
 
@@ -393,6 +436,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         advance,
         stop,
         switchEngagement,
+        switching,
         setPinned,
       }}
     >
