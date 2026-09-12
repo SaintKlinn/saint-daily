@@ -29,6 +29,32 @@ export function calculateStreak(entries: PracticeEntryLike[], now: Date = new Da
   return streak;
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Plus longue suite de jours consécutifs pratiqués **de toute l'histoire**,
+ * pas seulement celle qui se termine aujourd'hui — c'est le record, pas le
+ * streak en cours.
+ *
+ * Travaille sur des index de jour entiers plutôt que sur des clés texte :
+ * une suite se détecte alors par une simple différence de 1, sans
+ * arithmétique de dates sensible aux mois de longueurs inégales. En UTC,
+ * comme `calculateStreak`, pour rester déterministe quel que soit le fuseau.
+ */
+export function calculateBestStreak(entries: PracticeEntryLike[]): number {
+  if (entries.length === 0) return 0;
+  const dayIndexes = [
+    ...new Set(entries.map((e) => Math.floor(startOfUtcDay(new Date(e.practicedAt)).getTime() / MS_PER_DAY))),
+  ].sort((a, b) => a - b);
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < dayIndexes.length; i++) {
+    run = dayIndexes[i] === dayIndexes[i - 1] + 1 ? run + 1 : 1;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
 /** Vrai seulement si `current` dépasse une valeur précédente connue —
  *  `previous: null` encode "pas encore de valeur de référence" (premier
  *  rendu), pour ne jamais déclencher un pulse de récompense à l'ouverture

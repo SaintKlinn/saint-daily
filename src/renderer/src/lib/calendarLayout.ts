@@ -7,6 +7,13 @@ export function startOfWeek(reference: Date): Date {
   return monday;
 }
 
+export function startOfMonth(reference: Date): Date {
+  const first = new Date(reference);
+  first.setHours(0, 0, 0, 0);
+  first.setDate(1);
+  return first;
+}
+
 export function addDays(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() + days);

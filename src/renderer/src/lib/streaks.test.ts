@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calculateBestStreak,
   calculateStreak,
   daysSinceLastPractice,
   filterByTag,
@@ -33,6 +34,53 @@ describe('calculateStreak', () => {
   it('resets to 0 when the chain is broken', () => {
     const now = new Date('2026-08-31T18:00:00Z');
     expect(calculateStreak([{ practicedAt: '2026-08-28T09:00:00Z' }], now)).toBe(0);
+  });
+});
+
+describe('calculateBestStreak', () => {
+  it('returns 0 with no entries', () => {
+    expect(calculateBestStreak([])).toBe(0);
+  });
+
+  it('counts the longest past run, not the current one', () => {
+    const entries = [
+      // Une série de 4 en août…
+      { practicedAt: '2026-08-01T09:00:00Z' },
+      { practicedAt: '2026-08-02T09:00:00Z' },
+      { practicedAt: '2026-08-03T09:00:00Z' },
+      { practicedAt: '2026-08-04T09:00:00Z' },
+      // …puis une série de 2 en septembre.
+      { practicedAt: '2026-09-10T09:00:00Z' },
+      { practicedAt: '2026-09-11T09:00:00Z' },
+    ];
+    expect(calculateBestStreak(entries)).toBe(4);
+  });
+
+  it('counts a day only once however many entries it holds', () => {
+    const entries = [
+      { practicedAt: '2026-08-01T08:00:00Z' },
+      { practicedAt: '2026-08-01T20:00:00Z' },
+      { practicedAt: '2026-08-02T09:00:00Z' },
+    ];
+    expect(calculateBestStreak(entries)).toBe(2);
+  });
+
+  it('is not fooled by unsorted input', () => {
+    const entries = [
+      { practicedAt: '2026-08-03T09:00:00Z' },
+      { practicedAt: '2026-08-01T09:00:00Z' },
+      { practicedAt: '2026-08-02T09:00:00Z' },
+    ];
+    expect(calculateBestStreak(entries)).toBe(3);
+  });
+
+  it('spans a month boundary', () => {
+    const entries = [
+      { practicedAt: '2026-08-30T09:00:00Z' },
+      { practicedAt: '2026-08-31T09:00:00Z' },
+      { practicedAt: '2026-09-01T09:00:00Z' },
+    ];
+    expect(calculateBestStreak(entries)).toBe(3);
   });
 });
 
