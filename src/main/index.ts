@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
 import { registerDevLoginHandler } from './devLogin';
-import { createTray } from './tray';
+import { createTray, setTrayNextEngagement } from './tray';
 import { registerAutoLaunchHandlers } from './autoLaunch';
 import { registerAutoUpdateHandlers } from './autoUpdate';
 import { createPomodoroOverlay } from './pomodoroOverlay';
@@ -95,6 +95,9 @@ app
       if (!mainWindow) return;
       mainWindow.show();
       mainWindow.focus();
+    });
+    ipcMain.on('tray:set-next-engagement', (_event, label: string | null) => {
+      setTrayNextEngagement(label);
     });
     registerDevLoginHandler();
     registerAutoLaunchHandlers();

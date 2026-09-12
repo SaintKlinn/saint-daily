@@ -47,6 +47,9 @@ const api = {
   focusWindow: (): void => {
     ipcRenderer.send('window:focus');
   },
+  setTrayNextEngagement: (label: string | null): void => {
+    ipcRenderer.send('tray:set-next-engagement', label);
+  },
   pomodoro: {
     // Fenêtre principale -> main -> overlay : diffuse un instantané à
     // chaque transition (jamais à chaque tick, voir Global Constraints).

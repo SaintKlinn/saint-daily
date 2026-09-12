@@ -3,6 +3,13 @@ import { join } from 'node:path';
 
 let tray: Tray | null = null;
 
+export function setTrayNextEngagement(label: string | null): void {
+  // L'infobulle est la seule surface de l'app visible sans ouvrir la
+  // fenêtre : elle garde toujours le nom du produit en première ligne,
+  // pour rester identifiable parmi les autres icônes du tray.
+  tray?.setToolTip(label ? `Saint Daily\n${label}` : 'Saint Daily');
+}
+
 export function createTray(getWindow: () => BrowserWindow | null): void {
   // En dev l'icône est lue depuis le dossier resources/ du projet ; dans
   // l'app packagée elle n'est PAS dans l'asar (electron-builder ne
@@ -14,7 +21,7 @@ export function createTray(getWindow: () => BrowserWindow | null): void {
     ? join(process.resourcesPath, 'icon.png')
     : join(__dirname, '../../resources/icon.png');
   tray = new Tray(iconPath);
-  tray.setToolTip('Saint Daily');
+  setTrayNextEngagement(null);
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {

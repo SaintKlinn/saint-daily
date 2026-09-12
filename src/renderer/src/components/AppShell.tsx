@@ -8,6 +8,7 @@ import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, ChartIcon, GearIcon } fro
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
 import { useEngagementReminders } from '../hooks/useEngagementReminders';
+import { useTrayNextEngagement } from '../hooks/useTrayNextEngagement';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
 
@@ -27,6 +28,7 @@ export default function AppShell() {
   const hasSyncedRecurrenceRef = useRef(false);
 
   useEngagementReminders();
+  useTrayNextEngagement();
 
   useEffect(() => {
     if (loading || hasSyncedRecurrenceRef.current) return;
