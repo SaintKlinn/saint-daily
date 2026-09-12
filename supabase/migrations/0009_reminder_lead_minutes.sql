@@ -1,6 +1,7 @@
 begin;
 
 alter table saint_daily.app_settings
-  add column reminder_lead_minutes integer not null default 10;
+  add column reminder_lead_minutes integer not null default 10
+  check (reminder_lead_minutes >= 0);
 
 commit;

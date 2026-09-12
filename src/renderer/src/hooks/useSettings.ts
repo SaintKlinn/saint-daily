@@ -7,7 +7,11 @@ import type { SkillAppSettings } from '../lib/types';
 interface SettingsRow {
   user_id: string;
   reminder_threshold_days: number;
-  reminder_lead_minutes: number;
+  // Optionnel à dessein : la migration qui ajoute cette colonne est
+  // appliquée à la base live après le déploiement du code (voir le `?? 10`
+  // ci-dessous). La typer `number` non optionnel ferait passer ce repli
+  // pour du code mort qu'un futur nettoyage supprimerait.
+  reminder_lead_minutes: number | undefined;
   notifications_enabled: boolean;
   auto_launch_enabled: boolean;
   pomodoro_work_minutes: number;
@@ -62,9 +66,16 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
   };
 }
 
-const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId'> = {
+// `reminderLeadMinutes` volontairement absent : la migration qui ajoute
+// cette colonne est appliquée à la base live après le déploiement de ce
+// code. L'envoyer dans le payload d'INSERT ci-dessous ferait échouer
+// PostgREST avec PGRST204 tant que la colonne n'existe pas — laissant
+// `settings` à `null` en permanence pour tout compte neuf (seul le code
+// '23505' est traité comme un cas particulier). La valeur par défaut de la
+// colonne (10) prend le relais une fois la migration appliquée ; le
+// `?? 10` de `fromRow` couvre l'intervalle pour la lecture.
+const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId' | 'reminderLeadMinutes'> = {
   reminderThresholdDays: 5,
-  reminderLeadMinutes: 10,
   notificationsEnabled: true,
   autoLaunchEnabled: true,
   pomodoroWorkMinutes: 25,
