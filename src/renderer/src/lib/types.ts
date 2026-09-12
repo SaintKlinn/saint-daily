@@ -54,4 +54,5 @@ export interface SkillAppSettings {
   pomodoroCyclesBeforeLongBreak: number;
   pomodoroAutoAdvance: boolean;
   showPracticeInCalendar: boolean;
+  weeklyReviewDismissedAt: string | null;
 }

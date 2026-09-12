@@ -20,6 +20,7 @@ interface SettingsRow {
   pomodoro_cycles_before_long_break: number;
   pomodoro_auto_advance: boolean;
   show_practice_in_calendar: boolean;
+  weekly_review_dismissed_at?: string | null;
 }
 
 function fromRow(row: SettingsRow): SkillAppSettings {
@@ -40,6 +41,7 @@ function fromRow(row: SettingsRow): SkillAppSettings {
     pomodoroCyclesBeforeLongBreak: row.pomodoro_cycles_before_long_break,
     pomodoroAutoAdvance: row.pomodoro_auto_advance,
     showPracticeInCalendar: row.show_practice_in_calendar,
+    weeklyReviewDismissedAt: row.weekly_review_dismissed_at ?? null,
   };
 }
 
@@ -63,6 +65,9 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
     ...(patch.showPracticeInCalendar !== undefined
       ? { show_practice_in_calendar: patch.showPracticeInCalendar }
       : {}),
+    ...(patch.weeklyReviewDismissedAt !== undefined
+      ? { weekly_review_dismissed_at: patch.weeklyReviewDismissedAt }
+      : {}),
   };
 }
 
@@ -74,7 +79,7 @@ function toRow(patch: Partial<Omit<SkillAppSettings, 'userId'>>) {
 // '23505' est traité comme un cas particulier). La valeur par défaut de la
 // colonne (10) prend le relais une fois la migration appliquée ; le
 // `?? 10` de `fromRow` couvre l'intervalle pour la lecture.
-const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId' | 'reminderLeadMinutes'> = {
+const DEFAULT_SETTINGS: Omit<SkillAppSettings, 'userId' | 'reminderLeadMinutes' | 'weeklyReviewDismissedAt'> = {
   reminderThresholdDays: 5,
   notificationsEnabled: true,
   autoLaunchEnabled: true,
