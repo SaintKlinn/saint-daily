@@ -9,10 +9,11 @@ import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
-import { buttonClassName } from '../components/Button';
+import Button, { buttonClassName } from '../components/Button';
 import { CheckIcon, PlusIcon } from '../components/icons';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import { colors } from '../theme/colors';
+import { shouldShowWeeklyReview } from '../lib/rituels';
 
 const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
@@ -25,7 +26,7 @@ const notifiedSkillIds = new Set<string>();
 export default function Accueil() {
   const { engagements, error: skillsError, setArchived } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const activeSkills = useMemo(() => activeEngagements.filter((e) => !e.scheduledAt && !e.isProject), [activeEngagements]);
   const {
@@ -62,6 +63,13 @@ export default function Accueil() {
     }
     setCompleteTaskError(null);
     await refreshEntries();
+  }
+
+  async function handleDismissWeeklyReview() {
+    // Un échec ici n'a aucune conséquence grave : le bandeau réapparaîtra
+    // au prochain rendu, ce qui est préférable à un message d'erreur pour
+    // un geste aussi anodin que fermer une invitation.
+    await updateSettings({ weeklyReviewDismissedAt: new Date().toISOString() });
   }
 
   const stats = useMemo(
@@ -111,6 +119,25 @@ export default function Accueil() {
 
   return (
     <div className="flex flex-col gap-9">
+      {settings && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
+        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
+          <div>
+            <p className="text-[15px] text-champagne">Ta semaine est prête</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              Un coup d'œil sur ce que tu as pratiqué ces derniers jours.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/bilan" onClick={handleDismissWeeklyReview} className={buttonClassName('primary', 'sm')}>
+              Voir le bilan
+            </Link>
+            <Button variant="secondary" size="sm" onClick={handleDismissWeeklyReview}>
+              Plus tard
+            </Button>
+          </div>
+        </div>
+      )}
+
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
