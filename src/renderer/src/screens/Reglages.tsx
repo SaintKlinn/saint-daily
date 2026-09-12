@@ -82,25 +82,40 @@ export default function Reglages() {
 
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  // Séparé de `actionError` : celui-ci s'affiche ~150 lignes plus haut, dans
+  // la section Rappels, alors que ce bloc vit juste à côté des boutons
+  // d'export — un échec réseau sur l'export passerait sinon totalement
+  // inaperçu (voir revue finale de branche).
+  const [exportError, setExportError] = useState<string | null>(null);
 
   async function handleExport(format: 'json' | 'csv') {
-    setActionError(null);
+    setExportError(null);
     setExportMessage(null);
     setExporting(true);
-    const { bundle, error: exportError } = await fetchExportBundle();
-    if (exportError || !bundle) {
-      setActionError(exportError ?? 'Export impossible.');
+    try {
+      const { bundle, error: fetchError } = await fetchExportBundle();
+      if (fetchError || !bundle) {
+        setExportError(fetchError ?? 'Export impossible.');
+        return;
+      }
+      const filename = exportFileName(format);
+      if (format === 'json') {
+        downloadTextFile(filename, toJson(bundle), 'application/json');
+      } else {
+        downloadTextFile(filename, toCsv(bundle), 'text/csv');
+      }
+      // Electron ouvre une boîte de dialogue « Enregistrer sous » (aucun
+      // handler `will-download` dans src/main/) : on ne sait donc jamais si
+      // l'utilisateur a réellement enregistré le fichier ou annulé. Le
+      // message ne peut donc affirmer qu'un téléchargement a été lancé, pas
+      // qu'il a abouti dans un dossier précis.
+      setExportMessage('Téléchargement lancé.');
+    } finally {
+      // Sans ce `finally`, une exception inattendue (fetchExportBundle ou
+      // downloadTextFile) laissait `exporting` à `true` pour toujours : les
+      // deux boutons restaient désactivés, sans aucune explication.
       setExporting(false);
-      return;
     }
-    const filename = exportFileName(format);
-    if (format === 'json') {
-      downloadTextFile(filename, toJson(bundle), 'application/json');
-    } else {
-      downloadTextFile(filename, toCsv(bundle), 'text/csv');
-    }
-    setExportMessage(`${filename} enregistré dans ton dossier Téléchargements.`);
-    setExporting(false);
   }
 
   // `!settings` en plus de `loading` : useSettings repasse loading à true
@@ -282,6 +297,11 @@ export default function Reglages() {
           </div>
         </div>
 
+        {exportError && (
+          <p role="alert" className="py-2 text-[13px] text-danger">
+            {exportError}
+          </p>
+        )}
         {exportMessage && (
           <p role="status" className="py-2 text-[13px] text-muted">
             {exportMessage}
