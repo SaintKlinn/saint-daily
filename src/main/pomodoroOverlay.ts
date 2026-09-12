@@ -16,8 +16,12 @@ let autoShownByMinimize = false;
 let hasActiveSession = false;
 
 function applyOverlayVisibility(): void {
-  if (manuallyPinned || autoShownByMinimize) overlayWindow?.show();
-  else overlayWindow?.hide();
+  // Fenêtre détruite (fermeture système/Alt+F4 pendant isQuitting, ou tout
+  // autre chemin qui laisserait `overlayWindow` non réinitialisé) plutôt que
+  // simplement cachée : appeler show()/hide() dessus lèverait alors.
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  if (manuallyPinned || autoShownByMinimize) overlayWindow.show();
+  else overlayWindow.hide();
 }
 
 // Même garde que isQuitting dans src/main/index.ts : sans elle, le close
@@ -60,6 +64,14 @@ function buildOverlayWindow(): BrowserWindow {
       event.preventDefault();
       win.hide();
     }
+  });
+  // Ne se déclenche donc qu'à la vraie destruction (séquence de quitte),
+  // jamais sur un close intercepté ci-dessus. Sans ça, `overlayWindow`
+  // resterait une référence vers une fenêtre détruite après un quit — le
+  // garde isDestroyed() d'applyOverlayVisibility() est un filet, celui-ci
+  // évite d'avoir à s'y fier.
+  win.on('closed', () => {
+    overlayWindow = null;
   });
 
   const isDev = !app.isPackaged;

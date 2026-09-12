@@ -73,6 +73,16 @@ export default function Pomodoro() {
             {error}
           </p>
         )}
+        {selectedSkill && !activeSkills.some((s) => s.id === selectedSkill.id) && (
+          // Cible résolue depuis un lien profond (ex. "Démarrer un pomodoro"
+          // sur une tâche planifiée du calendrier) mais absente du
+          // sélecteur, qui ne liste que des skills sans horaire — sans ce
+          // rappel visible, l'écran arrive avec rien de surligné et semble
+          // avoir ignoré la demande.
+          <p className="text-sm text-muted">
+            Pomodoro pour <span className="text-champagne">{selectedSkill.name}</span>
+          </p>
+        )}
         <SkillPicker
           skills={activeSkills}
           entriesBySkill={entriesBySkill}

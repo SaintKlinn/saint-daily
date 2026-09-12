@@ -139,7 +139,7 @@ export default function TaskPopover({
             {error}
           </p>
         )}
-        <div className="relative mt-2 flex justify-end gap-3">
+        <div className="relative mt-2 flex flex-wrap justify-end gap-3">
           <BoutonSuppression onConfirm={onDelete} busy={deleting} />
           <Link to={`/pomodoro?skillId=${task.id}`} className={buttonClassName('secondary', 'sm')}>
             Démarrer un pomodoro
