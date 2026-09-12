@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
 import { useSettings } from '../hooks/useSettings';
 import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
-import Button from '../components/Button';
+import Button, { buttonClassName } from '../components/Button';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -267,6 +268,18 @@ export default function Reglages() {
           </p>
         </details>
       </section>
+
+      <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div>
+          <p className="text-[15px] text-champagne">Corbeille</p>
+          <p className="mt-0.5 text-[13px] text-muted">
+            Restaurer ou supprimer définitivement ce qui a été supprimé
+          </p>
+        </div>
+        <Link to="/corbeille" className={buttonClassName('secondary', 'sm')}>
+          Ouvrir
+        </Link>
+      </div>
 
       <Button variant="secondary" size="sm" className="w-fit" onClick={() => signOut()}>
         Se déconnecter

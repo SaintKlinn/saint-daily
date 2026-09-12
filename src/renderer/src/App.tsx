@@ -22,6 +22,7 @@ import DetailProjet from './screens/DetailProjet';
 import Bilan from './screens/Bilan';
 import Pomodoro from './screens/Pomodoro';
 import Reglages from './screens/Reglages';
+import Corbeille from './screens/Corbeille';
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -85,6 +86,7 @@ function Router() {
           <Route path="bilan" element={<Bilan />} />
           <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="reglages" element={<Reglages />} />
+          <Route path="corbeille" element={<Corbeille />} />
           <Route path="*" element={<Introuvable />} />
         </Route>
       </Route>
