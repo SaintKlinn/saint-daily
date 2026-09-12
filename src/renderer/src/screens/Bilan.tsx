@@ -4,6 +4,7 @@ import { useAllPracticeEntriesForUser } from '../hooks/usePracticeEntries';
 import {
   compareWeeks,
   engagementBreakdown,
+  engagementIdentity,
   tagBreakdown,
   timeOfDayBuckets,
   type EngagementLike,
@@ -24,37 +25,47 @@ function Section({ titre, children }: { titre: string; children: ReactNode }) {
 }
 
 export default function Bilan() {
-  const { engagements, error: engagementsError } = useEngagements();
-  const { entries, loading, error: entriesError } = useAllPracticeEntriesForUser();
+  const { engagements, loading: engagementsLoading, error: engagementsError } = useEngagements();
+  const { entries, loading: entriesLoading, error: entriesError } = useAllPracticeEntriesForUser();
+  const loading = engagementsLoading || entriesLoading;
   const [heatmapEngagementId, setHeatmapEngagementId] = useState('tous');
 
   const engagementsById = useMemo(() => {
     const map: Record<string, EngagementLike> = {};
     for (const engagement of engagements) {
-      map[engagement.id] = { id: engagement.id, name: engagement.name, tags: engagement.tags };
+      map[engagement.id] = {
+        id: engagement.id,
+        name: engagement.name,
+        tags: engagement.tags,
+        recurrenceSeriesId: engagement.recurrenceSeriesId,
+      };
     }
     return map;
   }, [engagements]);
 
   // Les projets ne se pratiquent pas et n'ont donc jamais d'entrée ; les
   // archivés restent hors du sélecteur mais leurs entrées comptent bien
-  // dans la vue "Tous", puisque l'historique reste l'historique.
-  const selectableEngagements = useMemo(
-    () =>
-      engagements
-        .filter((engagement) => !engagement.isProject && !engagement.archivedAt)
-        .map((engagement) => ({ id: engagement.id, name: engagement.name }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [engagements]
-  );
+  // dans la vue "Tous", puisque l'historique reste l'historique. Une
+  // sélection est une IDENTITÉ (`engagementIdentity`), pas un `id` brut :
+  // sans ça, une série récurrente de 56 occurrences lisait comme 56
+  // options identiques dans le menu.
+  const selectableEngagements = useMemo(() => {
+    const byIdentity = new Map<string, { id: string; name: string }>();
+    for (const engagement of engagements) {
+      if (engagement.isProject || engagement.archivedAt) continue;
+      const identity = engagementIdentity(engagement);
+      if (!byIdentity.has(identity)) byIdentity.set(identity, { id: identity, name: engagement.name });
+    }
+    return [...byIdentity.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [engagements]);
 
-  const heatmapEntries = useMemo(
-    () =>
-      heatmapEngagementId === 'tous'
-        ? entries
-        : entries.filter((entry) => entry.engagementId === heatmapEngagementId),
-    [entries, heatmapEngagementId]
-  );
+  const heatmapEntries = useMemo(() => {
+    if (heatmapEngagementId === 'tous') return entries;
+    return entries.filter((entry) => {
+      const engagement = engagementsById[entry.engagementId];
+      return engagement ? engagementIdentity(engagement) === heatmapEngagementId : false;
+    });
+  }, [entries, heatmapEngagementId, engagementsById]);
 
   const comparison = useMemo(() => compareWeeks(entries), [entries]);
   const parTag = useMemo(() => tagBreakdown(entries, engagementsById), [entries, engagementsById]);

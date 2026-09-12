@@ -4,6 +4,7 @@ import {
   compareWeeks,
   countEntriesByDay,
   engagementBreakdown,
+  engagementIdentity,
   formatMinutes,
   heatmapLevel,
   tagBreakdown,
@@ -149,6 +150,55 @@ describe('engagementBreakdown', () => {
       { key: 'b', label: 'Cuir', minutes: 15, sessions: 1 },
     ]);
   });
+
+  it('collapses every occurrence of a recurring series into a single row', () => {
+    // Une série quotidienne de 56 jours produit 56 lignes `engagement`
+    // distinctes partageant le même `recurrenceSeriesId` — sans le
+    // regroupement par identité, chaque occurrence cochée apparaîtrait
+    // comme sa propre ligne "0 min · 1 séance".
+    const engagementsById = {
+      occ1: { id: 'occ1', name: 'Course à pied', tags: [], recurrenceSeriesId: 'serie-1' },
+      occ2: { id: 'occ2', name: 'Course à pied', tags: [], recurrenceSeriesId: 'serie-1' },
+      occ3: { id: 'occ3', name: 'Course à pied', tags: [], recurrenceSeriesId: 'serie-1' },
+    };
+    const entries = [
+      { engagementId: 'occ1', durationMinutes: 30, practicedAt: new Date(2026, 8, 8, 9).toISOString() },
+      { engagementId: 'occ2', durationMinutes: 20, practicedAt: new Date(2026, 8, 9, 9).toISOString() },
+      { engagementId: 'occ3', durationMinutes: 10, practicedAt: new Date(2026, 8, 10, 9).toISOString() },
+    ];
+    expect(engagementBreakdown(entries, engagementsById)).toEqual([
+      { key: 'serie-1', label: 'Course à pied', minutes: 60, sessions: 3 },
+    ]);
+  });
+
+  it('excludes an engagement whose entries total zero minutes', () => {
+    // Cocher une tâche insère une entrée `durationMinutes: 0` — une séance
+    // légitime ailleurs, mais cette carte parle de temps investi : une
+    // ligne à 0 minute n'a rien à y montrer.
+    const engagementsById = {
+      a: { id: 'a', name: 'Guitare', tags: [] },
+      b: { id: 'b', name: 'Ménage', tags: [] },
+    };
+    const entries = [
+      { engagementId: 'a', durationMinutes: 30, practicedAt: new Date(2026, 8, 10, 9).toISOString() },
+      { engagementId: 'b', durationMinutes: 0, practicedAt: new Date(2026, 8, 10, 9).toISOString() },
+      { engagementId: 'b', durationMinutes: 0, practicedAt: new Date(2026, 8, 11, 9).toISOString() },
+    ];
+    expect(engagementBreakdown(entries, engagementsById)).toEqual([
+      { key: 'a', label: 'Guitare', minutes: 30, sessions: 1 },
+    ]);
+  });
+});
+
+describe('engagementIdentity', () => {
+  it('falls back to the id when there is no recurrence series', () => {
+    expect(engagementIdentity({ id: 'a', recurrenceSeriesId: null })).toBe('a');
+    expect(engagementIdentity({ id: 'a' })).toBe('a');
+  });
+
+  it('uses the recurrence series id when present', () => {
+    expect(engagementIdentity({ id: 'occ1', recurrenceSeriesId: 'serie-1' })).toBe('serie-1');
+  });
 });
 
 describe('timeOfDayBuckets', () => {
@@ -181,7 +231,7 @@ describe('formatMinutes', () => {
   it('formats below and above an hour', () => {
     expect(formatMinutes(0)).toBe('0 min');
     expect(formatMinutes(45)).toBe('45 min');
-    expect(formatMinutes(60)).toBe('1 h');
-    expect(formatMinutes(135)).toBe('2 h 15');
+    expect(formatMinutes(60)).toBe('1h');
+    expect(formatMinutes(135)).toBe('2h 15');
   });
 });

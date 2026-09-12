@@ -10,6 +10,22 @@ export interface EngagementLike {
   id: string;
   name: string;
   tags: string[];
+  // Optionnel pour ne pas casser les appelants existants qui n'ont pas
+  // encore besoin de l'identité de série (voir `engagementIdentity`).
+  recurrenceSeriesId?: string | null;
+}
+
+/**
+ * Identité stable d'un engagement à travers ses occurrences récurrentes.
+ * Chaque occurrence d'une série de tâches (une par jour sur 56 jours, par
+ * exemple) est SA PROPRE ligne dans `engagement`, avec son propre `id`,
+ * mais partage le `recurrenceSeriesId` de ses sœurs. Regrouper par
+ * `id` seul ferait apparaître une série quotidienne de 56 jours comme 56
+ * lignes distinctes portant le même nom — cette fonction est le point
+ * unique qui décide de la clé de regroupement correcte.
+ */
+export function engagementIdentity(engagement: Pick<EngagementLike, 'id' | 'recurrenceSeriesId'>): string {
+  return engagement.recurrenceSeriesId ?? engagement.id;
 }
 
 /**
@@ -152,6 +168,16 @@ export function tagBreakdown(
   return [...rows.values()].sort(byMinutesDesc);
 }
 
+/**
+ * Contrairement à `tagBreakdown`, qui regroupe déjà par nom de tag, ceci
+ * regroupe par IDENTITÉ D'ENGAGEMENT (`engagementIdentity`) plutôt que par
+ * `engagement.id` brut : sans ça, une série récurrente de 56 occurrences
+ * cochées produirait 56 lignes identiques "0 min · 1 séance" au lieu d'une
+ * seule ligne pour la série. Les lignes dont le total est 0 minute sont
+ * ensuite exclues : cette carte parle de temps investi, et une tâche
+ * simplement cochée (`durationMinutes: 0`) — une séance légitime ailleurs,
+ * pour les streaks — n'a rien à montrer ici.
+ */
 export function engagementBreakdown(
   entries: PracticeEntryLike[],
   engagementsById: Record<string, EngagementLike>
@@ -160,12 +186,13 @@ export function engagementBreakdown(
   for (const entry of entries) {
     const engagement = engagementsById[entry.engagementId];
     if (!engagement) continue;
-    const row = rows.get(engagement.id) ?? { key: engagement.id, label: engagement.name, minutes: 0, sessions: 0 };
+    const identity = engagementIdentity(engagement);
+    const row = rows.get(identity) ?? { key: identity, label: engagement.name, minutes: 0, sessions: 0 };
     row.minutes += entry.durationMinutes;
     row.sessions += 1;
-    rows.set(engagement.id, row);
+    rows.set(identity, row);
   }
-  return [...rows.values()].sort(byMinutesDesc);
+  return [...rows.values()].filter((row) => row.minutes > 0).sort(byMinutesDesc);
 }
 
 export type TimeOfDayKey = 'nuit' | 'matin' | 'apresMidi' | 'soir';
@@ -207,9 +234,13 @@ export function timeOfDayBuckets(entries: PracticeEntryLike[]): TimeOfDayBucket[
   });
 }
 
-export function formatMinutes(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
+// Seule implémentation de ce format dans l'app — Accueil.tsx l'importe
+// d'ici plutôt que d'en garder une copie. Format hérité d'Accueil (`2h 15`,
+// sans espace avant le "h") : c'est un rendu que l'utilisateur voit déjà
+// ailleurs, on ne le change pas pour l'aligner sur un nouvel écran.
+export function formatMinutes(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} min`;
+  return minutes === 0 ? `${hours}h` : `${hours}h ${String(minutes).padStart(2, '0')}`;
 }
