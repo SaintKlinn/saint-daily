@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
 import { useSettings } from '../hooks/useSettings';
+import { useNoteTemplates } from '../hooks/useNoteTemplates';
 import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
@@ -15,6 +16,13 @@ const FOCUS_RING =
 export default function Reglages() {
   const { signOut } = useAuth();
   const { settings, loading, error, updateSettings } = useSettings();
+  const { templates, error: templatesError, addTemplate, removeTemplate } = useNoteTemplates();
+  const [newTemplateText, setNewTemplateText] = useState('');
+  // Distinct de `templatesError` (qui vient du chargement) : une action
+  // ratée doit rester visible même après que la liste elle-même s'est
+  // chargée avec succès — ici l'utilisateur gère les modèles
+  // explicitement, un échec doit se voir (contrairement à NouvelleEntree).
+  const [templateActionError, setTemplateActionError] = useState<string | null>(null);
   const [autoLaunch, setAutoLaunch] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   // Les trois réglages ci-dessous écrivaient en silence : un échec réseau
@@ -78,6 +86,25 @@ export default function Reglages() {
     setActionError(null);
     const { error: updateError } = await updateSettings(patch);
     if (updateError) setActionError(updateError);
+  }
+
+  async function handleAddTemplate(e: FormEvent) {
+    e.preventDefault();
+    const text = newTemplateText.trim();
+    if (!text) return;
+    setTemplateActionError(null);
+    const { error: addError } = await addTemplate(text);
+    if (addError) {
+      setTemplateActionError(addError);
+      return;
+    }
+    setNewTemplateText('');
+  }
+
+  async function handleRemoveTemplate(id: string) {
+    setTemplateActionError(null);
+    const { error: removeError } = await removeTemplate(id);
+    if (removeError) setTemplateActionError(removeError);
   }
 
   const [exporting, setExporting] = useState(false);
@@ -307,6 +334,55 @@ export default function Reglages() {
             {exportMessage}
           </p>
         )}
+      </section>
+
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Modèles de note</h2>
+        <p className="mb-3 text-[13px] text-muted">
+          Des raccourcis proposés en un clic à la saisie d'une nouvelle entrée
+        </p>
+
+        {templatesError && (
+          <p role="alert" className="mb-2 text-sm text-danger">
+            {templatesError}
+          </p>
+        )}
+        {templateActionError && (
+          <p role="alert" className="mb-2 text-sm text-danger">
+            {templateActionError}
+          </p>
+        )}
+
+        {templates.length === 0 ? (
+          <EmptyState>Aucun modèle pour l'instant.</EmptyState>
+        ) : (
+          <ul className="flex flex-col gap-0">
+            {templates.map((template) => (
+              <li
+                key={template.id}
+                className="flex items-center justify-between gap-3 border-b border-ink-700 py-[14px]"
+              >
+                <p className="text-[14px] text-champagne">{template.text}</p>
+                <Button variant="secondary" size="sm" onClick={() => handleRemoveTemplate(template.id)}>
+                  Retirer
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form onSubmit={handleAddTemplate} className="mt-3 flex gap-2">
+          <input
+            value={newTemplateText}
+            onChange={(e) => setNewTemplateText(e.target.value)}
+            aria-label="Nouveau modèle de note"
+            placeholder="Ex. : Séance courte, peu de progrès aujourd'hui"
+            className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          />
+          <Button type="submit" variant="secondary" size="sm" disabled={!newTemplateText.trim()}>
+            Ajouter
+          </Button>
+        </form>
       </section>
 
       <section className="flex flex-col gap-0">

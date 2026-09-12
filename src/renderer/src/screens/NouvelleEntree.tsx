@@ -2,9 +2,10 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
+import { useNoteTemplates } from '../hooks/useNoteTemplates';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
-import { SelectField, TextAreaField } from '../components/FormField';
+import { FormField, SelectField, TextAreaField } from '../components/FormField';
 import type { Mood } from '../lib/types';
 
 const FOCUS_RING =
@@ -18,10 +19,16 @@ export default function NouvelleEntree() {
   const { engagements } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const { logEntry } = usePracticeEntries(null);
+  // L'erreur du hook n'est délibérément pas affichée ici : elle signifie
+  // « pas de modèles disponibles », ce que l'absence de chips dit déjà, et
+  // un message d'erreur en travers du formulaire central pour une
+  // commodité absente serait disproportionné.
+  const { templates } = useNoteTemplates();
 
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
   const [duration, setDuration] = useState('30');
   const [mood, setMood] = useState<Mood | ''>('');
+  const [tagsInput, setTagsInput] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,11 +46,16 @@ export default function NouvelleEntree() {
     }
     setSubmitting(true);
     setError(null);
+    const tags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     const { error: logError } = await logEntry({
       engagementId: skillId,
       durationMinutes,
       note: note || null,
       mood: mood || null,
+      tags,
     });
     setSubmitting(false);
     if (logError) {
@@ -92,6 +104,29 @@ export default function NouvelleEntree() {
           <option value="bien">Bien</option>
           <option value="excellent">Excellent</option>
         </SelectField>
+        <FormField
+          label="Tags de la séance (optionnels, séparés par des virgules)"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="technique, difficile"
+        />
+        {templates.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Modèles de note</p>
+            <div className="flex flex-wrap gap-2">
+              {templates.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setNote(template.text)}
+                  className={`border border-ink-700 px-3 py-1.5 text-left text-[12px] text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
+                >
+                  {template.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <TextAreaField label="Note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
         {error && (
           <p role="alert" className="text-sm text-danger">
