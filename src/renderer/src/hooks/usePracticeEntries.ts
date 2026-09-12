@@ -128,3 +128,53 @@ export function useAllPracticeEntries(engagementIds: string[]) {
 
   return { entriesBySkill, loading, error, refresh };
 }
+
+// Supabase plafonne une requête à 1000 lignes par défaut. Sans pagination,
+// tous les widgets du Bilan afficheraient des totaux silencieusement
+// tronqués dès que l'historique dépasse ce seuil — un bug invisible qui
+// s'aggraverait avec le temps, exactement dans un écran censé donner une
+// vue fidèle de tout l'historique.
+const ALL_ENTRIES_PAGE_SIZE = 1000;
+
+/**
+ * Toutes les entrées de pratique de l'utilisateur, sans filtre
+ * d'engagement — y compris celles d'engagements archivés, puisque
+ * l'historique reste l'historique. Utilisé par l'écran Bilan, qui a besoin
+ * d'une vue complète en une seule source.
+ */
+export function useAllPracticeEntriesForUser() {
+  const { session } = useAuth();
+  const [entries, setEntries] = useState<PracticeEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!session) return;
+    setLoading(true);
+    setError(null);
+    const rows: PracticeEntryRow[] = [];
+    for (let from = 0; ; from += ALL_ENTRIES_PAGE_SIZE) {
+      const { data, error: fetchError } = await getSupabaseClient()
+        .from('practice_entry')
+        .select('*')
+        .order('practiced_at', { ascending: false })
+        .range(from, from + ALL_ENTRIES_PAGE_SIZE - 1);
+      if (fetchError) {
+        setError(toFrenchError(fetchError.message));
+        setLoading(false);
+        return;
+      }
+      const page = (data ?? []) as PracticeEntryRow[];
+      rows.push(...page);
+      if (page.length < ALL_ENTRIES_PAGE_SIZE) break;
+    }
+    setEntries(rows.map(fromRow));
+    setLoading(false);
+  }, [session]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { entries, loading, error, refresh };
+}
