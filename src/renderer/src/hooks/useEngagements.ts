@@ -254,10 +254,16 @@ export function useEngagements() {
         .is('deleted_at', null);
       if (childrenError) return { error: toFrenchError(childrenError.message) };
     }
+    // `.is('deleted_at', null)` rend l'appel idempotent : sans cette garde,
+    // un second clic (ou un double-appel accidentel) re-timestamperait le
+    // projet, et `restore` ne matcherait plus les enfants sur ce nouvel
+    // horodatage — le projet reviendrait seul, ses enfants strandés en
+    // corbeille.
     const { error: updateError } = await supabase
       .from('engagement')
       .update({ deleted_at: deletedAt })
-      .eq('id', id);
+      .eq('id', id)
+      .is('deleted_at', null);
     if (updateError) return { error: toFrenchError(updateError.message) };
     await refresh();
     return { error: null };
@@ -287,25 +293,44 @@ export function useEngagements() {
    * jalons partent d'eux-mêmes (`on delete cascade`), mais `project_id`
    * n'a aucune clause `on delete` : sans les deux passes ci-dessous, la
    * base refuserait de supprimer un projet encore référencé.
+   *
+   * Ordonné pour que rien d'irréversible n'arrive avant que toutes les
+   * étapes réversibles aient réussi : si le réseau lâche en cours de
+   * route, on se retrouve au pire avec des enfants détachés à retrouver,
+   * jamais avec des enfants supprimés pendant que le projet est resté en
+   * corbeille.
    */
   async function purge(id: string, isProject: boolean) {
     const supabase = getSupabaseClient();
     if (isProject) {
-      const { error: childrenError } = await supabase
+      // 1. Lecture seule : aucune conséquence si elle échoue ou si tout
+      // s'arrête ici.
+      const { data: childRows, error: readError } = await supabase
         .from('engagement')
-        .delete()
-        .eq('project_id', id)
-        .not('deleted_at', 'is', null);
-      if (childrenError) return { error: toFrenchError(childrenError.message) };
-      // Un enfant restauré entre-temps pointe encore vers le projet : il
-      // survit, mais perd son rattachement, sans quoi la clé étrangère
-      // bloquerait la suppression du parent.
-      const { error: detachError } = await supabase
-        .from('engagement')
-        .update({ project_id: null })
+        .select('id, deleted_at')
         .eq('project_id', id);
-      if (detachError) return { error: toFrenchError(detachError.message) };
+      if (readError) return { error: toFrenchError(readError.message) };
+      const children = (childRows as { id: string; deleted_at: string | null }[] | null) ?? [];
+
+      // 2. Détacher tout le monde — réversible, et ce qui lève le blocage
+      // de clé étrangère pour la suppression du parent à l'étape 4.
+      if (children.length > 0) {
+        const { error: detachError } = await supabase
+          .from('engagement')
+          .update({ project_id: null })
+          .eq('project_id', id);
+        if (detachError) return { error: toFrenchError(detachError.message) };
+      }
+
+      // 3. Seulement maintenant l'étape irréversible : ceux qui étaient
+      // déjà en corbeille. Un enfant restauré entre-temps survit, détaché.
+      const trashedIds = children.filter((child) => child.deleted_at).map((child) => child.id);
+      if (trashedIds.length > 0) {
+        const { error: deleteChildrenError } = await supabase.from('engagement').delete().in('id', trashedIds);
+        if (deleteChildrenError) return { error: toFrenchError(deleteChildrenError.message) };
+      }
     }
+    // 4. Le parent, en dernier.
     const { error: deleteError } = await supabase.from('engagement').delete().eq('id', id);
     if (deleteError) return { error: toFrenchError(deleteError.message) };
     await refresh();
