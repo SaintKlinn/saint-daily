@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
 import { registerDevLoginHandler } from './devLogin';
 import { createTray, setTrayNextEngagement } from './tray';
@@ -105,6 +105,19 @@ app
     createPomodoroOverlay(() => mainWindow);
     createTray(() => mainWindow);
 
+    // Combinaison fixe pour ce premier jet. `register` renvoie false si une
+    // autre application détient déjà le raccourci — on le trace sans
+    // insister : l'app reste parfaitement utilisable sans lui.
+    const registered = globalShortcut.register('CommandOrControl+Alt+N', () => {
+      if (!mainWindow) return;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('navigate:request', '/entree/nouvelle');
+    });
+    if (!registered) {
+      console.warn('Raccourci global Ctrl+Alt+N indisponible (déjà pris par une autre application).');
+    }
+
     app.on('activate', () => {
       if (mainWindow) mainWindow.show();
       else mainWindow = createWindow();
@@ -116,6 +129,10 @@ app
 
 app.on('before-quit', () => {
   isQuitting = true;
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on('window-all-closed', () => {

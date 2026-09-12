@@ -50,6 +50,11 @@ const api = {
   setTrayNextEngagement: (label: string | null): void => {
     ipcRenderer.send('tray:set-next-engagement', label);
   },
+  onNavigateRequest: (callback: (path: string) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
+    ipcRenderer.on('navigate:request', listener);
+    return () => ipcRenderer.removeListener('navigate:request', listener);
+  },
   pomodoro: {
     // Fenêtre principale -> main -> overlay : diffuse un instantané à
     // chaque transition (jamais à chaque tick, voir Global Constraints).

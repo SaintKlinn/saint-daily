@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { HashRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
+import { HashRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { AuthProvider, useAuth } from './lib/auth';
 import { PomodoroProvider } from './lib/pomodoro';
@@ -74,6 +74,8 @@ function AuthProviderLayout() {
 function EngagementWatchers() {
   useEngagementReminders();
   useTrayNextEngagement();
+  const navigate = useNavigate();
+  useEffect(() => window.api?.onNavigateRequest?.((path) => navigate(path)), [navigate]);
   return null;
 }
 
