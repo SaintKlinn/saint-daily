@@ -5,6 +5,7 @@ import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { SelectField, TextAreaField } from '../components/FormField';
+import type { Mood } from '../lib/types';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -20,6 +21,7 @@ export default function NouvelleEntree() {
 
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
   const [duration, setDuration] = useState('30');
+  const [mood, setMood] = useState<Mood | ''>('');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +39,12 @@ export default function NouvelleEntree() {
     }
     setSubmitting(true);
     setError(null);
-    const { error: logError } = await logEntry({ engagementId: skillId, durationMinutes, note: note || null });
+    const { error: logError } = await logEntry({
+      engagementId: skillId,
+      durationMinutes,
+      note: note || null,
+      mood: mood || null,
+    });
     setSubmitting(false);
     if (logError) {
       // La saisie reste dans le formulaire — pas de perte, retry manuel.
@@ -77,6 +84,14 @@ export default function NouvelleEntree() {
             <span className="font-sans text-[13px] normal-case tracking-normal text-muted">minutes</span>
           </div>
         </label>
+        <SelectField label="Humeur (optionnelle)" value={mood} onChange={(e) => setMood(e.target.value as Mood | '')}>
+          <option value="">Non précisée</option>
+          <option value="difficile">Difficile</option>
+          <option value="moyen">Moyen</option>
+          <option value="correct">Correct</option>
+          <option value="bien">Bien</option>
+          <option value="excellent">Excellent</option>
+        </SelectField>
         <TextAreaField label="Note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
         {error && (
           <p role="alert" className="text-sm text-danger">
