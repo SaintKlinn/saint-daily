@@ -6,7 +6,7 @@ import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
-import type { GenericLevel, GoalMetric, GoalPeriod } from '../lib/types';
+import type { GenericLevel, GoalMetric, GoalPeriod, Mood } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
@@ -23,6 +23,16 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
   intermediaire: 'Intermédiaire',
   avance: 'Avancé',
   expert: 'Expert',
+};
+
+// Même libellés que le sélecteur de NouvelleEntree — l'humeur était captée
+// et stockée mais jamais réaffichée nulle part, y compris ici.
+const MOOD_LABELS: Record<Mood, string> = {
+  difficile: 'Difficile',
+  moyen: 'Moyen',
+  correct: 'Correct',
+  bien: 'Bien',
+  excellent: 'Excellent',
 };
 
 // Persiste tout le temps que l'app tourne, pas seulement le montage
@@ -328,13 +338,23 @@ export default function DetailSkill() {
               {badges.map((badge) => (
                 <li
                   key={badge.key}
-                  title={badge.hint}
-                  className={`border px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.08em] ${
+                  className={`flex flex-col gap-0.5 border px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.08em] ${
                     badge.unlocked ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
                   }`}
                 >
-                  {badge.unlocked ? '' : '· '}
-                  {badge.label}
+                  <span>
+                    {/* L'état ne tenait qu'à la couleur et à un « · » que la
+                        plupart des lecteurs d'écran ignorent. Le mot est
+                        annoncé même en `sr-only` ; la couleur ne fait plus
+                        que le souligner visuellement. */}
+                    <span className="sr-only">{badge.unlocked ? 'Débloqué. ' : 'Verrouillé. '}</span>
+                    {badge.label}
+                  </span>
+                  {/* La condition de déblocage n'était lisible qu'au survol
+                      via `title`, donc inatteignable au clavier et absente
+                      pour un lecteur d'écran. Elle est maintenant du texte
+                      normal, toujours présent. */}
+                  <span className="font-sans text-[10px] normal-case tracking-normal text-muted">{badge.hint}</span>
                 </li>
               ))}
             </ul>
@@ -401,7 +421,16 @@ export default function DetailSkill() {
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   <p className="w-16 font-data text-xs text-accent-bright">{entry.durationMinutes} min</p>
-                  <p className="flex-1 font-serif text-[15px] italic text-champagne">{entry.note}</p>
+                  <p className="flex-1 font-serif text-[15px] italic text-champagne">
+                    {entry.note}
+                    {/* Discret et à côté de la note plutôt qu'en colonne
+                        propre : l'humeur est optionnelle, une colonne vide la
+                        plupart du temps aurait cassé l'alignement du journal
+                        pour rien. */}
+                    {entry.mood && (
+                      <span className="ml-2 font-sans not-italic text-xs text-muted">· {MOOD_LABELS[entry.mood]}</span>
+                    )}
+                  </p>
                 </div>
               ))}
             </div>
@@ -541,9 +570,14 @@ function GoalSetter({
   const [target, setTarget] = useState('3');
   const [submitting, setSubmitting] = useState(false);
 
+  const goalTarget = Number(target);
+  // Un champ vide (`Number('') === 0`) ou une saisie non numérique donnent
+  // toutes deux `goalTarget <= 0` ou `NaN` : le bouton se désactive plutôt
+  // que de rester cliquable pour ne rien faire.
+  const targetIsValid = Number.isFinite(goalTarget) && goalTarget > 0;
+
   async function handleSubmit() {
-    const goalTarget = Number(target);
-    if (!Number.isFinite(goalTarget) || goalTarget <= 0) return;
+    if (!targetIsValid) return;
     setSubmitting(true);
     await onSubmit({ goalPeriod: period, goalMetric: metric, goalTarget });
     setSubmitting(false);
@@ -583,10 +617,11 @@ function GoalSetter({
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           aria-label="Cible de l'objectif"
+          aria-invalid={!targetIsValid}
           className={`w-20 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-[15px] text-champagne ${FOCUS_RING}`}
         />
       </label>
-      <Button type="button" variant="secondary" size="sm" onClick={handleSubmit} disabled={submitting}>
+      <Button type="button" variant="secondary" size="sm" onClick={handleSubmit} disabled={submitting || !targetIsValid}>
         Définir l'objectif
       </Button>
     </div>
