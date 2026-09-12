@@ -1,17 +1,31 @@
-import { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
+import BoutonSuppression from '../components/BoutonSuppression';
 import { ChevronLeftIcon } from '../components/icons';
 
 export default function DetailProjet() {
   const { id } = useParams<{ id: string }>();
-  const { engagements, loading, error } = useEngagements();
+  const navigate = useNavigate();
+  const { engagements, loading, error, softDelete } = useEngagements();
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const project = projects.find((p) => p.id === id);
   const children = useMemo(() => engagements.filter((e) => e.projectId === id), [engagements, id]);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (!project) return;
+    setActionError(null);
+    const { error: deleteError } = await softDelete(project.id, true);
+    if (deleteError) {
+      setActionError(deleteError);
+      return;
+    }
+    navigate('/projets');
+  }
 
   // Même garde que DetailSkill.tsx : `loading` repasse à true à chaque
   // refresh (y compris après une simple modification), donc la comparer
@@ -48,6 +62,18 @@ export default function DetailProjet() {
         )}
         {project.notes && <p className="relative mt-3 text-sm text-champagne">{project.notes}</p>}
       </div>
+
+      <div className="flex items-center gap-3">
+        <BoutonSuppression onConfirm={handleDelete} />
+        <p className="text-[13px] text-muted">
+          Supprimer un projet envoie aussi ses engagements liés à la corbeille.
+        </p>
+      </div>
+      {actionError && (
+        <p role="alert" className="text-sm text-danger">
+          {actionError}
+        </p>
+      )}
 
       <section>
         <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Engagements liés</h2>

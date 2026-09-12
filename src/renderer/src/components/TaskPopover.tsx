@@ -1,5 +1,6 @@
 import RayCorner from './RayCorner';
 import Button from './Button';
+import BoutonSuppression from './BoutonSuppression';
 import RecurrenceEditor from './RecurrenceEditor';
 import MilestoneChecklist from './MilestoneChecklist';
 import { useMilestones } from '../hooks/useMilestones';
@@ -30,6 +31,7 @@ export default function TaskPopover({
   recurrenceBusy,
   projects,
   onProjectChange,
+  onDelete,
   error,
 }: {
   task: Engagement;
@@ -43,6 +45,7 @@ export default function TaskPopover({
   recurrenceBusy: boolean;
   projects: Engagement[];
   onProjectChange: (projectId: string | null) => void;
+  onDelete: () => void;
   error: string | null;
 }) {
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(task.id);
@@ -134,6 +137,7 @@ export default function TaskPopover({
           </p>
         )}
         <div className="relative mt-2 flex justify-end gap-3">
+          <BoutonSuppression onConfirm={onDelete} />
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer
           </Button>

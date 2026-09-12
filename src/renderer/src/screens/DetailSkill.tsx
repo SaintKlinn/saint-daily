@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useMilestones } from '../hooks/useMilestones';
@@ -10,6 +10,7 @@ import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
+import BoutonSuppression from '../components/BoutonSuppression';
 import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
 
 const FOCUS_RING =
@@ -30,7 +31,8 @@ const knownStreakBySkillId = new Map<string, number>();
 
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
-  const { engagements, loading, error: skillsError, updateEngagement, setArchived } = useEngagements();
+  const navigate = useNavigate();
+  const { engagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
@@ -94,6 +96,17 @@ export default function DetailSkill() {
     setActionError(null);
     const { error } = await setArchived(skill.id, !skill.archivedAt);
     if (error) setActionError(error);
+  }
+
+  async function handleDelete() {
+    if (!skill) return;
+    setActionError(null);
+    const { error } = await softDelete(skill.id, false);
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    navigate('/skills');
   }
 
   async function handleLevelChange(e: ChangeEvent<HTMLSelectElement>) {
@@ -224,6 +237,7 @@ export default function DetailSkill() {
           <Button variant="secondary" size="sm" onClick={handleToggleArchived}>
             {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
           </Button>
+          <BoutonSuppression onConfirm={handleDelete} />
         </div>
       </div>
 

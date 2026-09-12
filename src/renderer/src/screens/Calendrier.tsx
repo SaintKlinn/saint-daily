@@ -37,7 +37,15 @@ function formatSnoozeConfirmation(iso: string): string {
 
 export default function Calendrier() {
   const navigate = useNavigate();
-  const { engagements, error: engagementsError, setArchived, updateEngagement, createEngagements, deleteEngagements } = useEngagements();
+  const {
+    engagements,
+    error: engagementsError,
+    setArchived,
+    updateEngagement,
+    createEngagements,
+    deleteEngagements,
+    softDelete,
+  } = useEngagements();
   const { settings, updateSettings, error: settingsError } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
@@ -273,6 +281,16 @@ export default function Calendrier() {
     await refreshEntries();
   }
 
+  async function handleDeleteTask(taskId: string) {
+    setActionError(null);
+    const { error } = await softDelete(taskId, false);
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    setPopoverTask(null);
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
@@ -430,6 +448,7 @@ export default function Calendrier() {
           recurrenceBusy={recurrenceBusy}
           projects={projects}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
+          onDelete={() => handleDeleteTask(popoverTask.id)}
           error={actionError}
         />
       )}
