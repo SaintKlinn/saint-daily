@@ -36,10 +36,21 @@ export default function Accueil() {
     refresh: refreshEntries,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
-  const resumeSkill = useMemo(() => {
-    const id = lastPracticedEngagementId(entriesBySkill);
-    return id ? (activeSkills.find((s) => s.id === id) ?? null) : null;
+  // entriesBySkill couvre TOUS les engagements actifs (tâches et projets
+  // compris, voir useAllPracticeEntries(activeEngagements...) plus haut) —
+  // cocher une tâche y insère une entrée de 0 minute qui devient aussitôt
+  // la plus récente. Sans ce filtrage, lastPracticedEngagementId renverrait
+  // l'id de la tâche, activeSkills.find() ne le trouverait jamais (ce n'est
+  // pas un skill), et le bouton « Reprendre » disparaîtrait purement et
+  // simplement au lieu de continuer à pointer vers le dernier skill pratiqué.
+  const skillEntriesBySkill = useMemo(() => {
+    const activeSkillIds = new Set(activeSkills.map((s) => s.id));
+    return Object.fromEntries(Object.entries(entriesBySkill).filter(([id]) => activeSkillIds.has(id)));
   }, [entriesBySkill, activeSkills]);
+  const resumeSkill = useMemo(() => {
+    const id = lastPracticedEngagementId(skillEntriesBySkill);
+    return id ? (activeSkills.find((s) => s.id === id) ?? null) : null;
+  }, [skillEntriesBySkill, activeSkills]);
   const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
   // Persistance best-effort côté `updateSettings` (voir handleDismissWeeklyReview) :
   // tant que la migration `weekly_review_dismissed_at` n'est pas appliquée, cet
