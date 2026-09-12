@@ -102,7 +102,18 @@ export async function fetchExportBundle(
   if (entryError) return { bundle: null, error: entryError };
 
   const { rows: milestoneRows, error: milestoneError } = await fetchAllPages<RawMilestone>((from, to) =>
-    supabase.from('engagement_milestone').select('*').order('position', { ascending: true }).range(from, to)
+    supabase
+      .from('engagement_milestone')
+      .select('*')
+      // `position` seul n'est pas assez unique pour paginer de façon
+      // stable : deux jalons peuvent la partager (jalons d'engagements
+      // différents, ou valeurs dupliquées au sein d'un même engagement), et
+      // l'ordre PostgreSQL entre lignes à égalité n'est pas garanti d'une
+      // page à l'autre — des lignes peuvent alors se dupliquer ou manquer
+      // à la frontière entre deux pages. `id` est unique et départage.
+      .order('position', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to)
   );
   if (milestoneError) return { bundle: null, error: milestoneError };
 
@@ -171,7 +182,7 @@ const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note'];
 
 // Encadre et double les guillemets dès que la valeur contient un
 // séparateur, un guillemet ou un saut de ligne : sans ça, une note
-// contenant une simple virgule décale toutes les colonnes suivantes.
+// contenant un point-virgule décale toutes les colonnes suivantes.
 function csvCell(value: string): string {
   return /[",;\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
@@ -180,7 +191,14 @@ function csvCell(value: string): string {
  * Vue tabulaire des séances : une ligne par entrée, la plus ancienne en
  * premier. Le JSON reste le format d'archive complet ; ce CSV existe pour
  * être ouvert dans un tableur, d'où le BOM en tête — sans lui Excel sous
- * Windows lit le fichier en ANSI et massacre tous les accents.
+ * Windows lit le fichier en ANSI et massacre tous les accents. Séparateur
+ * `;` plutôt que `,` pour la même raison : l'app est entièrement en
+ * français, et Excel en locale française (comme toute locale qui utilise
+ * la virgule comme séparateur décimal) attend `;` comme séparateur de
+ * liste — avec une virgule, un double-clic vide tout dans la colonne A,
+ * ce qui annule l'intérêt même du CSV. On n'utilise pas l'en-tête
+ * `sep=,` : c'est une astuce propre à Excel qui apparaîtrait comme une
+ * ligne parasite dans Google Sheets ou pandas.
  */
 export function toCsv(bundle: ExportBundle): string {
   const rows: string[][] = [];
@@ -189,14 +207,21 @@ export function toCsv(bundle: ExportBundle): string {
       rows.push([
         entry.practicedAt,
         engagement.name,
-        engagement.tags.join(' '),
+        // ', ' reste lisible et sans ambiguïté maintenant que `;` est le
+        // séparateur de colonnes : une virgule à l'intérieur d'une cellule
+        // ne fait éclater aucune colonne.
+        engagement.tags.join(', '),
         String(entry.durationMinutes),
         entry.note ?? '',
       ]);
     }
   }
-  rows.sort((a, b) => a[0].localeCompare(b[0]));
-  return '\ufeff' + [CSV_HEADER, ...rows].map((cells) => cells.map(csvCell).join(',')).join('\r\n');
+  // Comparaison `<`/`>` plutôt que `localeCompare` : `localeCompare`
+  // applique des règles linguistiques qui ne respectent pas l'ordre
+  // chronologique réel d'un timestamp ISO-8601 — `09:00:00.5+00:00` s'y
+  // retrouverait avant `09:00:00+00:00` alors qu'il lui est postérieur.
+  rows.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  return '\ufeff' + [CSV_HEADER, ...rows].map((cells) => cells.map(csvCell).join(';')).join('\r\n');
 }
 
 export function exportFileName(extension: 'json' | 'csv', now: Date = new Date()): string {

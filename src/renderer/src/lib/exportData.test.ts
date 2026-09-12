@@ -67,25 +67,51 @@ describe('toCsv', () => {
 
   it('writes one row per entry, oldest first, under a header', () => {
     const lines = toCsv(bundle).split('\r\n');
-    expect(lines[0]).toBe(`${BOM}Date,Engagement,Tags,Durée (min),Note`);
+    expect(lines[0]).toBe(`${BOM}Date;Engagement;Tags;Durée (min);Note`);
     expect(lines).toHaveLength(3);
     expect(lines[1]).toContain('2026-09-01T09:00:00.000Z');
     expect(lines[2]).toContain('2026-09-02T09:00:00.000Z');
   });
 
-  it('quotes and escapes a note containing commas and quotes', () => {
+  it('joins multiple tags with a comma so each stays readable', () => {
+    const line = toCsv(bundle).split('\r\n')[1];
+    expect(line).toContain('Musique, Perso');
+  });
+
+  it('quotes and escapes a note containing a semicolon and quotes', () => {
     const line = toCsv(bundle).split('\r\n')[2];
     expect(line).toContain('"Bonne séance, gammes ; puis ""Blackbird"""');
   });
 
   it('writes an empty cell for a missing note and keeps a zero duration', () => {
     const line = toCsv(bundle).split('\r\n')[1];
-    expect(line.endsWith(',')).toBe(true);
-    expect(line).toContain(',0,');
+    expect(line.endsWith(';')).toBe(true);
+    expect(line).toContain(';0;');
   });
 
   it('produces just the header when there is nothing to export', () => {
     const empty: ExportBundle = { exportedAt: bundle.exportedAt, engagements: [] };
-    expect(toCsv(empty)).toBe(BOM + 'Date,Engagement,Tags,Durée (min),Note');
+    expect(toCsv(empty)).toBe(BOM + 'Date;Engagement;Tags;Durée (min);Note');
+  });
+
+  // `localeCompare` réordonnait ces deux lignes à l'envers : les règles
+  // linguistiques qu'il applique ignorent la vraie chronologie ISO-8601
+  // d'un timestamp à fraction de seconde.
+  it('sorts fractional-second timestamps in true chronological order', () => {
+    const withFraction: ExportBundle = {
+      exportedAt: bundle.exportedAt,
+      engagements: [
+        {
+          ...bundle.engagements[0],
+          entries: [
+            { id: 'p3', engagementId: 'e1', durationMinutes: 5, note: null, practicedAt: '2026-09-01T09:00:00.5+00:00', createdAt: '2026-09-01T09:00:00.5+00:00' },
+            { id: 'p4', engagementId: 'e1', durationMinutes: 5, note: null, practicedAt: '2026-09-01T09:00:00+00:00', createdAt: '2026-09-01T09:00:00+00:00' },
+          ],
+        },
+      ],
+    };
+    const lines = toCsv(withFraction).split('\r\n');
+    expect(lines[1]).toContain('2026-09-01T09:00:00+00:00');
+    expect(lines[2]).toContain('2026-09-01T09:00:00.5+00:00');
   });
 });
