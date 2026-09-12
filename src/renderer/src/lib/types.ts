@@ -45,7 +45,15 @@ export interface PracticeEntry {
   durationMinutes: number;
   note: string | null;
   mood: Mood | null;
+  tags: string[];
   practicedAt: string;
+  createdAt: string;
+}
+
+export interface NoteTemplate {
+  id: string;
+  text: string;
+  position: number;
   createdAt: string;
 }
 

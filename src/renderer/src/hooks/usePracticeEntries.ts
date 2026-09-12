@@ -11,6 +11,7 @@ interface PracticeEntryRow {
   duration_minutes: number;
   note: string | null;
   mood?: Mood | null;
+  tags?: string[] | null;
   practiced_at: string;
   created_at: string;
 }
@@ -26,6 +27,7 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
     // pas encore appliquée à la base live, donc la propriété peut être
     // absente de la ligne.
     mood: row.mood ?? null,
+    tags: row.tags ?? [],
     practicedAt: row.practiced_at,
     createdAt: row.created_at,
   };
@@ -96,6 +98,7 @@ export function usePracticeEntries(engagementId: string | null) {
     durationMinutes: number;
     note?: string | null;
     mood?: Mood | null;
+    tags?: string[];
     practicedAt?: string;
   }) {
     if (!session) return { error: 'Non connecté' };
@@ -110,6 +113,10 @@ export function usePracticeEntries(engagementId: string | null) {
       // TOUTES les écritures d'entrée — y compris cocher une tâche et
       // terminer un Pomodoro, qui n'ont rien à voir avec l'humeur.
       ...(input.mood ? { mood: input.mood } : {}),
+      // Même raison que `mood` : la colonne n'existe pas encore en base
+      // live, et la nommer casserait toutes les écritures d'entrée, y
+      // compris celles qui n'ont rien à voir avec les tags.
+      ...(input.tags && input.tags.length > 0 ? { tags: input.tags } : {}),
     });
     if (insertError) return { error: toFrenchError(insertError.message) };
     if (input.engagementId === engagementId) await refresh();
