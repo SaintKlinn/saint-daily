@@ -1,6 +1,7 @@
 import { fetchAllPages } from '../hooks/usePracticeEntries';
 import { getSupabaseClient } from './supabase';
 import { toFrenchError } from './errors';
+import type { Mood } from './types';
 
 export interface ExportMilestone {
   id: string;
@@ -15,6 +16,7 @@ export interface ExportEntry {
   engagementId: string;
   durationMinutes: number;
   note: string | null;
+  mood: Mood | null;
   practicedAt: string;
   createdAt: string;
 }
@@ -64,6 +66,10 @@ interface RawEntry {
   engagement_id: string;
   duration_minutes: number;
   note: string | null;
+  // Optionnelle : la migration qui ajoute cette colonne n'est pas encore
+  // appliquée à la base live, donc la propriété peut être absente de la
+  // ligne — même raison que dans `usePracticeEntries.fromRow`.
+  mood?: Mood | null;
   practiced_at: string;
   created_at: string;
 }
@@ -129,6 +135,7 @@ export async function fetchExportBundle(
       engagementId: row.engagement_id,
       durationMinutes: row.duration_minutes,
       note: row.note,
+      mood: row.mood ?? null,
       practicedAt: row.practiced_at,
       createdAt: row.created_at,
     });
@@ -178,7 +185,18 @@ export function toJson(bundle: ExportBundle): string {
   return JSON.stringify(bundle, null, 2);
 }
 
-const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note'];
+const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note', 'Humeur'];
+
+// Mêmes libellés que le sélecteur de NouvelleEntree et que le journal de
+// DetailSkill — l'un des trois endroits où l'humeur choisie doit apparaître
+// enfin quelque part.
+const MOOD_LABELS: Record<Mood, string> = {
+  difficile: 'Difficile',
+  moyen: 'Moyen',
+  correct: 'Correct',
+  bien: 'Bien',
+  excellent: 'Excellent',
+};
 
 // Encadre et double les guillemets dès que la valeur contient un
 // séparateur, un guillemet ou un saut de ligne : sans ça, une note
@@ -213,6 +231,7 @@ export function toCsv(bundle: ExportBundle): string {
         engagement.tags.join(', '),
         String(entry.durationMinutes),
         entry.note ?? '',
+        entry.mood ? MOOD_LABELS[entry.mood] : '',
       ]);
     }
   }

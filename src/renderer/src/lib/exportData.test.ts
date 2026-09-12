@@ -27,6 +27,7 @@ const bundle: ExportBundle = {
           engagementId: 'e1',
           durationMinutes: 30,
           note: 'Bonne séance, gammes ; puis "Blackbird"',
+          mood: 'bien',
           practicedAt: '2026-09-02T09:00:00.000Z',
           createdAt: '2026-09-02T09:00:00.000Z',
         },
@@ -35,6 +36,7 @@ const bundle: ExportBundle = {
           engagementId: 'e1',
           durationMinutes: 0,
           note: null,
+          mood: null,
           practicedAt: '2026-09-01T09:00:00.000Z',
           createdAt: '2026-09-01T09:00:00.000Z',
         },
@@ -67,7 +69,7 @@ describe('toCsv', () => {
 
   it('writes one row per entry, oldest first, under a header', () => {
     const lines = toCsv(bundle).split('\r\n');
-    expect(lines[0]).toBe(`${BOM}Date;Engagement;Tags;Durée (min);Note`);
+    expect(lines[0]).toBe(`${BOM}Date;Engagement;Tags;Durée (min);Note;Humeur`);
     expect(lines).toHaveLength(3);
     expect(lines[1]).toContain('2026-09-01T09:00:00.000Z');
     expect(lines[2]).toContain('2026-09-02T09:00:00.000Z');
@@ -83,15 +85,22 @@ describe('toCsv', () => {
     expect(line).toContain('"Bonne séance, gammes ; puis ""Blackbird"""');
   });
 
-  it('writes an empty cell for a missing note and keeps a zero duration', () => {
+  it('writes empty cells for a missing note and a missing mood, and keeps a zero duration', () => {
     const line = toCsv(bundle).split('\r\n')[1];
-    expect(line.endsWith(';')).toBe(true);
-    expect(line).toContain(';0;');
+    const cells = line.split(';');
+    expect(cells[3]).toBe('0');
+    expect(cells[4]).toBe('');
+    expect(cells[5]).toBe('');
+  });
+
+  it('writes the French mood label in the Humeur column when a mood was chosen', () => {
+    const line = toCsv(bundle).split('\r\n')[2];
+    expect(line.endsWith(';Bien')).toBe(true);
   });
 
   it('produces just the header when there is nothing to export', () => {
     const empty: ExportBundle = { exportedAt: bundle.exportedAt, engagements: [] };
-    expect(toCsv(empty)).toBe(BOM + 'Date;Engagement;Tags;Durée (min);Note');
+    expect(toCsv(empty)).toBe(BOM + 'Date;Engagement;Tags;Durée (min);Note;Humeur');
   });
 
   // `localeCompare` réordonnait ces deux lignes à l'envers : les règles
@@ -104,8 +113,8 @@ describe('toCsv', () => {
         {
           ...bundle.engagements[0],
           entries: [
-            { id: 'p3', engagementId: 'e1', durationMinutes: 5, note: null, practicedAt: '2026-09-01T09:00:00.5+00:00', createdAt: '2026-09-01T09:00:00.5+00:00' },
-            { id: 'p4', engagementId: 'e1', durationMinutes: 5, note: null, practicedAt: '2026-09-01T09:00:00+00:00', createdAt: '2026-09-01T09:00:00+00:00' },
+            { id: 'p3', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, practicedAt: '2026-09-01T09:00:00.5+00:00', createdAt: '2026-09-01T09:00:00.5+00:00' },
+            { id: 'p4', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, practicedAt: '2026-09-01T09:00:00+00:00', createdAt: '2026-09-01T09:00:00+00:00' },
           ],
         },
       ],
