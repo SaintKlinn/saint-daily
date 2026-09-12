@@ -37,6 +37,13 @@ export default function Accueil() {
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
   const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
+  // Persistance best-effort côté `updateSettings` (voir handleDismissWeeklyReview) :
+  // tant que la migration `weekly_review_dismissed_at` n'est pas appliquée, cet
+  // appel échoue systématiquement. Sans cet état local, le bandeau ne
+  // disparaîtrait jamais au clic — ni « Voir le bilan » ni « Plus tard » n'auraient
+  // d'effet visible. Il ne survit pas à un rechargement ; une fois la migration en
+  // place, la persistance côté serveur prend le relais entre les sessions.
+  const [weeklyReviewDismissedThisMount, setWeeklyReviewDismissedThisMount] = useState(false);
 
   const tasks = useMemo(
     () =>
@@ -66,9 +73,12 @@ export default function Accueil() {
   }
 
   async function handleDismissWeeklyReview() {
-    // Un échec ici n'a aucune conséquence grave : le bandeau réapparaîtra
-    // au prochain rendu, ce qui est préférable à un message d'erreur pour
-    // un geste aussi anodin que fermer une invitation.
+    // Un échec ici n'a aucune conséquence grave : pas de message d'erreur
+    // pour un geste aussi anodin que fermer une invitation. Mais le
+    // bandeau doit tout de même disparaître visiblement à l'instant même —
+    // d'où le flag local mis à jour de façon synchrone, indépendamment du
+    // résultat de l'appel réseau.
+    setWeeklyReviewDismissedThisMount(true);
     await updateSettings({ weeklyReviewDismissedAt: new Date().toISOString() });
   }
 
@@ -119,7 +129,7 @@ export default function Accueil() {
 
   return (
     <div className="flex flex-col gap-9">
-      {settings && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
+      {settings && !weeklyReviewDismissedThisMount && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
         <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
           <div>
             <p className="text-[15px] text-champagne">Ta semaine est prête</p>
