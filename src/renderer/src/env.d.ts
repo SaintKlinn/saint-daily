@@ -25,6 +25,7 @@ export interface SaintDailyApi {
   getAppVersion: () => Promise<string>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
   getAutoLaunch: () => Promise<boolean>;
+  focusWindow: () => void;
   pomodoro: {
     reportState: (state: PomodoroStateSnapshot | null) => void;
     onState: (callback: (state: PomodoroStateSnapshot | null) => void) => () => void;

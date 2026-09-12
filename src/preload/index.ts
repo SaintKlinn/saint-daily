@@ -44,6 +44,9 @@ const api = {
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
   setAutoLaunch: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('set-auto-launch', enabled),
   getAutoLaunch: (): Promise<boolean> => ipcRenderer.invoke('get-auto-launch'),
+  focusWindow: (): void => {
+    ipcRenderer.send('window:focus');
+  },
   pomodoro: {
     // Fenêtre principale -> main -> overlay : diffuse un instantané à
     // chaque transition (jamais à chaque tick, voir Global Constraints).

@@ -88,6 +88,14 @@ app
   .then(() => {
     mainWindow = createWindow();
     ipcMain.handle('get-app-version', () => app.getVersion());
+    // Clic sur une notification de rappel : la fenêtre est peut-être
+    // cachée dans le tray (sa fermeture est interceptée en `hide()`),
+    // donc `focus()` seul ne suffirait pas à la faire réapparaître.
+    ipcMain.on('window:focus', () => {
+      if (!mainWindow) return;
+      mainWindow.show();
+      mainWindow.focus();
+    });
     registerDevLoginHandler();
     registerAutoLaunchHandlers();
     registerAutoUpdateHandlers(() => mainWindow);
