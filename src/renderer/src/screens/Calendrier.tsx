@@ -61,6 +61,10 @@ export default function Calendrier() {
   const { logEntry } = usePracticeEntries(null);
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
+  // Threadé jusqu'à `BoutonSuppression` dans le popover, comme `completing`
+  // l'est déjà pour « Marquer comme faite » : sans lui, le bouton reste
+  // armable pendant tout l'aller-retour réseau de `softDelete`.
+  const [deletingTask, setDeletingTask] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
   const [recurrenceMessage, setRecurrenceMessage] = useState<string | null>(null);
@@ -283,7 +287,9 @@ export default function Calendrier() {
 
   async function handleDeleteTask(taskId: string) {
     setActionError(null);
+    setDeletingTask(true);
     const { error } = await softDelete(taskId, false);
+    setDeletingTask(false);
     if (error) {
       setActionError(error);
       return;
@@ -449,6 +455,7 @@ export default function Calendrier() {
           projects={projects}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
           onDelete={() => handleDeleteTask(popoverTask.id)}
+          deleting={deletingTask}
           error={actionError}
         />
       )}

@@ -25,14 +25,26 @@ function Section({ titre, children }: { titre: string; children: ReactNode }) {
 }
 
 export default function Bilan() {
-  const { engagements, loading: engagementsLoading, error: engagementsError } = useEngagements();
+  const {
+    engagements,
+    deletedEngagements,
+    loading: engagementsLoading,
+    error: engagementsError,
+  } = useEngagements();
   const { entries, loading: entriesLoading, error: entriesError } = useAllPracticeEntriesForUser();
   const loading = engagementsLoading || entriesLoading;
   const [heatmapEngagementId, setHeatmapEngagementId] = useState('tous');
 
+  // Vivants ET en corbeille : comme pour un engagement archivé (qui reste
+  // dans `engagements`), l'historique de pratique d'un skill supprimé ne
+  // disparaît pas — seule la fiche part à la corbeille. Sans les deux
+  // listes ici, ses entrées resteraient comptées dans le talon de la
+  // semaine (heatmap, `compareWeeks`, `timeOfDayBuckets`) tout en
+  // disparaissant silencieusement des répartitions par tag et par
+  // engagement, qui ne retrouveraient plus l'engagement correspondant.
   const engagementsById = useMemo(() => {
     const map: Record<string, EngagementLike> = {};
-    for (const engagement of engagements) {
+    for (const engagement of [...engagements, ...deletedEngagements]) {
       map[engagement.id] = {
         id: engagement.id,
         name: engagement.name,
@@ -41,7 +53,7 @@ export default function Bilan() {
       };
     }
     return map;
-  }, [engagements]);
+  }, [engagements, deletedEngagements]);
 
   // Les projets ne se pratiquent pas et n'ont donc jamais d'entrée ; les
   // archivés restent hors du sélecteur mais leurs entrées comptent bien

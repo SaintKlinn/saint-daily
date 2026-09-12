@@ -12,6 +12,11 @@ interface BoutonSuppressionProps {
 // qui suit, plusieurs minutes plus tard.
 const ARM_TIMEOUT_MS = 4000;
 
+// Un double-clic ordinaire arrive en moins de 300 ms : sans ce garde-fou,
+// il armerait puis confirmerait dans le même geste, exactement l'accident
+// que les deux temps sont censés empêcher.
+const DOUBLE_CLICK_GUARD_MS = 300;
+
 // Classes écrites en entier par état plutôt que composées avec
 // `buttonClassName` : deux utilitaires Tailwind concurrents (`text-muted`
 // et `text-danger`) dans la même liste ont un gagnant décidé par l'ordre
@@ -30,6 +35,7 @@ export default function BoutonSuppression({
 }: BoutonSuppressionProps) {
   const [armed, setArmed] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+  const armedAtRef = useRef(0);
 
   useEffect(
     () => () => {
@@ -40,12 +46,14 @@ export default function BoutonSuppression({
 
   function handleClick() {
     if (armed) {
+      if (Date.now() - armedAtRef.current < DOUBLE_CLICK_GUARD_MS) return;
       if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
       setArmed(false);
       onConfirm();
       return;
     }
     setArmed(true);
+    armedAtRef.current = Date.now();
     timeoutRef.current = window.setTimeout(() => setArmed(false), ARM_TIMEOUT_MS);
   }
 

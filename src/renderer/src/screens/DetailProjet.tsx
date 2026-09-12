@@ -15,11 +15,16 @@ export default function DetailProjet() {
   const project = projects.find((p) => p.id === id);
   const children = useMemo(() => engagements.filter((e) => e.projectId === id), [engagements, id]);
   const [actionError, setActionError] = useState<string | null>(null);
+  // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
+  // cet état, le bouton reste armable pendant toute l'attente réseau.
+  const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
     if (!project) return;
     setActionError(null);
+    setDeleting(true);
     const { error: deleteError } = await softDelete(project.id, true);
+    setDeleting(false);
     if (deleteError) {
       setActionError(deleteError);
       return;
@@ -64,7 +69,7 @@ export default function DetailProjet() {
       </div>
 
       <div className="flex items-center gap-3">
-        <BoutonSuppression onConfirm={handleDelete} />
+        <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
         <p className="text-[13px] text-muted">
           Supprimer un projet envoie aussi ses engagements liés à la corbeille.
         </p>

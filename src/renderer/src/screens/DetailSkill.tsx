@@ -44,6 +44,10 @@ export default function DetailSkill() {
   // un échec réseau ne se voyait qu'en revenant à l'état précédent au
   // prochain refresh, sans un mot d'explication (audit ui-ux-pro-max).
   const [actionError, setActionError] = useState<string | null>(null);
+  // La navigation vers /skills n'arrive qu'après l'aller-retour de
+  // `softDelete` : sans cet état, le bouton reste armable pendant toute
+  // l'attente réseau.
+  const [deleting, setDeleting] = useState(false);
   const [celebratingMilestoneId, setCelebratingMilestoneId] = useState<string | null>(null);
   // Set dans un event handler, pas un effet : pas de fonction de nettoyage
   // possible au démontage. On garde donc l'id du timeout en cours ici pour
@@ -101,7 +105,9 @@ export default function DetailSkill() {
   async function handleDelete() {
     if (!skill) return;
     setActionError(null);
+    setDeleting(true);
     const { error } = await softDelete(skill.id, false);
+    setDeleting(false);
     if (error) {
       setActionError(error);
       return;
@@ -237,7 +243,7 @@ export default function DetailSkill() {
           <Button variant="secondary" size="sm" onClick={handleToggleArchived}>
             {skill.archivedAt ? 'Désarchiver' : 'Archiver'}
           </Button>
-          <BoutonSuppression onConfirm={handleDelete} />
+          <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
         </div>
       </div>
 

@@ -32,6 +32,7 @@ export default function TaskPopover({
   projects,
   onProjectChange,
   onDelete,
+  deleting,
   error,
 }: {
   task: Engagement;
@@ -46,6 +47,7 @@ export default function TaskPopover({
   projects: Engagement[];
   onProjectChange: (projectId: string | null) => void;
   onDelete: () => void;
+  deleting: boolean;
   error: string | null;
 }) {
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(task.id);
@@ -137,7 +139,7 @@ export default function TaskPopover({
           </p>
         )}
         <div className="relative mt-2 flex justify-end gap-3">
-          <BoutonSuppression onConfirm={onDelete} />
+          <BoutonSuppression onConfirm={onDelete} busy={deleting} />
           <Button type="button" variant="secondary" onClick={onClose}>
             Fermer
           </Button>
