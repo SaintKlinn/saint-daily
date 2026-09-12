@@ -17,12 +17,16 @@ export default function BarreRepartition({ rows, emptyLabel }: BarreRepartitionP
       {rows.map((row) => (
         <li key={row.key} className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[13px] text-champagne">{row.label}</span>
-            <span className="font-data text-[11px] tabular-nums text-muted">
+            <span className="min-w-0 truncate text-[13px] text-champagne">{row.label}</span>
+            <span className="shrink-0 font-data text-[11px] tabular-nums text-muted">
               {formatMinutes(row.minutes)} · {row.sessions} séance{row.sessions > 1 ? 's' : ''}
             </span>
           </div>
-          <div className="h-1.5 w-full bg-ink-700">
+          {/* `bg-ink-700` (1.14:1 sur la carte ink-800) rendait le rail
+              invisible ; `bg-muted` est déjà vérifié à 4.57:1 sur ink-800
+              (theme/colors.ts) et sert déjà de couleur secondaire lisible
+              ailleurs dans l'app. */}
+          <div className="h-1.5 w-full bg-muted">
             <div className="h-full bg-accent-bright" style={{ width: `${(row.minutes / max) * 100}%` }} />
           </div>
         </li>

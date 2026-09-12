@@ -5,8 +5,13 @@ interface SemaineVsSemaineProps {
 }
 
 function Bloc({ titre, minutes, sessions, accent }: { titre: string; minutes: number; sessions: number; accent: boolean }) {
+  // `bg-ink-800` ici, dans une `Section` déjà `bg-ink-800`/`border-ink-700`,
+  // se fondait totalement dans son parent — aucun conteneur perceptible.
+  // `bg-ink-950` (plus sombre que la section) donne un puits visiblement
+  // en retrait, avec `border-ink-700` (plus clair que ce fond-là) pour le
+  // délimiter — même logique que le "puits" du niveau 0 de la heatmap.
   return (
-    <div className="flex flex-1 flex-col gap-1 border border-ink-700 bg-ink-800 px-5 py-4">
+    <div className="flex flex-1 flex-col gap-1 border border-ink-700 bg-ink-950 px-5 py-4">
       <p className="font-data text-[10px] uppercase tracking-[0.1em] text-muted">{titre}</p>
       <p className={`font-serif text-[26px] tabular-nums ${accent ? 'text-accent-bright' : 'text-champagne'}`}>
         {formatMinutes(minutes)}

@@ -26,6 +26,35 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
   };
 }
 
+// Supabase plafonne une requête à 1000 lignes par défaut. Sans pagination,
+// toute requête sur l'historique complet se tronquerait silencieusement
+// dès que ce seuil est dépassé — un bug qui s'aggrave avec le temps et qui
+// serait invisible sans erreur. Extrait en helper partagé pour que
+// `useAllPracticeEntries` (streaks d'Accueil/Calendrier/ListeSkills/
+// Pomodoro) et `useAllPracticeEntriesForUser` (Bilan) ne puissent pas
+// diverger sur cette logique : l'un des deux paginait déjà, l'autre non.
+const PRACTICE_ENTRIES_PAGE_SIZE = 1000;
+
+async function fetchAllPages(
+  // `PromiseLike`, pas `Promise` : le query builder de supabase-js est
+  // "thenable" mais n'implémente pas l'interface `Promise` complète
+  // (`catch`/`finally`/`Symbol.toStringTag`) tant qu'on ne l'attend pas.
+  fetchPage: (
+    from: number,
+    to: number
+  ) => PromiseLike<{ data: PracticeEntryRow[] | null; error: { message: string } | null }>
+): Promise<{ rows: PracticeEntryRow[]; error: string | null }> {
+  const rows: PracticeEntryRow[] = [];
+  for (let from = 0; ; from += PRACTICE_ENTRIES_PAGE_SIZE) {
+    const { data, error } = await fetchPage(from, from + PRACTICE_ENTRIES_PAGE_SIZE - 1);
+    if (error) return { rows, error: toFrenchError(error.message) };
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PRACTICE_ENTRIES_PAGE_SIZE) break;
+  }
+  return { rows, error: null };
+}
+
 export function usePracticeEntries(engagementId: string | null) {
   const { session } = useAuth();
   const [entries, setEntries] = useState<PracticeEntry[]>([]);
@@ -103,13 +132,12 @@ export function useAllPracticeEntries(engagementIds: string[]) {
     // L'erreur DOIT être capturée : sans elle, un échec de cette requête
     // affichait silencieusement tous les skills avec streak 0 et aucun
     // rappel « dû », sans le moindre indice que quelque chose a raté.
-    const { data, error: fetchError } = await getSupabaseClient()
-      .from('practice_entry')
-      .select('*')
-      .in('engagement_id', engagementIds);
-    setError(fetchError ? toFrenchError(fetchError.message) : null);
+    const { rows, error: fetchError } = await fetchAllPages((from, to) =>
+      getSupabaseClient().from('practice_entry').select('*').in('engagement_id', engagementIds).range(from, to)
+    );
+    setError(fetchError);
     const bySkill: Record<string, PracticeEntry[]> = {};
-    for (const row of (data ?? []) as PracticeEntryRow[]) {
+    for (const row of rows) {
       const entry = fromRow(row);
       (bySkill[entry.engagementId] ??= []).push(entry);
     }
@@ -129,13 +157,6 @@ export function useAllPracticeEntries(engagementIds: string[]) {
   return { entriesBySkill, loading, error, refresh };
 }
 
-// Supabase plafonne une requête à 1000 lignes par défaut. Sans pagination,
-// tous les widgets du Bilan afficheraient des totaux silencieusement
-// tronqués dès que l'historique dépasse ce seuil — un bug invisible qui
-// s'aggraverait avec le temps, exactement dans un écran censé donner une
-// vue fidèle de tout l'historique.
-const ALL_ENTRIES_PAGE_SIZE = 1000;
-
 /**
  * Toutes les entrées de pratique de l'utilisateur, sans filtre
  * d'engagement — y compris celles d'engagements archivés, puisque
@@ -152,21 +173,13 @@ export function useAllPracticeEntriesForUser() {
     if (!session) return;
     setLoading(true);
     setError(null);
-    const rows: PracticeEntryRow[] = [];
-    for (let from = 0; ; from += ALL_ENTRIES_PAGE_SIZE) {
-      const { data, error: fetchError } = await getSupabaseClient()
-        .from('practice_entry')
-        .select('*')
-        .order('practiced_at', { ascending: false })
-        .range(from, from + ALL_ENTRIES_PAGE_SIZE - 1);
-      if (fetchError) {
-        setError(toFrenchError(fetchError.message));
-        setLoading(false);
-        return;
-      }
-      const page = (data ?? []) as PracticeEntryRow[];
-      rows.push(...page);
-      if (page.length < ALL_ENTRIES_PAGE_SIZE) break;
+    const { rows, error: fetchError } = await fetchAllPages((from, to) =>
+      getSupabaseClient().from('practice_entry').select('*').order('practiced_at', { ascending: false }).range(from, to)
+    );
+    if (fetchError) {
+      setError(fetchError);
+      setLoading(false);
+      return;
     }
     setEntries(rows.map(fromRow));
     setLoading(false);
