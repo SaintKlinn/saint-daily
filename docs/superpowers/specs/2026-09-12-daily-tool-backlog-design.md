@@ -26,10 +26,11 @@ les dépendances entre eux sont explicitées en fin de document.
   chantier d'architecture à part entière : sa propre spec, précédée d'un
   spike de faisabilité.
 - **Temps d'écran** (suivi passif de la fenêtre active) — abandonné.
-- **Windows Hello** — aucune API Electron de première partie ; demande un
-  module natif ou un pont WinRT. Reste au backlog comme spike séparé. Le
-  verrouillage par code PIN est conçu ici, Windows Hello viendra ou non
-  ensuite.
+- **Sécurité & vie privée** (verrouillage de l'app avant ouverture) — le
+  groupe entier est retiré du périmètre. Windows Hello n'a de toute façon
+  aucune API Electron de première partie et aurait demandé un module natif
+  ou un pont WinRT ; le verrouillage par code PIN, lui, avait été conçu
+  pendant le brainstorm puis écarté. L'ensemble retourne au backlog.
 - **Intégration au panneau Widgets natif de Windows 11** — API Microsoft
   distincte, packaging probablement différent (MSIX), faisabilité
   incertaine pour une app Electron. Remplacé ici par une mini-fenêtre
@@ -54,7 +55,7 @@ Ces contraintes s'appliquent à **tous** les chantiers ci-dessous.
   dans l'esprit de `LogoMark`, `ProgressRing`, `RailFlare`.
 - **Aucune nouvelle dépendance npm** : tout ce qui est décrit ici est
   faisable avec la stack actuelle et les API intégrées d'Electron
-  (`Notification`, `globalShortcut`, `safeStorage`, `Tray`, `BrowserWindow`).
+  (`Notification`, `globalShortcut`, `Tray`, `BrowserWindow`).
 - **Base de données** : schéma `saint_daily`, accès via le client Supabase
   du renderer. Les requêtes s'appuient sur RLS pour le filtrage par
   utilisateur, comme le fait déjà `useEngagements` (pas de `.eq('user_id',…)`
@@ -93,7 +94,6 @@ l'implémentation selon l'ordre réellement exécuté.
 | Notifications | `app_settings` | `reminder_lead_minutes integer not null default 10` |
 | Corbeille | `engagement` | `deleted_at timestamptz` |
 | Données | `app_settings` | `weekly_review_dismissed_at timestamptz` |
-| Verrou PIN | — | aucune (stockage local chiffré, hors Supabase) |
 | Pomodoro & focus | — | aucune |
 | Friction réduite | — | aucune |
 | Motivation | `engagement` | `goal_period text`, `goal_metric text`, `goal_target numeric` |
@@ -187,7 +187,7 @@ nouvelle icône dans `icons.tsx` (glyphe type barres, même gabarit 24×24
 `stroke-width` 1.6 que les icônes existantes).
 
 Composition finale du rail une fois toute cette spec livrée : Accueil,
-Skills, Calendrier, Projets, **Bilan**, **Journal** (chantier 9),
+Skills, Calendrier, Projets, **Bilan**, **Journal** (chantier 8),
 Réglages — sept entrées. C'est le plafond assumé : la Corbeille
 (chantier 3) est pour cette raison accessible par un lien depuis Réglages
 plutôt que par une huitième icône.
@@ -384,42 +384,7 @@ corbeille, échappement CSV des notes contenant virgules et guillemets).
 
 ---
 
-## 5. Verrou PIN (sécurité & vie privée)
-
-L'app contient désormais des tâches personnelles, des notes de quotidien et
-bientôt de l'humeur — plus sensible qu'un simple traqueur de compétences.
-
-### Stockage
-
-Le PIN est **local à la machine, jamais synchronisé sur Supabase** : un
-code d'accès est une notion "cet appareil", pas "ce compte". Il est stocké
-dans le dossier `userData` d'Electron, chiffré via
-`safeStorage.encryptString` / `decryptString` (DPAPI sous Windows, intégré à
-Electron — aucune dépendance nouvelle). Un canal IPC dédié permet au
-renderer de définir, vérifier et effacer le code sans jamais manipuler le
-fichier lui-même.
-
-### Comportement
-
-- Nouvel écran `Verrouillage.tsx`, affiché avant tout le reste de l'app si
-  un PIN est configuré : pavé numérique, 3 essais puis un court délai
-  d'attente avant de pouvoir réessayer.
-- Lien "PIN oublié ?" qui **efface simplement le code**. C'est cohérent
-  avec l'objectif réel : dissuader un coup d'œil curieux sur une session
-  Windows déjà déverrouillée, pas résister à un accès physique déterminé.
-- Le verrou se déclenche **au lancement de l'app uniquement**, pas au
-  retour depuis le tray.
-- Activation, changement et désactivation depuis une section "Verrouillage
-  de l'app" dans `Reglages.tsx`.
-
-### Tests
-
-Unitaires sur la logique de vérification et le compteur d'essais, extraite
-du composant dans une fonction pure.
-
----
-
-## 6. Pomodoro & mode focus
+## 5. Pomodoro & mode focus
 
 ### Épinglage automatique
 
@@ -470,7 +435,7 @@ Accessible par un bouton "Focus" depuis `TaskPopover.tsx` et
 
 ---
 
-## 7. Friction réduite
+## 6. Friction réduite
 
 ### Raccourci clavier global
 
@@ -484,7 +449,7 @@ chantier.
 
 Bouton sur l'Accueil : trouve l'engagement dont la dernière entrée est la
 plus récente et navigue vers le Pomodoro pré-sélectionné dessus. Réutilise
-le mécanisme de pré-sélection du chantier 6.
+le mécanisme de pré-sélection du chantier 5.
 
 ### Enchaîner des Pomodoros sur des engagements différents
 
@@ -514,7 +479,7 @@ depuis le menu du tray.
 
 ---
 
-## 8. Motivation
+## 7. Motivation
 
 ### Objectifs hebdomadaires et mensuels
 
@@ -576,7 +541,7 @@ hebdomadaire et mensuelle de `GoalProgress`.
 
 ---
 
-## 9. Journal
+## 8. Journal
 
 ### Écran
 
@@ -616,14 +581,14 @@ que l'utilisateur peut ensuite ajuster.
 
 ### Réflexions du soir
 
-Le Journal affiche également les réflexions quotidiennes du chantier 10,
+Le Journal affiche également les réflexions quotidiennes du chantier 9,
 interclassées dans la même liste chronologique et distinguées par un badge
 — un seul endroit pour tout ce qui a été écrit, plutôt que deux journaux
 parallèles.
 
 ---
 
-## 10. Rituels quotidiens
+## 9. Rituels quotidiens
 
 Deux bandeaux sur l'Accueil, sur la même mécanique que la revue
 hebdomadaire du chantier 4 mais à la granularité du jour.
@@ -647,7 +612,7 @@ aujourd'hui : un champ texte d'une ligne directement dans le bandeau et un
 bouton pour l'enregistrer. Une fois enregistré, le bandeau disparaît pour
 la journée. Volontairement une ligne, pas un journal complet.
 
-Ces réflexions apparaissent ensuite dans le Journal (chantier 9).
+Ces réflexions apparaissent ensuite dans le Journal (chantier 8).
 
 ### Tests
 
@@ -657,7 +622,7 @@ changement de jour, fuseau local.
 
 ---
 
-## 11. Gestes du calendrier
+## 10. Gestes du calendrier
 
 Les deux idées restées isolées dans des groupes par ailleurs livrés.
 
@@ -713,7 +678,9 @@ passer sans modification — le paramètre est optionnel.
 
 ## Découpage en chantiers et dépendances
 
-Onze chantiers, chacun livrable indépendamment, dans cet ordre :
+Dix chantiers, chacun livrable indépendamment. Les numéros sont ceux des
+sections ci-dessus, et l'ordre du tableau est un ordre d'exécution valide
+(chaque chantier n'a que des dépendances déjà livrées avant lui) :
 
 | # | Chantier | Dépend de |
 |---|---|---|
@@ -721,19 +688,18 @@ Onze chantiers, chacun livrable indépendamment, dans cet ordre :
 | 2 | Notifications | — |
 | 3 | Corbeille | — |
 | 4 | Données (export + revue hebdo) | 1 (le bandeau pointe vers `/bilan`), 3 (exclusion de la corbeille à l'export) |
-| 5 | Journal | 1 (`useAllPracticeEntriesForUser`) |
-| 6 | Rituels quotidiens | 5 (les réflexions s'affichent dans le Journal) |
+| 5 | Pomodoro & mode focus | — |
+| 6 | Friction réduite | 1 (widget de répartition), 5 (pré-sélection Pomodoro) |
 | 7 | Motivation | — |
-| 8 | Pomodoro & mode focus | — |
-| 9 | Friction réduite | 1 (widget de répartition), 8 (pré-sélection Pomodoro) |
-| 10 | Verrou PIN | — |
-| 11 | Gestes du calendrier | — |
+| 8 | Journal | 1 (`useAllPracticeEntriesForUser`) |
+| 9 | Rituels quotidiens | 8 (les réflexions s'affichent dans le Journal) |
+| 10 | Gestes du calendrier | — |
 
-Les chantiers 2, 3, 7, 8, 10 et 11 n'ont aucune dépendance : leur ordre
+Les chantiers 1, 2, 3, 5, 7 et 10 n'ont aucune dépendance : leur ordre
 relatif est libre. Les dépendances listées sont réelles (code partagé), pas
 thématiques.
 
-Trois chantiers touchent le process principal (8, 9, 10) et méritent une
+Deux chantiers touchent le process principal (5 et 6) et méritent une
 vérification manuelle en application packagée en plus des tests unitaires,
 puisque les chemins de ressources et le comportement du tray diffèrent
 entre dev et app installée — le commentaire de `src/main/tray.ts` en garde
