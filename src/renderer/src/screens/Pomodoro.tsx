@@ -23,8 +23,22 @@ export default function Pomodoro() {
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const activeSkills = skills.filter((s) => !s.archivedAt);
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
-  const { session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned } =
-    usePomodoro();
+  const {
+    session,
+    durations,
+    note,
+    setNote,
+    error,
+    pinned,
+    cycleCompletedAt,
+    start,
+    pause,
+    resume,
+    advance,
+    stop,
+    switchEngagement,
+    setPinned,
+  } = usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
   // Le sélecteur ne liste que des skills, mais une cible arrivée par lien
   // profond peut être une tâche planifiée (« Démarrer un pomodoro » depuis
@@ -252,6 +266,35 @@ export default function Pomodoro() {
           className={`border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-sm normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
       </label>
+
+      {session.status === 'awaitingAdvance' && (
+        <div className="relative mt-4 flex w-full flex-col gap-2 border-t border-ink-700 pt-4">
+          <label htmlFor="pomodoro-switch" className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+            Enchaîner sur un autre engagement
+          </label>
+          <select
+            id="pomodoro-switch"
+            value=""
+            onChange={(e) => {
+              const next = activeSkills.find((s) => s.id === e.target.value);
+              if (next) void switchEngagement(next.id, next.name);
+            }}
+            className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-[13px] text-champagne ${FOCUS_RING}`}
+          >
+            <option value="">Continuer sur {session.skillName}</option>
+            {activeSkills
+              .filter((s) => s.id !== session.skillId)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+          </select>
+          <p className="text-[12px] text-muted">
+            Le temps déjà fait est enregistré sur {session.skillName} avant de basculer.
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }

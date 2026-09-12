@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabase';
 import { useAuth } from './auth';
 import { toFrenchError } from './errors';
@@ -30,6 +31,7 @@ interface PomodoroContextValue {
   resume: () => void;
   advance: () => void;
   stop: () => Promise<void>;
+  switchEngagement: (skillId: string, skillName: string) => Promise<void>;
   setPinned: (pinned: boolean) => void;
 }
 
@@ -240,17 +242,22 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  async function stopInternal() {
-    const current = sessionRef.current;
-    const currentDurations = durationsRef.current;
-    const currentAuthSession = authSessionRef.current;
-    if (!current || !currentAuthSession || !currentDurations) {
-      setSession(null);
-      setSessionDurations(null);
-      return;
-    }
-    setError(null);
-
+  /**
+   * Solde la session en cours : convertit les checkpoints accumulés en une
+   * unique entrée de pratique pour l'engagement **actuellement ciblé**, puis
+   * supprime les checkpoints.
+   *
+   * Extrait de `stopInternal` sans changement de comportement, pour que le
+   * changement d'engagement en cours de session puisse solder l'ancien avant
+   * de basculer. Sans ce solde, la consolidation finale attribuerait tout le
+   * temps de la session au dernier engagement ciblé, y compris les cycles
+   * faits sur le précédent.
+   */
+  async function flushSession(
+    current: PomodoroSession,
+    currentDurations: PomodoroDurations,
+    currentAuthSession: Session
+  ): Promise<void> {
     const partialMinutes =
       current.status !== 'awaitingAdvance' && current.phase === 'work'
         ? partialMinutesElapsed(current, currentDurations)
@@ -305,6 +312,20 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+  }
+
+  async function stopInternal() {
+    const current = sessionRef.current;
+    const currentDurations = durationsRef.current;
+    const currentAuthSession = authSessionRef.current;
+    if (!current || !currentAuthSession || !currentDurations) {
+      setSession(null);
+      setSessionDurations(null);
+      return;
+    }
+    setError(null);
+
+    await flushSession(current, currentDurations, currentAuthSession);
 
     setSession(null);
     setSessionDurations(null);
@@ -314,6 +335,25 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     // clics dans sa zone même invisible (comportement Electron sur les
     // fenêtres transparentes).
     setPinned(false);
+  }
+
+  /**
+   * Change l'engagement ciblé sans interrompre le minuteur. Le temps déjà
+   * accumulé est soldé au profit de l'engagement qu'on quitte, et la session
+   * repart avec une liste de checkpoints vide.
+   */
+  async function switchEngagement(skillId: string, skillName: string) {
+    const current = sessionRef.current;
+    const currentDurations = durationsRef.current;
+    const currentAuthSession = authSessionRef.current;
+    if (!current || !currentDurations || !currentAuthSession) return;
+    if (current.skillId === skillId) return;
+    setError(null);
+    await flushSession(current, currentDurations, currentAuthSession);
+    setNote('');
+    setSession((session) =>
+      session ? { ...session, skillId, skillName, loggedEntryIds: [] } : session
+    );
   }
 
   async function stop() {
@@ -339,7 +379,22 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
 
   return (
     <PomodoroContext.Provider
-      value={{ session, durations, note, setNote, error, pinned, cycleCompletedAt, start, pause, resume, advance, stop, setPinned }}
+      value={{
+        session,
+        durations,
+        note,
+        setNote,
+        error,
+        pinned,
+        cycleCompletedAt,
+        start,
+        pause,
+        resume,
+        advance,
+        stop,
+        switchEngagement,
+        setPinned,
+      }}
     >
       {children}
     </PomodoroContext.Provider>
