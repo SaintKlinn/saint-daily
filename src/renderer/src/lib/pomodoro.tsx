@@ -95,10 +95,17 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   // Filet de sécurité si le Provider se démonte alors qu'une session
   // épinglée est encore active (ex. déconnexion) : sans ça, l'overlay reste
   // visible et continue de capturer les clics indéfiniment, orphelin de
-  // toute fenêtre principale pour le désépingler.
+  // toute fenêtre principale pour le désépingler. `reportState(null)` est
+  // tout aussi nécessaire que `setPinned(false)` ici : sans lui,
+  // `hasActiveSession` reste vrai côté process main (voir
+  // src/main/pomodoroOverlay.ts), donc réduire la fenêtre après une
+  // déconnexion en pleine session ré-affiche l'overlay — figé sur une
+  // session morte, ses boutons relayant vers un renderer qui n'a plus de
+  // Provider pour les recevoir — par-dessus l'écran de connexion.
   useEffect(() => {
     return () => {
       window.api?.pomodoro?.setPinned?.(false);
+      window.api?.pomodoro?.reportState?.(null);
     };
   }, []);
 
