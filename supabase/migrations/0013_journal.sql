@@ -14,6 +14,8 @@ create table saint_daily.note_template (
   created_at timestamptz not null default now()
 );
 
+create index note_template_user_id_idx on saint_daily.note_template (user_id);
+
 alter table saint_daily.note_template enable row level security;
 create policy "note_template_owner_all" on saint_daily.note_template
   for all

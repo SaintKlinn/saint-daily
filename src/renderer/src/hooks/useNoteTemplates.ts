@@ -44,9 +44,15 @@ export function useNoteTemplates() {
 
   async function addTemplate(text: string) {
     if (!session) return { error: 'Non connecté' };
+    // `templates.length` collisionnerait avec une position existante dès
+    // qu'un modèle a été retiré : après suppression du premier de trois
+    // modèles (positions 0, 1, 2), il n'en reste que deux mais la position
+    // 2 est déjà prise. Un plus que le maximum courant reste toujours
+    // libre, y compris quand la liste est vide (`-1 + 1`).
+    const nextPosition = templates.reduce((max, t) => Math.max(max, t.position), -1) + 1;
     const { error: insertError } = await getSupabaseClient()
       .from('note_template')
-      .insert({ user_id: session.user.id, text, position: templates.length });
+      .insert({ user_id: session.user.id, text, position: nextPosition });
     if (insertError) return { error: toFrenchError(insertError.message) };
     await refresh();
     return { error: null };

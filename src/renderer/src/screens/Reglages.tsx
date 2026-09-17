@@ -16,12 +16,16 @@ const FOCUS_RING =
 export default function Reglages() {
   const { signOut } = useAuth();
   const { settings, loading, error, updateSettings } = useSettings();
-  const { templates, error: templatesError, addTemplate, removeTemplate } = useNoteTemplates();
+  const { templates, addTemplate, removeTemplate } = useNoteTemplates();
   const [newTemplateText, setNewTemplateText] = useState('');
-  // Distinct de `templatesError` (qui vient du chargement) : une action
-  // ratée doit rester visible même après que la liste elle-même s'est
-  // chargée avec succès — ici l'utilisateur gère les modèles
-  // explicitement, un échec doit se voir (contrairement à NouvelleEntree).
+  // L'erreur de *chargement* du hook n'est délibérément pas affichée : la
+  // migration qui crée `note_template` n'est pas encore appliquée en live,
+  // donc cette erreur se déclenche à CHAQUE visite de Réglages pour tout le
+  // monde, pour une fonctionnalité jamais utilisée — un message permanent,
+  // non actionnable (retenter n'aide pas) et alarmiste pour rien. Une
+  // action explicite (ajouter/retirer) reste, elle, affichée ci-dessous :
+  // là, l'utilisateur vient de faire quelque chose et un échec doit se voir
+  // (contrairement à NouvelleEntree, qui n'agit pas sur les modèles).
   const [templateActionError, setTemplateActionError] = useState<string | null>(null);
   const [autoLaunch, setAutoLaunch] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
@@ -342,11 +346,6 @@ export default function Reglages() {
           Des raccourcis proposés en un clic à la saisie d'une nouvelle entrée
         </p>
 
-        {templatesError && (
-          <p role="alert" className="mb-2 text-sm text-danger">
-            {templatesError}
-          </p>
-        )}
         {templateActionError && (
           <p role="alert" className="mb-2 text-sm text-danger">
             {templateActionError}

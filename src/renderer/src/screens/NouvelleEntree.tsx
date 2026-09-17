@@ -119,7 +119,8 @@ export default function NouvelleEntree() {
                   key={template.id}
                   type="button"
                   onClick={() => setNote(template.text)}
-                  className={`border border-ink-700 px-3 py-1.5 text-left text-[12px] text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
+                  title={template.text}
+                  className={`max-w-[220px] truncate border border-ink-700 px-3 py-1.5 text-left text-[12px] text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
                 >
                   {template.text}
                 </button>
