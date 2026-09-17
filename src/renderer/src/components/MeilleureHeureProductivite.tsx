@@ -43,10 +43,17 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
           return (
             <div key={bucket.key} className="flex flex-1 flex-col items-center gap-1.5">
               <span className="font-data text-[11px] tabular-nums text-muted">{bucket.sessions}</span>
-              <div
-                className="w-full bg-accent-bright"
-                style={{ height: Math.max(height, bucket.sessions > 0 ? 3 : 1) }}
-              />
+              {/* Rien du tout à zéro séance, plutôt qu'un filet de 1 px :
+                  maintenant que les barres sont toutes de la couleur des
+                  données, un trait d'or sous un « 0 » se lirait comme une
+                  activité minuscule au lieu d'une absence. Le compteur
+                  au-dessus et le « — » en dessous le disent déjà. Les
+                  périodes non vides gardent leur minimum de 3 px, sans
+                  quoi une séance isolée face à un maximum élevé
+                  n'afficherait aucune barre. */}
+              {bucket.sessions > 0 && (
+                <div className="w-full bg-accent-bright" style={{ height: Math.max(height, 3) }} />
+              )}
             </div>
           );
         })}
