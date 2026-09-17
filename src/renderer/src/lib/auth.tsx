@@ -39,7 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await getSupabaseClient().auth.signOut();
+    // `scope: 'local'` et non le défaut : `signOut()` nu vaut
+    // `scope: 'global'`, qui révoque les jetons de rafraîchissement de
+    // TOUTES les sessions de l'utilisateur. Or ce projet Supabase est
+    // partagé avec Saint Gym — se déconnecter d'ici fermait aussi sa
+    // session là-bas, et sur tous ses appareils. Un bouton « Se
+    // déconnecter » dans une app ne déconnecte que cette app.
+    await getSupabaseClient().auth.signOut({ scope: 'local' });
   }
 
   return <AuthContext.Provider value={{ session, loading, signIn, signOut }}>{children}</AuthContext.Provider>;

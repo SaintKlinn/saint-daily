@@ -1,0 +1,46 @@
+// Le pseudonyme vient de `user_metadata.username`, que la session porte
+// déjà : aucune requête, donc rien à casser quand la base est injoignable
+// ou que le schéma a bougé — précisément les moments où savoir sur quel
+// compte on est compte le plus. L'autre source possible, `public.profile`
+// (table de Saint Gym, restée dans `public`), donnerait la même valeur au
+// prix d'une requête vers l'autre app.
+
+interface UtilisateurLike {
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+}
+
+/**
+ * Renvoie le pseudonyme à afficher, ou `null` s'il n'y a rien d'affichable.
+ *
+ * Replis successifs : un compte créé sans `username` ne doit pas afficher
+ * un vide — la partie locale de l'e-mail identifie déjà le compte, et
+ * l'e-mail entier reste préférable à rien.
+ */
+export function pseudonyme(utilisateur: UtilisateurLike | null | undefined): string | null {
+  if (!utilisateur) return null;
+
+  const brut = utilisateur.user_metadata?.username;
+  if (typeof brut === 'string' && brut.trim()) return brut.trim();
+
+  const email = typeof utilisateur.email === 'string' ? utilisateur.email.trim() : '';
+  if (!email) return null;
+
+  const arobase = email.indexOf('@');
+  // `> 0` et non `!== -1` : une adresse commençant par « @ » donnerait une
+  // partie locale vide, auquel cas l'adresse entière vaut mieux que rien.
+  if (arobase > 0) return email.slice(0, arobase);
+  return email;
+}
+
+/**
+ * La lettre affichée dans la pastille du rail.
+ *
+ * `Array.from` plutôt que `[0]` : une initiale peut être un caractère hors
+ * du plan multilingue de base (un emoji, par exemple), que `[0]` couperait
+ * au milieu d'une paire de substitution et rendrait comme un losange.
+ */
+export function initiale(pseudo: string): string {
+  const premier = Array.from(pseudo.trim())[0] ?? '';
+  return premier.toLocaleUpperCase('fr-FR');
+}

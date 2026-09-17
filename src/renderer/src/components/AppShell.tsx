@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
+import PastilleCompte from './PastilleCompte';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, ChartIcon, NotebookIcon, GearIcon } from './icons';
@@ -119,6 +120,7 @@ export default function AppShell() {
             </NavLink>
           ))}
         </div>
+        <PastilleCompte />
         <RailFlare />
       </nav>
       <main
