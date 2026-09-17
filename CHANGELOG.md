@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/SaintKlinn/saint-daily/compare/v1.6.0...v1.7.0) (2026-09-17)
+
+
+### Nouveautés
+
+* show which account is signed in at the foot of the nav rail ([69290fe](https://github.com/SaintKlinn/saint-daily/commit/69290fe8b2d92062c129d3b3b5c7de63ce519a6d))
+
 ## [1.6.0](https://github.com/SaintKlinn/saint-daily/compare/v1.5.1...v1.6.0) (2026-09-17)
 
 
