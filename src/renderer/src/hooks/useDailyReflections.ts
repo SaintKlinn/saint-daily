@@ -3,6 +3,7 @@ import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
 import { toLocalDateKey } from '../lib/rituels';
+import { fetchAllPages } from './usePracticeEntries';
 import type { DailyReflection } from '../lib/types';
 
 interface DailyReflectionRow {
@@ -24,15 +25,20 @@ export function useDailyReflections() {
   const refresh = useCallback(async () => {
     if (!session) return;
     setLoading(true);
-    const { data, error } = await getSupabaseClient()
-      .from('daily_reflection')
-      .select('*')
-      .order('date', { ascending: false });
+    // Paginé via le helper partagé plutôt qu'un `.select()` unique : passé
+    // ~1000 lignes (2,7 ans de bilans quotidiens), PostgREST tronque
+    // silencieusement la réponse, et triée `date desc` ce sont les plus
+    // anciennes réflexions qui disparaîtraient du Journal sans le moindre
+    // signal. Voir le commentaire de `fetchAllPages` dans
+    // usePracticeEntries.ts.
+    const { rows, error } = await fetchAllPages<DailyReflectionRow>((from, to) =>
+      getSupabaseClient().from('daily_reflection').select('*').order('date', { ascending: false }).range(from, to)
+    );
     // Un échec de lecture vaut « aucune réflexion » et n'est remonté
     // nulle part : tant que la migration n'est pas appliquée cette table
     // n'existe pas, et l'Accueil ne doit pas porter un message d'erreur
     // permanent pour une fonctionnalité que l'utilisateur n'a pas touchée.
-    setReflections(error ? [] : (data as DailyReflectionRow[]).map(fromRow));
+    setReflections(error ? [] : rows.map(fromRow));
     setLoading(false);
   }, [session]);
 

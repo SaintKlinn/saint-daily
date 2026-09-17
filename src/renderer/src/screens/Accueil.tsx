@@ -65,7 +65,7 @@ export default function Accueil() {
   // place, la persistance côté serveur prend le relais entre les sessions.
   const [weeklyReviewDismissedThisMount, setWeeklyReviewDismissedThisMount] = useState(false);
 
-  const { reflections, saveToday } = useDailyReflections();
+  const { reflections, loading: reflectionsLoading, saveToday } = useDailyReflections();
   const [eveningText, setEveningText] = useState('');
   const [eveningError, setEveningError] = useState<string | null>(null);
   const [eveningSaving, setEveningSaving] = useState(false);
@@ -114,7 +114,11 @@ export default function Accueil() {
     morningDismissedDateThisMount !== todayKey &&
     !!settings &&
     shouldShowMorningGreeting(settings.morningGreetingDismissedDate, now);
-  const showEvening = shouldShowEveningPrompt(hasReflectionToday, now);
+  // Tant que la lecture des réflexions n'a pas résolu, on ne sait pas
+  // encore si aujourd'hui en a déjà une : afficher le bandeau puis le
+  // faire disparaître un instant plus tard serait un flash visible sur
+  // un jour qui a en fait déjà un bilan.
+  const showEvening = !reflectionsLoading && shouldShowEveningPrompt(hasReflectionToday, now);
 
   async function handleDismissMorning() {
     setMorningDismissedDateThisMount(todayKey);
@@ -241,7 +245,7 @@ export default function Accueil() {
               value={eveningText}
               onChange={(e) => setEveningText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleSaveEvening();
+                if (e.key === 'Enter' && !eveningSaving) void handleSaveEvening();
               }}
               placeholder="Journée dense mais satisfaisante."
               aria-label="Bilan de la journée"

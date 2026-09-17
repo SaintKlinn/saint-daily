@@ -17,8 +17,8 @@ create table saint_daily.daily_reflection (
   unique (user_id, date)
 );
 
-create index daily_reflection_user_id_idx on saint_daily.daily_reflection (user_id);
-
+-- Pas d'index séparé sur `user_id` : l'index unique sur `(user_id, date)`
+-- ci-dessus a déjà `user_id` en colonne de tête, donc le couvre.
 alter table saint_daily.daily_reflection enable row level security;
 create policy "daily_reflection_owner_all" on saint_daily.daily_reflection
   for all
