@@ -70,4 +70,12 @@ export interface SkillAppSettings {
   pomodoroAutoAdvance: boolean;
   showPracticeInCalendar: boolean;
   weeklyReviewDismissedAt: string | null;
+  morningGreetingDismissedDate: string | null;
+}
+
+export interface DailyReflection {
+  id: string;
+  date: string; // AAAA-MM-JJ, jour local
+  text: string;
+  createdAt: string;
 }
