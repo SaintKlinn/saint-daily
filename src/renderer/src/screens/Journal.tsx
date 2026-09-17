@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntriesForUser } from '../hooks/usePracticeEntries';
+import { useDailyReflections } from '../hooks/useDailyReflections';
 import { filterJournalEntries, type JournalEntry } from '../lib/journal';
 import { formatMinutes } from '../lib/retrospective';
 import EmptyState from '../components/EmptyState';
@@ -16,11 +17,26 @@ const FOCUS_RING =
 const MAX_VISIBLE_ROWS = 200;
 
 interface Row extends JournalEntry {
+  kind: 'seance' | 'reflexion';
   durationMinutes: number;
+  // Les séances ont une heure, les réflexions seulement un jour : on trie
+  // sur `created_at` pour les secondes, ce qui les place naturellement en
+  // fin de leur journée — là où un bilan du soir appartient.
+  sortAt: string;
+}
+
+// Une date seule (`AAAA-MM-JJ`) est interprétée en UTC par `new Date`,
+// alors qu'elle désigne un jour local : on l'ancre à midi local pour que
+// le libellé affiché soit le bon jour dans tous les fuseaux.
+function parseRowDate(value: string): Date {
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.exec(value);
+  if (!dateOnly) return new Date(value);
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day, 12);
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return parseRowDate(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function Journal() {
@@ -31,6 +47,7 @@ export default function Journal() {
     error: engagementsError,
   } = useEngagements();
   const { entries, loading: entriesLoading, error: entriesError } = useAllPracticeEntriesForUser();
+  const { reflections } = useDailyReflections();
   const loading = engagementsLoading || entriesLoading;
   const [search, setSearch] = useState('');
   // Différé pour que la frappe reste fluide sur un long historique : la
@@ -47,18 +64,31 @@ export default function Journal() {
     return map;
   }, [engagements, deletedEngagements]);
 
-  const rows = useMemo<Row[]>(
-    () =>
-      entries.map((entry) => ({
-        id: entry.id,
-        engagementName: namesById[entry.engagementId] ?? 'Engagement inconnu',
-        note: entry.note,
-        tags: entry.tags,
-        practicedAt: entry.practicedAt,
-        durationMinutes: entry.durationMinutes,
-      })),
-    [entries, namesById]
-  );
+  const rows = useMemo<Row[]>(() => {
+    const seances: Row[] = entries.map((entry) => ({
+      kind: 'seance',
+      id: entry.id,
+      engagementName: namesById[entry.engagementId] ?? 'Engagement inconnu',
+      note: entry.note,
+      tags: entry.tags,
+      practicedAt: entry.practicedAt,
+      durationMinutes: entry.durationMinutes,
+      sortAt: entry.practicedAt,
+    }));
+    const bilans: Row[] = reflections.map((reflection) => ({
+      kind: 'reflexion',
+      id: `reflexion-${reflection.id}`,
+      // Le libellé sert aussi de cible de recherche : chercher « bilan »
+      // doit ramener ses bilans du soir.
+      engagementName: 'Bilan du soir',
+      note: reflection.text,
+      tags: [],
+      practicedAt: reflection.date,
+      durationMinutes: 0,
+      sortAt: reflection.createdAt,
+    }));
+    return [...seances, ...bilans].sort((a, b) => (a.sortAt < b.sortAt ? 1 : a.sortAt > b.sortAt ? -1 : 0));
+  }, [entries, namesById, reflections]);
 
   const visible = useMemo(() => filterJournalEntries(rows, deferredSearch), [rows, deferredSearch]);
   const visibleRows = visible.slice(0, MAX_VISIBLE_ROWS);
@@ -105,7 +135,8 @@ export default function Journal() {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-serif text-[17px] text-champagne">{row.engagementName}</span>
                 <span className="font-data text-[11px] tabular-nums text-muted">
-                  {formatDate(row.practicedAt)} · {formatMinutes(row.durationMinutes)}
+                  {formatDate(row.practicedAt)}
+                  {row.kind === 'seance' ? ` · ${formatMinutes(row.durationMinutes)}` : ' · bilan du soir'}
                 </span>
               </div>
               {row.note && <p className="whitespace-pre-wrap text-[13px] text-champagne">{row.note}</p>}
