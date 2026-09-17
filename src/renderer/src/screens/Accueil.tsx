@@ -73,7 +73,23 @@ export default function Accueil() {
   // migration ne soit appliquée l'écriture échoue, et un geste de rejet
   // qui ne produit aucun effet visible est pire que pas de bandeau du
   // tout. Même correctif que celui appliqué au bandeau hebdomadaire.
-  const [morningDismissedThisMount, setMorningDismissedThisMount] = useState(false);
+  // Stocke la clé du jour où le rejet a eu lieu, pas un simple booléen :
+  // avec l'horloge qui tourne ci-dessous, un montage qui traverse minuit
+  // ne doit masquer le bandeau que pour le jour où « Merci » a été cliqué
+  // — pas pour tous les matins suivants du même montage.
+  const [morningDismissedDateThisMount, setMorningDismissedDateThisMount] = useState<string | null>(null);
+
+  // L'app tourne dans le tray pendant des jours sans que l'Accueil se
+  // re-rende naturellement : sans cette horloge, les gates horaires des
+  // deux rituels (shouldShowMorningGreeting/shouldShowEveningPrompt) ne
+  // seraient réévaluées qu'au prochain montage, et un utilisateur qui
+  // laisse l'app ouverte sur l'Accueil à 14h ne verrait jamais le bandeau
+  // du soir apparaître à 18h — le rituel n'aurait simplement jamais lieu.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const tasks = useMemo(
     () =>
@@ -92,14 +108,17 @@ export default function Accueil() {
     });
   }, [tasks]);
 
-  const hasReflectionToday = reflections.some((reflection) => reflection.date === toLocalDateKey());
+  const todayKey = toLocalDateKey(now);
+  const hasReflectionToday = reflections.some((reflection) => reflection.date === todayKey);
   const showMorning =
-    !morningDismissedThisMount && !!settings && shouldShowMorningGreeting(settings.morningGreetingDismissedDate);
-  const showEvening = shouldShowEveningPrompt(hasReflectionToday);
+    morningDismissedDateThisMount !== todayKey &&
+    !!settings &&
+    shouldShowMorningGreeting(settings.morningGreetingDismissedDate, now);
+  const showEvening = shouldShowEveningPrompt(hasReflectionToday, now);
 
   async function handleDismissMorning() {
-    setMorningDismissedThisMount(true);
-    await updateSettings({ morningGreetingDismissedDate: toLocalDateKey() });
+    setMorningDismissedDateThisMount(todayKey);
+    await updateSettings({ morningGreetingDismissedDate: todayKey });
   }
 
   async function handleSaveEvening() {
@@ -107,7 +126,13 @@ export default function Accueil() {
     if (!text) return;
     setEveningError(null);
     setEveningSaving(true);
-    const { error } = await saveToday(text);
+    // La clé de jour vient de `now` — le même horodatage qui a décidé
+    // d'afficher le bandeau — et non d'un nouveau `new Date()` pris à
+    // l'instant du clic. Un bilan tapé à 23:58 et enregistré à 00:01 doit
+    // rester classé sous la journée qui vient de finir, pas sous la
+    // nouvelle qui commence : relire l'horloge ici est précisément ce qui
+    // ouvrirait la fenêtre de perte décrite dans la revue.
+    const { error } = await saveToday(text, todayKey);
     if (error) setEveningError(error);
     else setEveningText('');
     setEveningSaving(false);

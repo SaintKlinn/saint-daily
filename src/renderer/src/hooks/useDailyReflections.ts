@@ -44,12 +44,18 @@ export function useDailyReflections() {
    * Enregistre le bilan du jour. La contrainte d'unicité `(user_id, date)`
    * rend l'opération idempotente : réécrire son bilan remplace la ligne du
    * jour au lieu d'en créer une seconde.
+   *
+   * `dateKey` est fourni par l'appelant plutôt que recalculé ici avec
+   * `toLocalDateKey()` : l'appelant (Accueil) l'a déjà dérivé de l'horloge
+   * qui a décidé d'afficher le bandeau. Relire l'horloge une seconde fois
+   * au moment du clic ouvrirait une fenêtre autour de minuit où une ligne
+   * tapée juste avant serait enregistrée sous le jour suivant.
    */
-  async function saveToday(text: string) {
+  async function saveToday(text: string, dateKey: string = toLocalDateKey()) {
     if (!session) return { error: 'Non connecté' };
     const { error } = await getSupabaseClient()
       .from('daily_reflection')
-      .upsert({ user_id: session.user.id, date: toLocalDateKey(), text }, { onConflict: 'user_id,date' });
+      .upsert({ user_id: session.user.id, date: dateKey, text }, { onConflict: 'user_id,date' });
     // Ici, à l'inverse de la lecture, l'erreur est renvoyée : l'utilisateur
     // vient d'écrire une phrase et de cliquer, il doit savoir si elle est
     // partie.
