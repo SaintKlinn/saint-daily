@@ -3,12 +3,21 @@ import { dueReminders, reminderKey, reminderMessage, REMINDER_TOLERANCE_MS } fro
 
 const NOW = new Date('2026-09-12T10:00:00Z');
 
-function engagement(overrides: Partial<{ id: string; name: string; scheduledAt: string | null; archivedAt: string | null }> = {}) {
+function engagement(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    scheduledAt: string | null;
+    archivedAt: string | null;
+    skippedAt: string | null;
+  }> = {}
+) {
   return {
     id: 'e1',
     name: 'Cours de guitare',
     scheduledAt: '2026-09-12T10:10:00Z',
     archivedAt: null,
+    skippedAt: null,
     ...overrides,
   };
 }
@@ -54,6 +63,10 @@ describe('dueReminders', () => {
 
   it('skips archived engagements', () => {
     expect(dueReminders([engagement({ archivedAt: '2026-09-01T00:00:00Z' })], {}, NOW, 10, new Set())).toEqual([]);
+  });
+
+  it('skips a skipped occurrence', () => {
+    expect(dueReminders([engagement({ skippedAt: '2026-09-01T00:00:00Z' })], {}, NOW, 10, new Set())).toEqual([]);
   });
 
   it('skips engagements that already have a practice entry', () => {

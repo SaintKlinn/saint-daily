@@ -41,6 +41,7 @@ export default function Calendrier() {
     engagements,
     error: engagementsError,
     setArchived,
+    setSkipped,
     updateEngagement,
     createEngagements,
     deleteEngagements,
@@ -65,6 +66,9 @@ export default function Calendrier() {
   // l'est déjà pour « Marquer comme faite » : sans lui, le bouton reste
   // armable pendant tout l'aller-retour réseau de `softDelete`.
   const [deletingTask, setDeletingTask] = useState(false);
+  // Même raison que `deletingTask` ci-dessus : sans lui, le bouton reste
+  // armable pendant tout l'aller-retour réseau de `setSkipped`.
+  const [skipping, setSkipping] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
   const [recurrenceMessage, setRecurrenceMessage] = useState<string | null>(null);
@@ -344,6 +348,15 @@ export default function Calendrier() {
     setPopoverTask(null);
   }
 
+  async function handleToggleSkip(task: Engagement) {
+    setActionError(null);
+    setSkipping(true);
+    const { error } = await setSkipped(task.id, !task.skippedAt);
+    if (error) setActionError(error);
+    setSkipping(false);
+    setPopoverTask(null);
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
@@ -476,15 +489,21 @@ export default function Calendrier() {
                       e.dataTransfer.effectAllowed = 'move';
                     }}
                     onClick={() => setPopoverTask(task)}
-                    aria-label={priorityColor ? `${task.name} — priorité ${PRIORITY_LABELS[task.priority]}` : undefined}
-                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''}`}
+                    aria-label={`${task.name}${task.skippedAt ? ' — passée' : ''}${
+                      priorityColor ? ` — priorité ${PRIORITY_LABELS[task.priority]}` : ''
+                    }`}
+                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''} ${task.skippedAt ? 'opacity-60' : ''}`}
                     style={{
                       top: `${topPercent}%`,
                       height: `${heightPercent}%`,
                       ...(priorityColor ? { borderLeftColor: priorityColor } : {}),
                     }}
                   >
-                    <p className="truncate font-sans text-[11px] font-semibold text-champagne">{task.name}</p>
+                    <p
+                      className={`truncate font-sans text-[11px] font-semibold ${task.skippedAt ? 'line-through text-muted' : 'text-champagne'}`}
+                    >
+                      {task.name}
+                    </p>
                   </button>
                 );
               })}
@@ -517,6 +536,8 @@ export default function Calendrier() {
           recurrenceBusy={recurrenceBusy}
           projects={projects}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
+          onToggleSkip={() => handleToggleSkip(popoverTask)}
+          skipping={skipping}
           onDelete={() => handleDeleteTask(popoverTask.id)}
           deleting={deletingTask}
           error={actionError}

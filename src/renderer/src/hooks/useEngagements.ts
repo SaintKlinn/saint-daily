@@ -13,6 +13,7 @@ interface EngagementRow {
   generic_level: GenericLevel;
   archived_at: string | null;
   deleted_at: string | null;
+  skipped_at?: string | null;
   scheduled_at: string | null;
   scheduled_ends_at: string | null;
   priority: Priority;
@@ -43,6 +44,10 @@ function fromRow(row: EngagementRow): Engagement {
     // ce que le filtre ci-dessous traiterait correctement mais que le type
     // `string | null` ne décrit pas.
     deletedAt: row.deleted_at ?? null,
+    // `?? null` volontaire, même raison que `deletedAt` ci-dessus : la
+    // migration qui ajoute cette colonne n'est pas encore appliquée à la
+    // base live, donc la propriété peut être absente de la ligne.
+    skippedAt: row.skipped_at ?? null,
     scheduledAt: row.scheduled_at,
     scheduledEndsAt: row.scheduled_ends_at,
     priority: row.priority,
@@ -251,6 +256,16 @@ export function useEngagements() {
     return { error: null };
   }
 
+  async function setSkipped(id: string, skipped: boolean) {
+    const { error: updateError } = await getSupabaseClient()
+      .from('engagement')
+      .update({ skipped_at: skipped ? new Date().toISOString() : null })
+      .eq('id', id);
+    if (updateError) return { error: toFrenchError(updateError.message) };
+    await refresh();
+    return { error: null };
+  }
+
   /**
    * Envoie un engagement à la corbeille. Pour un projet, ses enfants
    * encore vivants y partent avec lui, **avec exactement le même
@@ -372,6 +387,7 @@ export function useEngagements() {
     createEngagements,
     updateEngagement,
     setArchived,
+    setSkipped,
     deleteEngagement,
     deleteEngagements,
     softDelete,

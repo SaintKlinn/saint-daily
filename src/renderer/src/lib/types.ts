@@ -14,6 +14,7 @@ export interface Engagement {
   genericLevel: GenericLevel;
   archivedAt: string | null;
   deletedAt: string | null;
+  skippedAt: string | null;
   scheduledAt: string | null;
   scheduledEndsAt: string | null;
   priority: Priority;

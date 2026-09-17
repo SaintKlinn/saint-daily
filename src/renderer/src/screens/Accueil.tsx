@@ -94,7 +94,7 @@ export default function Accueil() {
   const tasks = useMemo(
     () =>
       activeEngagements
-        .filter((e) => e.scheduledAt && (entriesBySkill[e.id] ?? []).length === 0)
+        .filter((e) => e.scheduledAt && (entriesBySkill[e.id] ?? []).length === 0 && !e.skippedAt)
         .sort((a, b) => new Date(a.scheduledAt as string).getTime() - new Date(b.scheduledAt as string).getTime()),
     [activeEngagements, entriesBySkill]
   );

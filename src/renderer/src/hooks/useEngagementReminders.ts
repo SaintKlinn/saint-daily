@@ -19,6 +19,7 @@ interface EngagementReminderRow {
   // colonne n'est pas encore passée sur la base live, donc `select('*')`
   // peut renvoyer la ligne sans ce champ plutôt que d'échouer.
   deleted_at?: string | null;
+  skipped_at?: string | null;
 }
 
 interface SettingsReminderRow {
@@ -128,6 +129,7 @@ export function useEngagementReminders(): void {
         name: row.name,
         scheduledAt: row.scheduled_at,
         archivedAt: row.archived_at,
+        skippedAt: row.skipped_at ?? null,
       }));
 
       // 5. Même clé de suivi, mêmes règles pures.

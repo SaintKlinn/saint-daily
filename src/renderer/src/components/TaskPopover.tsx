@@ -32,6 +32,8 @@ export default function TaskPopover({
   recurrenceBusy,
   projects,
   onProjectChange,
+  onToggleSkip,
+  skipping,
   onDelete,
   deleting,
   error,
@@ -47,6 +49,8 @@ export default function TaskPopover({
   recurrenceBusy: boolean;
   projects: Engagement[];
   onProjectChange: (projectId: string | null) => void;
+  onToggleSkip: () => void;
+  skipping?: boolean;
   onDelete: () => void;
   deleting: boolean;
   error: string | null;
@@ -141,6 +145,11 @@ export default function TaskPopover({
         )}
         <div className="relative mt-2 flex flex-wrap justify-end gap-3">
           <BoutonSuppression onConfirm={onDelete} busy={deleting} />
+          {task.recurrenceSeriesId && (
+            <Button variant="secondary" size="sm" onClick={onToggleSkip} disabled={skipping}>
+              {task.skippedAt ? 'Ne plus passer' : 'Passer cette occurrence'}
+            </Button>
+          )}
           <Link to={`/pomodoro?skillId=${task.id}`} className={buttonClassName('secondary', 'sm')}>
             Démarrer un pomodoro
           </Link>

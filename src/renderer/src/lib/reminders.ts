@@ -3,6 +3,7 @@ export interface ReminderEngagement {
   name: string;
   scheduledAt: string | null;
   archivedAt: string | null;
+  skippedAt: string | null;
 }
 
 export type ReminderKind = 'lead' | 'start';
@@ -58,6 +59,8 @@ export function dueReminders(
   for (const engagement of engagements) {
     if (!engagement.scheduledAt) continue;
     if (engagement.archivedAt) continue;
+    // Une occurrence passée ne rappelle plus : c'est tout l'objet du geste.
+    if (engagement.skippedAt) continue;
     if ((entryCountByEngagement[engagement.id] ?? 0) > 0) continue;
 
     const startMs = new Date(engagement.scheduledAt).getTime();
