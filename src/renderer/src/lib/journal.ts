@@ -9,12 +9,14 @@ export interface JournalEntry {
 // Insensible aux accents en plus de la casse : app entièrement en
 // français, où « seance » doit retrouver « Séance » et « débutant » doit
 // retrouver « debutant ». `NFD` décompose chaque caractère accentué en
-// lettre de base + diacritique combinant, que la classe `̀-ͯ`
-// retire ensuite.
+// lettre de base + diacritique combinant, que la plage U+0300-U+036F
+// retire ensuite. Cette plage est écrite en séquences d'échappement et
+// non en caractères bruts : des marques combinantes littérales dans le
+// source sont invisibles à la relecture et introuvables au grep.
 function normalize(value: string): string {
   return value
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 }
 
