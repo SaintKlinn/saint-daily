@@ -29,15 +29,22 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
     : `${bestBuckets[0].label} est ta période la plus active.`;
   return (
     <div className="flex flex-col gap-3">
+      {/* Toutes les barres sont `accent-bright` : la donnée est la donnée.
+          L'ancien `bg-muted` pour les non-gagnantes ne se distinguait de
+          l'or qu'à 1.10:1 — un signal illisible, et de toute façon
+          redondant, puisque la barre la plus haute EST le maximum. La
+          période gagnante est désignée par sa pastille de libellé (bordure
+          + texte accent, l'idiome des badges de DetailSkill), qui ne
+          repose ni sur la couleur seule ni sur une comparaison de teintes
+          quasi identiques. */}
       <div className="flex items-end gap-3">
         {buckets.map((bucket) => {
-          const isBest = bucket.sessions === max && bucket.sessions > 0;
           const height = max === 0 ? 0 : Math.round((bucket.sessions / max) * BAR_MAX_PX);
           return (
             <div key={bucket.key} className="flex flex-1 flex-col items-center gap-1.5">
               <span className="font-data text-[11px] tabular-nums text-muted">{bucket.sessions}</span>
               <div
-                className={`w-full ${isBest ? 'bg-accent-bright' : 'bg-muted'}`}
+                className="w-full bg-accent-bright"
                 style={{ height: Math.max(height, bucket.sessions > 0 ? 3 : 1) }}
               />
             </div>
@@ -45,14 +52,23 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
         })}
       </div>
       <div className="flex gap-3">
-        {buckets.map((bucket) => (
-          <div key={bucket.key} className="flex flex-1 flex-col items-center gap-0.5">
-            <span className="text-[12px] text-champagne">{bucket.label}</span>
-            <span className="font-data text-[10px] text-muted">
-              {bucket.sessions === 0 ? '—' : `${bucket.averageMinutes} min moy.`}
-            </span>
-          </div>
-        ))}
+        {buckets.map((bucket) => {
+          const isBest = bucket.sessions === max && bucket.sessions > 0;
+          return (
+            <div key={bucket.key} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <span
+                className={`max-w-full truncate border px-2 py-0.5 font-data text-[10px] uppercase tracking-[0.08em] ${
+                  isBest ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
+                }`}
+              >
+                {bucket.label}
+              </span>
+              <span className="font-data text-[10px] text-muted">
+                {bucket.sessions === 0 ? '—' : `${bucket.averageMinutes} min moy.`}
+              </span>
+            </div>
+          );
+        })}
       </div>
       <p className="text-[13px] text-muted">{summary}</p>
     </div>

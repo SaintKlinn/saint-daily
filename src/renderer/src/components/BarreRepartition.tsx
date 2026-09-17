@@ -1,4 +1,5 @@
 import { formatMinutes, type BreakdownRow } from '../lib/retrospective';
+import BarreProgression from './BarreProgression';
 
 interface BarreRepartitionProps {
   rows: BreakdownRow[];
@@ -22,13 +23,11 @@ export default function BarreRepartition({ rows, emptyLabel }: BarreRepartitionP
               {formatMinutes(row.minutes)} · {row.sessions} séance{row.sessions > 1 ? 's' : ''}
             </span>
           </div>
-          {/* `bg-ink-700` (1.14:1 sur la carte ink-800) rendait le rail
-              invisible ; `bg-muted` est déjà vérifié à 4.57:1 sur ink-800
-              (theme/colors.ts) et sert déjà de couleur secondaire lisible
-              ailleurs dans l'app. */}
-          <div className="h-1.5 w-full bg-muted">
-            <div className="h-full bg-accent-bright" style={{ width: `${(row.minutes / max) * 100}%` }} />
-          </div>
+          {/* Le rail passe par BarreProgression : la piste `bg-muted`
+              qu'il y avait ici rendait bien l'étendue visible, mais
+              laissait le remplissage or à 1.10:1 sur elle — la barre qui
+              porte la donnée était indistinguable de sa piste. */}
+          <BarreProgression ratio={row.minutes / max} />
         </li>
       ))}
     </ul>

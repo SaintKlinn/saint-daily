@@ -88,7 +88,7 @@ export default function Corbeille() {
                 {typeLabel(engagement)}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-serif text-champagne">{engagement.name}</p>
+                <p className="truncate font-serif text-[19px] text-champagne">{engagement.name}</p>
                 <p className="mt-0.5 font-data text-[11px] text-muted">
                   Supprimé le {formatDeletedAt(engagement.deletedAt as string)}
                 </p>

@@ -82,7 +82,7 @@ export default function Pomodoro() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto flex w-full max-w-md flex-col gap-5"
       >
-        <h1 className="font-serif text-2xl text-champagne">Pomodoro</h1>
+        <h1 className="font-serif text-[30px] text-champagne">Pomodoro</h1>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
@@ -207,7 +207,7 @@ export default function Pomodoro() {
         <p className="font-serif text-3xl text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
-        <p className="font-data text-xs uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
+        <p className="font-data text-[11px] uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
         {/* Toujours monté (jamais démonté/remonté) : sinon son apparition
             pousserait la rangée de boutons Pause/Continuer/Arrêter/Épingler
             plus bas dans la colonne flex, un reflow perceptible pile au
@@ -220,7 +220,7 @@ export default function Pomodoro() {
           animate={showCycleComplete ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           role="status"
-          className="font-data text-xs uppercase tracking-[0.1em] text-muted"
+          className="font-data text-[11px] uppercase tracking-[0.1em] text-muted"
         >
           {showCycleComplete ? 'Cycle terminé' : ''}
         </motion.p>
@@ -306,7 +306,7 @@ export default function Pomodoro() {
                   </option>
                 ))}
             </select>
-            <p className="text-[12px] text-muted">
+            <p className="text-[13px] text-muted">
               Le temps déjà fait est enregistré sur {session.skillName} avant de basculer.
             </p>
           </div>

@@ -18,7 +18,7 @@ import EmptyState from '../components/EmptyState';
 function Section({ titre, children }: { titre: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4 border border-ink-700 bg-ink-800 p-6">
-      <h2 className="font-sans text-[15px] font-semibold text-champagne">{titre}</h2>
+      <h2 className="font-sans text-sm font-semibold text-champagne">{titre}</h2>
       {children}
     </section>
   );

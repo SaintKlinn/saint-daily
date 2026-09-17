@@ -133,7 +133,7 @@ export default function Journal() {
           {visibleRows.map((row) => (
             <article key={row.id} className="flex flex-col gap-1.5 bg-ink-800 px-[18px] py-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-serif text-[17px] text-champagne">{row.engagementName}</span>
+                <span className="font-serif text-[19px] text-champagne">{row.engagementName}</span>
                 <span className="font-data text-[11px] tabular-nums text-muted">
                   {formatDate(row.practicedAt)}
                   {row.kind === 'seance' ? ` · ${formatMinutes(row.durationMinutes)}` : ' · bilan du soir'}
@@ -141,7 +141,7 @@ export default function Journal() {
               </div>
               {row.note && <p className="whitespace-pre-wrap text-[13px] text-champagne">{row.note}</p>}
               {row.tags.length > 0 && (
-                <p className="text-[12px] text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
+                <p className="text-[13px] text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
               )}
             </article>
           ))}

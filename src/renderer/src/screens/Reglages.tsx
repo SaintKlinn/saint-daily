@@ -361,7 +361,7 @@ export default function Reglages() {
                 key={template.id}
                 className="flex items-center justify-between gap-3 border-b border-ink-700 py-[14px]"
               >
-                <p className="text-[14px] text-champagne">{template.text}</p>
+                <p className="text-sm text-champagne">{template.text}</p>
                 <Button variant="secondary" size="sm" onClick={() => handleRemoveTemplate(template.id)}>
                   Retirer
                 </Button>

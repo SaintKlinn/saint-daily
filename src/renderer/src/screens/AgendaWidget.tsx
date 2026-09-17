@@ -18,7 +18,7 @@ export default function AgendaWidget() {
       className="flex h-screen w-screen flex-col gap-2 border border-ink-700 bg-ink-900/95 px-4 py-3 [-webkit-app-region:drag]"
       style={{ borderRadius: 16 }}
     >
-      <p className="font-data text-[10px] uppercase tracking-[0.1em] text-muted">Aujourd'hui</p>
+      <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Aujourd'hui</p>
       {items.length === 0 ? (
         <p className="text-[13px] text-muted">Rien de planifié aujourd'hui.</p>
       ) : (

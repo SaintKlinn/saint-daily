@@ -393,7 +393,7 @@ export default function Calendrier() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl text-champagne">Calendrier</h1>
+          <h1 className="font-serif text-[30px] text-champagne">Calendrier</h1>
           <p className="mt-1 font-data text-[13px] text-muted">{weekRangeLabel}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -461,7 +461,7 @@ export default function Calendrier() {
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
-              <p className="font-data text-[11px] uppercase text-muted">{DAY_LABELS[i]}</p>
+              <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
               <p className="font-serif text-lg text-champagne">{day.getDate()}</p>
             </div>
           ))}

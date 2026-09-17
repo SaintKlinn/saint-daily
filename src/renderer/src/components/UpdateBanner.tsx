@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AutoUpdateState } from '../env';
+import BarreProgression from './BarreProgression';
 import Button from './Button';
 import LogoMark from './LogoMark';
 
@@ -81,12 +82,10 @@ export default function UpdateBanner() {
           <p className="mb-1.5 font-sans text-sm text-champagne">
             Téléchargement de la mise à jour… {Math.round(percent)} %
           </p>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-ink-700">
-            <div
-              className="h-full rounded-full bg-accent-bright transition-[width] duration-300"
-              style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
-            />
-          </div>
+          {/* Même rail que partout ailleurs. C'était le seul `rounded-full`
+              de l'app en dehors du rond de Toggle, dans une interface qui
+              n'a aucun angle arrondi. */}
+          <BarreProgression ratio={percent / 100} />
         </div>
       )}
       {phase === 'downloaded' && (

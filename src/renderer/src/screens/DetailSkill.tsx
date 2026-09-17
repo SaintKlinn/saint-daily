@@ -289,7 +289,7 @@ export default function DetailSkill() {
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
           <p className="relative font-data text-2xl text-champagne">{totalHours}h</p>
-          <p className="relative font-data text-[11px] uppercase tracking-[0.05em] text-muted">cumulées</p>
+          <p className="relative font-data text-[11px] uppercase tracking-[0.1em] text-muted">cumulées</p>
           <p className="relative text-center text-sm text-muted">
             Streak :{' '}
             <motion.span
