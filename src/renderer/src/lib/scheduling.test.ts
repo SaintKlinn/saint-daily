@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findNextFreeSlot, type ExistingTaskSlot } from './scheduling';
+import { findNextFreeSlot, overlappingTaskNames, type ExistingTaskSlot } from './scheduling';
 
 describe('findNextFreeSlot', () => {
   it('returns the requested slot unchanged when the day is completely free', () => {
@@ -53,5 +53,44 @@ describe('findNextFreeSlot', () => {
     ];
     const result = findNextFreeSlot(from, 30, existing, 30);
     expect(result!.scheduledAt).toBe(new Date(2026, 8, 8, 0, 20).toISOString());
+  });
+});
+
+describe('overlappingTaskNames', () => {
+  const tasks = [
+    { id: 'a', name: 'Dentiste', scheduledAt: '2026-09-10T09:00:00Z', scheduledEndsAt: '2026-09-10T10:00:00Z' },
+    { id: 'b', name: 'Courses', scheduledAt: '2026-09-10T14:00:00Z', scheduledEndsAt: '2026-09-10T15:00:00Z' },
+  ];
+
+  it('returns nothing for a free slot', () => {
+    expect(
+      overlappingTaskNames({ scheduledAt: '2026-09-10T11:00:00Z', scheduledEndsAt: '2026-09-10T12:00:00Z' }, tasks)
+    ).toEqual([]);
+  });
+
+  it('names a task the slot lands on top of', () => {
+    expect(
+      overlappingTaskNames({ scheduledAt: '2026-09-10T09:30:00Z', scheduledEndsAt: '2026-09-10T10:30:00Z' }, tasks)
+    ).toEqual(['Dentiste']);
+  });
+
+  it('treats touching edges as free, not overlapping', () => {
+    expect(
+      overlappingTaskNames({ scheduledAt: '2026-09-10T10:00:00Z', scheduledEndsAt: '2026-09-10T11:00:00Z' }, tasks)
+    ).toEqual([]);
+  });
+
+  it('names every task the slot spans', () => {
+    expect(
+      overlappingTaskNames({ scheduledAt: '2026-09-10T08:00:00Z', scheduledEndsAt: '2026-09-10T20:00:00Z' }, tasks)
+    ).toEqual(['Dentiste', 'Courses']);
+  });
+
+  it('ignores tasks with no schedule', () => {
+    expect(
+      overlappingTaskNames({ scheduledAt: '2026-09-10T09:30:00Z', scheduledEndsAt: '2026-09-10T10:30:00Z' }, [
+        { id: 'c', name: 'Skill', scheduledAt: null, scheduledEndsAt: null },
+      ])
+    ).toEqual([]);
   });
 });

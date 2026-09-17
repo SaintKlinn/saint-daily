@@ -4,7 +4,7 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
-import { findNextFreeSlot } from '../lib/scheduling';
+import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
 import {
   RECURRENCE_WINDOW_DAYS,
   detectConflicts,
@@ -69,6 +69,9 @@ export default function Calendrier() {
   const [snoozeMessage, setSnoozeMessage] = useState<string | null>(null);
   const [recurrenceMessage, setRecurrenceMessage] = useState<string | null>(null);
   const [recurrenceBusy, setRecurrenceBusy] = useState(false);
+  // Clé `jour-heure` du créneau actuellement survolé pendant un
+  // glissement : sans retour visuel, on dépose à l'aveugle.
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -127,6 +130,50 @@ export default function Calendrier() {
     const start = new Date(day);
     start.setHours(hour, 0, 0, 0);
     navigate(`/taches/nouvelle?scheduledAt=${encodeURIComponent(start.toISOString())}`);
+  }
+
+  async function handleDropOnSlot(day: Date, hour: number, taskId: string) {
+    setDropTarget(null);
+    const task = activeEngagements.find((e) => e.id === taskId);
+    if (!task?.scheduledAt || !task.scheduledEndsAt) return;
+
+    // La durée est préservée : seul l'horaire de début change, comme pour
+    // le report rapide.
+    const durationMs = new Date(task.scheduledEndsAt).getTime() - new Date(task.scheduledAt).getTime();
+    const newStart = new Date(day);
+    newStart.setHours(hour, 0, 0, 0);
+    const scheduledAt = newStart.toISOString();
+    // Déposer une tâche sur son propre créneau ne doit rien écrire.
+    if (scheduledAt === task.scheduledAt) return;
+    const scheduledEndsAt = new Date(newStart.getTime() + durationMs).toISOString();
+
+    setActionError(null);
+    const { error } = await updateEngagement(taskId, { scheduledAt, scheduledEndsAt });
+    if (error) {
+      setActionError(error);
+      return;
+    }
+
+    // Glisser une occurrence ne déplace qu'elle : `updateEngagement` ne
+    // touche qu'une ligne, et les sœurs de la série gardent leur créneau.
+    const clashes = overlappingTaskNames(
+      { scheduledAt, scheduledEndsAt },
+      activeEngagements.filter((e) => e.id !== taskId)
+    );
+    const when = newStart.toLocaleString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    // Un chevauchement avertit sans jamais interdire, comme le fait déjà
+    // la détection de conflits de la récurrence.
+    setSnoozeMessage(
+      clashes.length > 0
+        ? `Déplacé au ${when}, en conflit avec ${clashes.join(', ')}.`
+        : `Déplacé au ${when}.`
+    );
   }
 
   async function handleTogglePracticeInCalendar(checked: boolean) {
@@ -399,7 +446,18 @@ export default function Calendrier() {
                     day: 'numeric',
                     month: 'long',
                   })} à ${String(h).padStart(2, '0')}:00`}
-                  className={`h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50 ${FOCUS_RING} focus-visible:relative focus-visible:z-20`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    setDropTarget(`${dayIndex}-${h}`);
+                  }}
+                  onDragLeave={() => setDropTarget((current) => (current === `${dayIndex}-${h}` ? null : current))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const taskId = e.dataTransfer.getData('text/plain');
+                    if (taskId) void handleDropOnSlot(day, h, taskId);
+                  }}
+                  className={`h-16 cursor-pointer border-b border-ink-800 hover:bg-ink-800/50 ${FOCUS_RING} focus-visible:relative focus-visible:z-20 ${dropTarget === `${dayIndex}-${h}` ? 'bg-accent-bright/20' : ''}`}
                 />
               ))}
               {tasksByDay[dayIndex].map((task) => {
@@ -412,6 +470,11 @@ export default function Calendrier() {
                   <button
                     key={task.id}
                     type="button"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', task.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
                     onClick={() => setPopoverTask(task)}
                     aria-label={priorityColor ? `${task.name} — priorité ${PRIORITY_LABELS[task.priority]}` : undefined}
                     className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''}`}
