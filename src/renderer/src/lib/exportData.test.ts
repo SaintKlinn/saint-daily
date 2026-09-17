@@ -28,6 +28,7 @@ const bundle: ExportBundle = {
           durationMinutes: 30,
           note: 'Bonne séance, gammes ; puis "Blackbird"',
           mood: 'bien',
+          tags: ['technique', 'gammes'],
           practicedAt: '2026-09-02T09:00:00.000Z',
           createdAt: '2026-09-02T09:00:00.000Z',
         },
@@ -37,6 +38,7 @@ const bundle: ExportBundle = {
           durationMinutes: 0,
           note: null,
           mood: null,
+          tags: [],
           practicedAt: '2026-09-01T09:00:00.000Z',
           createdAt: '2026-09-01T09:00:00.000Z',
         },
@@ -69,7 +71,7 @@ describe('toCsv', () => {
 
   it('writes one row per entry, oldest first, under a header', () => {
     const lines = toCsv(bundle).split('\r\n');
-    expect(lines[0]).toBe(`${BOM}Date;Engagement;Tags;Durée (min);Note;Humeur`);
+    expect(lines[0]).toBe(`${BOM}Date;Engagement;Tags;Durée (min);Note;Humeur;Tags de la séance`);
     expect(lines).toHaveLength(3);
     expect(lines[1]).toContain('2026-09-01T09:00:00.000Z');
     expect(lines[2]).toContain('2026-09-02T09:00:00.000Z');
@@ -94,13 +96,26 @@ describe('toCsv', () => {
   });
 
   it('writes the French mood label in the Humeur column when a mood was chosen', () => {
+    // Pas de split(';') naïf ici : la note de cette ligne contient elle-même
+    // un `;` entre guillemets, ce qui décale des index de cellules obtenus
+    // par un simple split. `toContain` reste correct sans dépendre du
+    // nombre de guillemets internes. La colonne Tags de la séance qui suit
+    // est elle-même quotée : elle contient une virgule, et `csvCell` quote
+    // sur virgule autant que sur point-virgule.
     const line = toCsv(bundle).split('\r\n')[2];
-    expect(line.endsWith(';Bien')).toBe(true);
+    expect(line).toContain(';Bien;"technique, gammes"');
+  });
+
+  it('writes the per-entry tags in their own column, distinct from the engagement Tags column', () => {
+    const lines = toCsv(bundle).split('\r\n');
+    expect(lines[2]).toContain('"Musique, Perso"'); // colonne Tags (engagement), inchangée
+    expect(lines[2].endsWith(';"technique, gammes"')).toBe(true); // nouvelle colonne Tags de la séance
+    expect(lines[1].endsWith(';')).toBe(true); // entrée sans tags -> dernière colonne vide
   });
 
   it('produces just the header when there is nothing to export', () => {
     const empty: ExportBundle = { exportedAt: bundle.exportedAt, engagements: [] };
-    expect(toCsv(empty)).toBe(BOM + 'Date;Engagement;Tags;Durée (min);Note;Humeur');
+    expect(toCsv(empty)).toBe(BOM + 'Date;Engagement;Tags;Durée (min);Note;Humeur;Tags de la séance');
   });
 
   // `localeCompare` réordonnait ces deux lignes à l'envers : les règles
@@ -113,8 +128,8 @@ describe('toCsv', () => {
         {
           ...bundle.engagements[0],
           entries: [
-            { id: 'p3', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, practicedAt: '2026-09-01T09:00:00.5+00:00', createdAt: '2026-09-01T09:00:00.5+00:00' },
-            { id: 'p4', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, practicedAt: '2026-09-01T09:00:00+00:00', createdAt: '2026-09-01T09:00:00+00:00' },
+            { id: 'p3', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, tags: [], practicedAt: '2026-09-01T09:00:00.5+00:00', createdAt: '2026-09-01T09:00:00.5+00:00' },
+            { id: 'p4', engagementId: 'e1', durationMinutes: 5, note: null, mood: null, tags: [], practicedAt: '2026-09-01T09:00:00+00:00', createdAt: '2026-09-01T09:00:00+00:00' },
           ],
         },
       ],

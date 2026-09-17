@@ -17,6 +17,7 @@ export interface ExportEntry {
   durationMinutes: number;
   note: string | null;
   mood: Mood | null;
+  tags: string[];
   practicedAt: string;
   createdAt: string;
 }
@@ -70,6 +71,8 @@ interface RawEntry {
   // appliquée à la base live, donc la propriété peut être absente de la
   // ligne — même raison que dans `usePracticeEntries.fromRow`.
   mood?: Mood | null;
+  // Même raison que `mood` ci-dessus, pour la même migration non appliquée.
+  tags?: string[] | null;
   practiced_at: string;
   created_at: string;
 }
@@ -136,6 +139,7 @@ export async function fetchExportBundle(
       durationMinutes: row.duration_minutes,
       note: row.note,
       mood: row.mood ?? null,
+      tags: row.tags ?? [],
       practicedAt: row.practiced_at,
       createdAt: row.created_at,
     });
@@ -185,7 +189,11 @@ export function toJson(bundle: ExportBundle): string {
   return JSON.stringify(bundle, null, 2);
 }
 
-const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note', 'Humeur'];
+// « Tags » porte les tags de l'engagement (voir ExportEngagement.tags) ;
+// « Tags de la séance » porte ceux propres à cette entrée précise
+// (ExportEntry.tags) — deux ensembles distincts qui se chevauchent
+// rarement, d'où une colonne séparée plutôt qu'un cumul dans la première.
+const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note', 'Humeur', 'Tags de la séance'];
 
 // Mêmes libellés que le sélecteur de NouvelleEntree et que le journal de
 // DetailSkill — l'un des trois endroits où l'humeur choisie doit apparaître
@@ -232,6 +240,7 @@ export function toCsv(bundle: ExportBundle): string {
         String(entry.durationMinutes),
         entry.note ?? '',
         entry.mood ? MOOD_LABELS[entry.mood] : '',
+        entry.tags.join(', '),
       ]);
     }
   }
