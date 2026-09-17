@@ -23,6 +23,7 @@ interface NextEngagementRow {
   name: string;
   scheduled_at: string;
   deleted_at?: string | null;
+  skipped_at?: string | null;
 }
 
 function formatLabel(row: NextEngagementRow): string {
@@ -60,7 +61,13 @@ export function useTrayNextEngagement(): void {
         .limit(CANDIDATE_LIMIT);
       if (cancelled || error) return;
 
-      const liveRows = ((data ?? []) as NextEngagementRow[]).filter((row) => !row.deleted_at);
+      // Une occurrence passée ne doit plus être annoncée : l'infobulle du
+      // tray est la surface la plus insistante de l'app, et continuer d'y
+      // nommer ce que l'utilisateur vient d'écarter viderait le geste de
+      // son sens.
+      const liveRows = ((data ?? []) as NextEngagementRow[]).filter(
+        (row) => !row.deleted_at && !row.skipped_at
+      );
       if (liveRows.length === 0) {
         window.api?.setTrayNextEngagement?.(null);
         return;

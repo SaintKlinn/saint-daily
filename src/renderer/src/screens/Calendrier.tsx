@@ -76,6 +76,10 @@ export default function Calendrier() {
   // Clé `jour-heure` du créneau actuellement survolé pendant un
   // glissement : sans retour visuel, on dépose à l'aveugle.
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  // Vrai pendant toute la durée d'un glissement de bloc : sert à laisser
+  // les blocs transparents aux événements de glissement (voir leur
+  // `className`).
+  const [dragging, setDragging] = useState(false);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const weekDaysList = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -152,17 +156,39 @@ export default function Calendrier() {
     const scheduledEndsAt = new Date(newStart.getTime() + durationMs).toISOString();
 
     setActionError(null);
+
+    // `planMissingOccurrences` s'ancre sur l'occurrence la plus tardive
+    // d'une série. Déposer celle-ci au-delà de la fenêtre de génération
+    // ferait renvoyer une liste vide à `generateOccurrences` : la série
+    // cesserait silencieusement de produire des occurrences jusqu'à ce que
+    // le temps rattrape. On refuse plutôt que de casser sans le dire.
+    if (task.recurrenceSeriesId) {
+      const windowEnd = addDays(new Date(), RECURRENCE_WINDOW_DAYS);
+      if (newStart.getTime() > windowEnd.getTime()) {
+        setSnoozeMessage(null);
+        setActionError(
+          `Trop loin pour une occurrence récurrente : au-delà de ${RECURRENCE_WINDOW_DAYS} jours, la série cesserait de générer ses occurrences suivantes. Modifie plutôt sa récurrence.`
+        );
+        return;
+      }
+    }
+
     const { error } = await updateEngagement(taskId, { scheduledAt, scheduledEndsAt });
     if (error) {
+      // Sans cet effacement, un « Déplacé au lundi… » vert resterait à côté
+      // de l'erreur rouge qui vient de s'afficher.
+      setSnoozeMessage(null);
       setActionError(error);
       return;
     }
 
     // Glisser une occurrence ne déplace qu'elle : `updateEngagement` ne
     // touche qu'une ligne, et les sœurs de la série gardent leur créneau.
+    // Une occurrence passée est exclue des conflits : elle n'occupe plus
+    // son créneau du point de vue de l'utilisateur.
     const clashes = overlappingTaskNames(
       { scheduledAt, scheduledEndsAt },
-      activeEngagements.filter((e) => e.id !== taskId)
+      activeEngagements.filter((e) => e.id !== taskId && !e.skippedAt)
     );
     const when = newStart.toLocaleString('fr-FR', {
       weekday: 'long',
@@ -352,8 +378,14 @@ export default function Calendrier() {
     setActionError(null);
     setSkipping(true);
     const { error } = await setSkipped(task.id, !task.skippedAt);
-    if (error) setActionError(error);
     setSkipping(false);
+    // Retour tôt sur échec, comme la suppression juste au-dessus : sinon le
+    // popover disparaît et l'erreur s'affiche en haut de l'écran, détachée
+    // du geste qui l'a provoquée.
+    if (error) {
+      setActionError(error);
+      return;
+    }
     setPopoverTask(null);
   }
 
@@ -487,12 +519,27 @@ export default function Calendrier() {
                     onDragStart={(e) => {
                       e.dataTransfer.setData('text/plain', task.id);
                       e.dataTransfer.effectAllowed = 'move';
+                      setDragging(true);
+                    }}
+                    // Couvre aussi l'abandon (Échap, dépôt hors grille) et
+                    // le dépôt d'un objet étranger, deux cas où aucun
+                    // `drop` utile ne survient et où la cible resterait
+                    // sinon allumée indéfiniment.
+                    onDragEnd={() => {
+                      setDragging(false);
+                      setDropTarget(null);
                     }}
                     onClick={() => setPopoverTask(task)}
                     aria-label={`${task.name}${task.skippedAt ? ' — passée' : ''}${
                       priorityColor ? ` — priorité ${PRIORITY_LABELS[task.priority]}` : ''
                     }`}
-                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''} ${task.skippedAt ? 'opacity-60' : ''}`}
+                    // `pointer-events-none` pendant un glissement : les blocs
+                    // sont positionnés en absolu AU-DESSUS des cellules
+                    // d'heure, en frères et non en enfants. Sans ça, chaque
+                    // pixel couvert par un bloc est un non-cible, et déposer
+                    // sur un créneau déjà occupé est silencieusement refusé —
+                    // alors que la règle est d'avertir sans jamais interdire.
+                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''} ${task.skippedAt ? 'opacity-60' : ''} ${dragging ? 'pointer-events-none' : ''}`}
                     style={{
                       top: `${topPercent}%`,
                       height: `${heightPercent}%`,
@@ -512,7 +559,10 @@ export default function Calendrier() {
                 return (
                   <div
                     key={entry.id}
-                    className="absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70"
+                    // Même raison que les blocs de tâches : activer
+                    // l'historique de pratique ajouterait sinon autant de
+                    // zones mortes invisibles sur la grille.
+                    className={`absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70 ${dragging ? 'pointer-events-none' : ''}`}
                     style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
                   >
                     <p className="truncate font-data text-[10px] text-muted">{entry.skillName}</p>

@@ -11,6 +11,7 @@ interface AgendaRow {
   name: string;
   scheduled_at: string;
   deleted_at?: string | null;
+  skipped_at?: string | null;
 }
 
 /**
@@ -39,7 +40,10 @@ export function useAgendaWidgetFeed(): void {
         .lt('scheduled_at', endOfDay(now).toISOString())
         .order('scheduled_at', { ascending: true });
       if (cancelled || error) return;
-      const rows = ((data ?? []) as AgendaRow[]).filter((row) => !row.deleted_at);
+      // Une occurrence passée disparaît aussi du widget de bureau : la
+      // laisser listée comme « pas faite » serait exactement le harcèlement
+      // que le geste sert à arrêter.
+      const rows = ((data ?? []) as AgendaRow[]).filter((row) => !row.deleted_at && !row.skipped_at);
       if (rows.length === 0) {
         window.api?.agenda?.reportState?.([]);
         return;
