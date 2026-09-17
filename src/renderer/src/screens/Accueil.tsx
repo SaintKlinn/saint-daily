@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
+import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
@@ -13,10 +14,14 @@ import Button, { buttonClassName } from '../components/Button';
 import { CheckIcon, PlusIcon } from '../components/icons';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import { colors } from '../theme/colors';
-import { shouldShowWeeklyReview } from '../lib/rituels';
+import { shouldShowEveningPrompt, shouldShowMorningGreeting, shouldShowWeeklyReview, toLocalDateKey } from '../lib/rituels';
+import { startOfDay, endOfDay } from '../lib/calendarLayout';
 
 const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
+
+const FOCUS_RING =
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 // En dehors du composant, au niveau du module — persiste pour toute la
 // session de l'app, pas seulement le montage courant du composant (une
@@ -60,6 +65,16 @@ export default function Accueil() {
   // place, la persistance côté serveur prend le relais entre les sessions.
   const [weeklyReviewDismissedThisMount, setWeeklyReviewDismissedThisMount] = useState(false);
 
+  const { reflections, saveToday } = useDailyReflections();
+  const [eveningText, setEveningText] = useState('');
+  const [eveningError, setEveningError] = useState<string | null>(null);
+  const [eveningSaving, setEveningSaving] = useState(false);
+  // Masquage local immédiat, en plus de la persistance : avant que la
+  // migration ne soit appliquée l'écriture échoue, et un geste de rejet
+  // qui ne produit aucun effet visible est pire que pas de bandeau du
+  // tout. Même correctif que celui appliqué au bandeau hebdomadaire.
+  const [morningDismissedThisMount, setMorningDismissedThisMount] = useState(false);
+
   const tasks = useMemo(
     () =>
       activeEngagements
@@ -67,6 +82,36 @@ export default function Accueil() {
         .sort((a, b) => new Date(a.scheduledAt as string).getTime() - new Date(b.scheduledAt as string).getTime()),
     [activeEngagements, entriesBySkill]
   );
+
+  const tasksToday = useMemo(() => {
+    const dayStart = startOfDay(new Date());
+    const dayEnd = endOfDay(new Date());
+    return tasks.filter((task) => {
+      const scheduled = new Date(task.scheduledAt as string);
+      return scheduled >= dayStart && scheduled < dayEnd;
+    });
+  }, [tasks]);
+
+  const hasReflectionToday = reflections.some((reflection) => reflection.date === toLocalDateKey());
+  const showMorning =
+    !morningDismissedThisMount && !!settings && shouldShowMorningGreeting(settings.morningGreetingDismissedDate);
+  const showEvening = shouldShowEveningPrompt(hasReflectionToday);
+
+  async function handleDismissMorning() {
+    setMorningDismissedThisMount(true);
+    await updateSettings({ morningGreetingDismissedDate: toLocalDateKey() });
+  }
+
+  async function handleSaveEvening() {
+    const text = eveningText.trim();
+    if (!text) return;
+    setEveningError(null);
+    setEveningSaving(true);
+    const { error } = await saveToday(text);
+    if (error) setEveningError(error);
+    else setEveningText('');
+    setEveningSaving(false);
+  }
 
   async function handleCompleteTask(taskId: string) {
     const { error } = await logEntry({ engagementId: taskId, durationMinutes: 0, note: null });
@@ -144,6 +189,57 @@ export default function Accueil() {
 
   return (
     <div className="flex flex-col gap-9">
+      {showMorning && (
+        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
+          <div>
+            <p className="text-[15px] text-champagne">Bonjour — voici ta journée</p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              {tasksToday.length} tâche{tasksToday.length > 1 ? 's' : ''} planifiée
+              {tasksToday.length > 1 ? 's' : ''} aujourd'hui · {dueSkills.length} rappel
+              {dueSkills.length > 1 ? 's' : ''} dû{dueSkills.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={handleDismissMorning}>
+            Merci
+          </Button>
+        </div>
+      )}
+
+      {showEvening && (
+        <div className="flex flex-col gap-2 border border-ink-700 bg-ink-800 px-5 py-4">
+          <div>
+            <p className="text-[15px] text-champagne">Un mot sur ta journée ?</p>
+            <p className="mt-0.5 text-[13px] text-muted">Une ligne suffit — ce n'est pas un journal.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={eveningText}
+              onChange={(e) => setEveningText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleSaveEvening();
+              }}
+              placeholder="Journée dense mais satisfaisante."
+              aria-label="Bilan de la journée"
+              maxLength={280}
+              className={`min-w-0 flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-[13px] text-champagne placeholder:text-muted ${FOCUS_RING}`}
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSaveEvening}
+              disabled={eveningSaving || !eveningText.trim()}
+            >
+              {eveningSaving ? 'Enregistrement…' : 'Enregistrer'}
+            </Button>
+          </div>
+          {eveningError && (
+            <p role="alert" className="text-sm text-danger">
+              {eveningError}
+            </p>
+          )}
+        </div>
+      )}
+
       {settings && !weeklyReviewDismissedThisMount && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
         <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
           <div>
