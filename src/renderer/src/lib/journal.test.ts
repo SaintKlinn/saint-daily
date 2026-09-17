@@ -5,12 +5,13 @@ const entries = [
   { id: '1', engagementName: 'Guitare', note: 'Travaillé les Barrés', tags: ['technique'], practicedAt: '2026-09-03T09:00:00Z' },
   { id: '2', engagementName: 'Cuir', note: null, tags: ['Atelier'], practicedAt: '2026-09-05T09:00:00Z' },
   { id: '3', engagementName: 'Guitare', note: 'Séance courte', tags: [], practicedAt: '2026-09-04T09:00:00Z' },
+  { id: '4', engagementName: 'Echecs', note: 'Partie rejouee sans erreur', tags: ['decouverte'], practicedAt: '2026-09-06T09:00:00Z' },
 ];
 
 describe('filterJournalEntries', () => {
   it('returns everything for an empty search', () => {
-    expect(filterJournalEntries(entries, '')).toHaveLength(3);
-    expect(filterJournalEntries(entries, '   ')).toHaveLength(3);
+    expect(filterJournalEntries(entries, '')).toHaveLength(4);
+    expect(filterJournalEntries(entries, '   ')).toHaveLength(4);
   });
 
   it('matches a note case-insensitively', () => {
@@ -32,5 +33,16 @@ describe('filterJournalEntries', () => {
 
   it('returns nothing when nothing matches', () => {
     expect(filterJournalEntries(entries, 'zzz')).toEqual([]);
+  });
+
+  it('matches accented text with an unaccented query', () => {
+    expect(filterJournalEntries(entries, 'seance').map((e) => e.id)).toEqual(['3']);
+    expect(filterJournalEntries(entries, 'barres').map((e) => e.id)).toEqual(['1']);
+  });
+
+  it('matches unaccented text with an accented query', () => {
+    expect(filterJournalEntries(entries, 'Échecs').map((e) => e.id)).toEqual(['4']);
+    expect(filterJournalEntries(entries, 'rejouée').map((e) => e.id)).toEqual(['4']);
+    expect(filterJournalEntries(entries, 'découverte').map((e) => e.id)).toEqual(['4']);
   });
 });

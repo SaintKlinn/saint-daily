@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntriesForUser } from '../hooks/usePracticeEntries';
 import { filterJournalEntries, type JournalEntry } from '../lib/journal';
@@ -9,6 +9,12 @@ import { SearchIcon } from '../components/icons';
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
+// Au-delà de ce seuil, on tronque le rendu plutôt que de reconstruire des
+// milliers de nœuds DOM à chaque frappe. Pas de virtualisation ici :
+// c'est un écran qu'on consulte, pas un qu'on habite, et 200 lignes
+// couvrent déjà largement un scan visuel.
+const MAX_VISIBLE_ROWS = 200;
+
 interface Row extends JournalEntry {
   durationMinutes: number;
 }
@@ -18,9 +24,19 @@ function formatDate(iso: string): string {
 }
 
 export default function Journal() {
-  const { engagements, deletedEngagements, error: engagementsError } = useEngagements();
-  const { entries, loading, error: entriesError } = useAllPracticeEntriesForUser();
+  const {
+    engagements,
+    deletedEngagements,
+    loading: engagementsLoading,
+    error: engagementsError,
+  } = useEngagements();
+  const { entries, loading: entriesLoading, error: entriesError } = useAllPracticeEntriesForUser();
+  const loading = engagementsLoading || entriesLoading;
   const [search, setSearch] = useState('');
+  // Différé pour que la frappe reste fluide sur un long historique : la
+  // reconstruction de la liste filtrée n'a pas besoin d'être synchrone
+  // avec chaque touche.
+  const deferredSearch = useDeferredValue(search);
 
   // Les engagements en corbeille sont inclus dans la table de noms : leur
   // historique reste de l'historique, et une ligne sans nom serait pire
@@ -44,7 +60,9 @@ export default function Journal() {
     [entries, namesById]
   );
 
-  const visible = useMemo(() => filterJournalEntries(rows, search), [rows, search]);
+  const visible = useMemo(() => filterJournalEntries(rows, deferredSearch), [rows, deferredSearch]);
+  const visibleRows = visible.slice(0, MAX_VISIBLE_ROWS);
+  const hiddenCount = visible.length - visibleRows.length;
 
   return (
     <div className="flex flex-col gap-7">
@@ -82,7 +100,7 @@ export default function Journal() {
         <EmptyState>Aucun résultat pour « {search.trim()} ».</EmptyState>
       ) : (
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-          {visible.map((row) => (
+          {visibleRows.map((row) => (
             <article key={row.id} className="flex flex-col gap-1.5 bg-ink-800 px-[18px] py-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-serif text-[17px] text-champagne">{row.engagementName}</span>
@@ -96,6 +114,12 @@ export default function Journal() {
               )}
             </article>
           ))}
+          {hiddenCount > 0 && (
+            <p className="bg-ink-800 px-[18px] py-3 font-data text-[11px] text-muted">
+              + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} résultat{hiddenCount > 1 ? 's' : ''} — affine ta
+              recherche pour les voir.
+            </p>
+          )}
         </div>
       )}
     </div>
