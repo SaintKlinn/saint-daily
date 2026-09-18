@@ -53,10 +53,24 @@ describe('échelle typographique', () => {
     }
   });
 
-  it('donne une graisse à chaque palier', () => {
-    for (const [role, [, meta]] of Object.entries(fontSize)) {
-      expect(['400', '500', '600'], role).toContain(meta.fontWeight);
-    }
+  it('donne à chaque palier la graisse que la spec lui attribue', () => {
+    // Épinglé rôle par rôle, et non « l'une des trois valeurs permises » :
+    // cette seconde version laissait passer un échange de graisses entre
+    // rôles — `heros` monté à 500, `titre` à 600 — qui aurait satisfait le
+    // test tout en contredisant la spec (§1 et « Les graisses »).
+    //
+    // Les raisons de ces attributions, pour qui serait tenté d'en changer :
+    // `libelle` est en 600 parce que des capitales mono à 11 px s'effacent
+    // sans corps ; `heros` reste en 400 parce qu'à 40 px la graisse
+    // n'ajoute rien et alourdit ; `corps` est en 400 pour qu'un
+    // `font-semibold` explicite dans le balisage le distingue — c'est ce
+    // qui porte les titres de section de carte.
+    expect(fontSize.libelle[1].fontWeight).toBe('600');
+    expect(fontSize.secondaire[1].fontWeight).toBe('400');
+    expect(fontSize.corps[1].fontWeight).toBe('400');
+    expect(fontSize.titre[1].fontWeight).toBe('500');
+    expect(fontSize['titre-ecran'][1].fontWeight).toBe('500');
+    expect(fontSize.heros[1].fontWeight).toBe('400');
   });
 });
 
