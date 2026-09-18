@@ -515,12 +515,31 @@ sed -i 's/overflow-y-auto px-14 py-12/overflow-y-auto px-12 py-12/' src/renderer
 
 - [ ] **Step 3 : Vérifier qu'il ne reste aucun demi-cran ni arbitraire**
 
+Le motif de préfixes doit être **complet** et couvrir la marge négative (`-ml-[…]`), sans quoi la vérification a un angle mort. Utiliser cette liste partout, telle quelle :
+
 ```
-grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\|space-x\|space-y\)-[0-9]*\.5\b" src/renderer/src/screens src/renderer/src/components
-grep -rn "\b\(gap\|p\|px\|py\)-\[" src/renderer/src/screens src/renderer/src/components
+P='-\?\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mx\|my\|mt\|mb\|ml\|mr\|space-x\|space-y\)'
+grep -rn "\b$P-[0-9]*\.5\b" src/renderer/src/screens src/renderer/src/components
+grep -rn "\b$P-\[[^]]*\]" src/renderer/src/screens src/renderer/src/components
 ```
 
-Attendu : aucun résultat pour les deux.
+Attendu : aucun résultat pour le premier ; pour le second, **uniquement les deux marges négatives de case à cocher** documentées à l'étape 3 bis.
+
+**Pourquoi ce motif et pas un plus court.** La première version de cette étape s'écrivait `\b\(gap\|p\|px\|py\)-\[`, qui exclut structurellement `pl`, `pr`, `pt`, `pb`, `ml`, `mr`, `mt`, `mb` — et l'énumération de l'étape 4 ne matche que des suffixes numériques, jamais la syntaxe à crochets. Trois valeurs arbitraires ont donc survécu à la tâche 4 sans qu'aucun contrôle ne bronche : `pl-[14px]`, `-ml-[21px]` et `-ml-[27px]`. C'est le troisième échec du même défaut de méthode sur ce chantier — un contrôle qui énumère un sous-ensemble de ce qu'il devrait couvrir. Les deux `grep` ci-dessus couvrent désormais **tous** les préfixes d'espacement et **les deux** syntaxes.
+
+- [ ] **Step 3 bis : Les deux marges négatives de case à cocher**
+
+`MilestoneChecklist.tsx` et la liste de jalons de `DetailSkill.tsx` décalent leur case à cocher par marge négative pour qu'elle chevauche le trait vertical du `<ul>`. Cette valeur n'est pas un rythme : c'est une **géométrie dérivée**, qui vaut
+
+> −(rembourrage du `<ul>` + moitié de la largeur de la case)
+
+Avec `pl-4` (16 px) et des cases de 16 et 18 px, cela donne `-ml-[24px]` et `-ml-[25px]`. Elles sont donc **une exception déclarée**, au même titre que le `gap-10` du rail, et doivent être recalculées dès que l'un des deux termes change.
+
+C'est exactement ce qui a été manqué : convertir le `<ul>` de `DetailSkill` de `pl-[18px]` à `pl-4` sans toucher à son `-ml-[27px]` a décalé la case de 2 px à gauche du trait. Vérifier que les deux couples sont cohérents :
+
+```
+grep -n "pl-4\|-ml-\[" src/renderer/src/components/MilestoneChecklist.tsx src/renderer/src/screens/DetailSkill.tsx
+```
 
 - [ ] **Step 4 : Vérifier qu'il ne reste aucun cran hors échelle**
 

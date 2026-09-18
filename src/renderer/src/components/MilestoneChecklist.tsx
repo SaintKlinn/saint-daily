@@ -26,11 +26,19 @@ export default function MilestoneChecklist({
         </p>
       )}
       {milestones.length > 0 && (
-        <ul className="flex flex-col gap-0 border-l border-ink-700 pl-[14px]">
+        <ul className="flex flex-col gap-0 border-l border-ink-700 pl-4">
           {milestones.map((m) => (
             <li key={m.id} className="flex items-center py-2">
               <label className="flex cursor-pointer items-center gap-2">
-                <span className="relative -ml-[21px] flex h-[16px] w-[16px] shrink-0 items-center justify-center">
+                {/* Même exception et même formule que la liste de jalons de
+                    DetailSkill : −(rembourrage du <ul> + moitié de la case),
+                    soit −(16 + 8) = −24, ce qui centre la case sur le trait
+                    vertical. Ce n'est pas un rythme mais une géométrie
+                    dérivée, à recalculer si l'un des deux termes change.
+                    L'ancien couple 14/−21 laissait la case 1 px à droite du
+                    trait ; les deux listes de jalons de l'app sont désormais
+                    alignées de la même façon. */}
+                <span className="relative -ml-[24px] flex h-[16px] w-[16px] shrink-0 items-center justify-center">
                   <input
                     type="checkbox"
                     checked={!!m.completedAt}

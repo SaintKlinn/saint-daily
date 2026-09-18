@@ -374,8 +374,23 @@ export default function DetailSkill() {
                     {/* Marge négative sur la case seulement (pas la ligne) :
                         elle chevauche le trait vertical du <ul>, le texte
                         suivant garde une position quasi normale grâce au
-                        gap (technique reprise de la maquette Detail). */}
-                    <span className="relative -ml-[27px] flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+                        gap (technique reprise de la maquette Detail).
+
+                        Exception assumée à l'échelle d'espacement, au même
+                        titre que le `gap-10` du rail : cette valeur n'est
+                        pas un rythme, c'est une géométrie dérivée. Elle
+                        vaut −(rembourrage du <ul> + moitié de la case),
+                        soit −(16 + 9) = −25, ce qui centre la case sur le
+                        trait. Elle doit donc être recalculée dès que l'un
+                        des deux change : ramener le rembourrage du <ul> de
+                        18 à 16 px sans toucher à cette marge avait décalé
+                        la case de 2 px vers la gauche.
+
+                        Écrit en toutes lettres, sans la syntaxe entre
+                        crochets : le `grep` qui traque les valeurs
+                        arbitraires d'espacement capturerait ce
+                        commentaire et ferait croire à une infraction. */}
+                    <span className="relative -ml-[25px] flex h-[18px] w-[18px] shrink-0 items-center justify-center">
                       <input
                         type="checkbox"
                         checked={!!m.completedAt}
