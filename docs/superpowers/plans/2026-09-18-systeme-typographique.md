@@ -685,7 +685,15 @@ grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\)-
 grep -rn "\b\(gap\|p\|px\|py\)-\[" src/renderer/src/screens src/renderer/src/components
 ```
 
-Attendu : **les trois ne renvoient rien.**
+Et celui-ci, **qui est le plus important des quatre** — il liste toute classe de taille de texte n'appartenant pas aux six rôles, quelle que soit sa forme :
+
+```
+grep -rn "text-\(xs\|sm\|base\|lg\|[0-9]*xl\)\b" src/renderer/src/screens src/renderer/src/components
+```
+
+**Pourquoi celui-là compte le plus.** L'inventaire d'origine de ce plan énumérait les tailles qu'il *savait* chercher — `text-xs`, `text-sm`, `text-lg`, `text-xl`, `text-2xl` — et a donc raté `text-3xl`, présent une seule fois, sur le minuteur de l'écran Pomodoro. Comme la tâche 1 supprime l'échelle Tailwind par défaut, cette classe orpheline ne rendait plus rien du tout : le minuteur s'affichait à la taille héritée, sans qu'aucun test ni aucun compteur ne bronche. Ce `grep`-là énumère par *famille* et non par valeur connue, donc il attrape aussi ce que l'inventaire n'avait pas imaginé.
+
+Attendu : **les quatre ne renvoient rien.**
 
 Ne pas se laisser induire en erreur par les dimensions de la heatmap posées à l'étape 2 : `h-[13px]`, `w-[13px]` et `leading-[13px]` sont des valeurs arbitraires, mais aucune ne contient la chaîne `text-[`, donc le premier motif ne les capture pas. Elles sont par ailleurs légitimes — ce sont des dimensions géométriques, pas des tailles de texte, et la contrainte globale ne porte que sur ces dernières.
 

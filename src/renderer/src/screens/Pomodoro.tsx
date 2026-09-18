@@ -204,7 +204,12 @@ export default function Pomodoro() {
         >
           <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
         </motion.div>
-        <p className="font-serif text-3xl text-champagne">
+        {/* `text-heros` et non `titre-ecran` : c'est le minuteur, donc le
+            point focal de l'écran, et la spec lui attribue nommément ce
+            rôle. Il rejoint ainsi le minuteur du mode focus, qui est déjà
+            en `heros` — les deux afficheurs de compte à rebours de l'app
+            n'ont aucune raison d'être à deux tailles différentes. */}
+        <p className="font-serif text-heros text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
