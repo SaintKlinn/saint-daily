@@ -707,7 +707,9 @@ Puis, pour les cases et la légende, `h-[11px] w-[11px]` → `h-[13px] w-[13px]`
 
 - [ ] **Step 3 : Vérifier que la heatmap défile toujours**
 
-53 colonnes de 13 px plus 3 px d'écart font environ 870 px au lieu de 740. Le conteneur est déjà en `overflow-x-auto` — **le confirmer plutôt que le supposer** : ouvrir le Bilan, mesurer `scrollWidth` contre `clientWidth` du conteneur de la grille, et vérifier que la page elle-même ne défile pas horizontalement.
+La grille s'élargit deux fois. Les cases passent de 11 à 13 px à l'étape précédente, et la tâche 4 a déjà porté leur écart de `gap-[3px]` à `gap-1` (4 px), cette valeur arbitraire n'ayant pas sa place dans l'échelle. Le calcul : **53 × 13 + 52 × 4 = 897 px**, contre 53 × 11 + 52 × 3 = 739 px à l'origine. La hauteur suit : 7 × 13 + 6 × 4 = 115 px au lieu de 95.
+
+Le conteneur est déjà en `overflow-x-auto` — **le confirmer plutôt que le supposer** : ouvrir le Bilan, mesurer `scrollWidth` contre `clientWidth` du conteneur de la grille, et vérifier que la page elle-même ne défile pas horizontalement. C'est un gain de 158 px, soit plus de 20 % ; si un débordement devait apparaître quelque part, c'est ici.
 
 - [ ] **Step 4 : Documenter les deux exceptions**
 
