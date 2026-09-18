@@ -359,7 +359,7 @@ export default function Reglages() {
             {templates.map((template) => (
               <li
                 key={template.id}
-                className="flex items-center justify-between gap-3 border-b border-ink-700 py-4"
+                className="flex items-center justify-between gap-2 border-b border-ink-700 py-4"
               >
                 <p className="text-corps text-champagne">{template.text}</p>
                 <Button variant="secondary" size="sm" onClick={() => handleRemoveTemplate(template.id)}>

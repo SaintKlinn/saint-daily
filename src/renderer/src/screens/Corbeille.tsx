@@ -48,7 +48,7 @@ export default function Corbeille() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Link
         to="/reglages"
         className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
@@ -83,7 +83,7 @@ export default function Corbeille() {
       ) : (
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
           {deletedEngagements.map((engagement) => (
-            <div key={engagement.id} className="flex items-center gap-4 bg-ink-800 px-4 py-4">
+            <div key={engagement.id} className="flex items-center gap-2 bg-ink-800 px-4 py-4">
               <span className="w-14 shrink-0 font-data text-libelle uppercase tracking-[0.08em] text-muted">
                 {typeLabel(engagement)}
               </span>

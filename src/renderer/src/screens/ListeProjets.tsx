@@ -28,7 +28,7 @@ export default function ListeProjets() {
           <Link
             key={project.id}
             to={`/projets/${project.id}`}
-            className="flex items-center gap-6 bg-ink-800 px-6 py-6 transition-colors duration-200 hover:bg-ink-700"
+            className="flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700"
           >
             <div className="flex-1">
               <span className="font-serif text-titre text-champagne">{project.name}</span>

@@ -266,7 +266,7 @@ export default function Pomodoro() {
         </button>
       </div>
 
-      <label className="relative flex w-full flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="relative flex w-full flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Note (optionnelle)
         <textarea
           value={note}
@@ -288,7 +288,7 @@ export default function Pomodoro() {
         // l'étendre à une phase 'work' en cours (status 'running' ou
         // 'paused') — ce serait précisément le découpage qu'on évite.
         (session.status === 'awaitingAdvance' || session.phase === 'shortBreak' || session.phase === 'longBreak') && (
-          <div className="relative mt-4 flex w-full flex-col gap-2 border-t border-ink-700 pt-4">
+          <div className="relative mt-4 flex w-full flex-col gap-1 border-t border-ink-700 pt-4">
             <label htmlFor="pomodoro-switch" className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
               Enchaîner sur un autre engagement
             </label>

@@ -204,7 +204,7 @@ export default function DetailSkill() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
         <Link
           to="/skills"
@@ -307,9 +307,9 @@ export default function DetailSkill() {
           </p>
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <div className="flex min-w-0 flex-1 flex-col gap-8">
           <section>
-            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Objectif</h2>
+            <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
             {goal ? (
               <div className="flex flex-col gap-3">
                 <GoalProgress progress={goal} />
@@ -329,7 +329,7 @@ export default function DetailSkill() {
           </section>
 
           <section>
-            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Records</h2>
+            <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Records</h2>
             <p className="mb-3 text-corps text-muted">
               Meilleur streak : <span className="text-champagne">{bestStreak} j</span> · Streak actuel :{' '}
               <span className="text-champagne">{streak} j</span>
@@ -361,7 +361,7 @@ export default function DetailSkill() {
           </section>
 
           <section>
-            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Jalons</h2>
+            <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Jalons</h2>
             {milestonesError && (
               <p role="alert" className="mb-2 text-corps text-danger">
                 {milestonesError}
@@ -423,7 +423,7 @@ export default function DetailSkill() {
           </section>
 
           <section className="flex min-h-0 flex-1 flex-col">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <h2 className="font-sans text-corps font-semibold text-champagne">Journal</h2>
               <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-corps text-accent-bright underline">
                 + Nouvelle entrée
@@ -431,7 +431,7 @@ export default function DetailSkill() {
             </div>
             <div className="flex flex-col overflow-y-auto">
               {entries.map((entry) => (
-                <div key={entry.id} className="flex gap-4 border-t border-ink-700 py-4 last:border-b">
+                <div key={entry.id} className="flex gap-2 border-t border-ink-700 py-4 last:border-b">
                   <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
@@ -452,7 +452,7 @@ export default function DetailSkill() {
           </section>
 
           <section>
-            <h2 className="mb-2 font-sans text-corps font-semibold text-champagne">Notes</h2>
+            <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Notes</h2>
             {/* Partie « second cerveau » de la spec : les réflexions libres
                 sur un skill étaient saisies à la création et cherchables,
                 mais jamais réaffichées ni modifiables ensuite. */}
@@ -600,7 +600,7 @@ function GoalSetter({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Période
         <select
           value={period}
@@ -612,7 +612,7 @@ function GoalSetter({
           <option value="mensuel">Mensuel</option>
         </select>
       </label>
-      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Métrique
         <select
           value={metric}
@@ -624,7 +624,7 @@ function GoalSetter({
           <option value="heures">Heures</option>
         </select>
       </label>
-      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Cible
         <input
           type="number"

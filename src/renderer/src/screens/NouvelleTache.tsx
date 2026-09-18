@@ -152,7 +152,7 @@ export default function NouvelleTache() {
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle tâche</p>
         <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Ajouter une tâche</h1>
       </div>
-      <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
         <FormField label="Titre" required value={name} onChange={(e) => setName(e.target.value)} />
         <FormField
           label="Tags (optionnels, séparés par des virgules)"

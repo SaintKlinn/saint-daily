@@ -50,7 +50,7 @@ export default function DetailProjet() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Link
         to="/projets"
         className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
@@ -81,7 +81,7 @@ export default function DetailProjet() {
       )}
 
       <section>
-        <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Engagements liés</h2>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Engagements liés</h2>
         {children.length === 0 ? (
           <EmptyState>Aucun engagement rattaché à ce projet.</EmptyState>
         ) : (
@@ -90,7 +90,7 @@ export default function DetailProjet() {
               <Link
                 key={child.id}
                 to={child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
-                className="flex items-center gap-3 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
+                className="flex items-center gap-2 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
               >
                 <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
                   {child.scheduledAt ? 'Tâche' : 'Skill'}

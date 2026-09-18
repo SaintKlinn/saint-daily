@@ -107,7 +107,7 @@ export default function ListeSkills() {
             <Link
               key={skill.id}
               to={`/skills/${skill.id}`}
-              className={`flex items-center gap-6 bg-ink-800 px-6 py-6 transition-colors duration-200 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
+              className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
               style={{ animationDelay: `${i * 40}ms` }}
             >
               <ProgressRing
@@ -118,7 +118,7 @@ export default function ListeSkills() {
                 }
               />
               <div className="flex-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="font-serif text-titre text-champagne">{skill.name}</span>
                   <span
                     className={`font-data text-libelle uppercase tracking-[0.08em] px-2 py-1 border ${

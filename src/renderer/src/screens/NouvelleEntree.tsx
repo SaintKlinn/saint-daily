@@ -73,7 +73,7 @@ export default function NouvelleEntree() {
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
         <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
       </div>
-      <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
         <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
           <option value="">Choisir…</option>
           {skills.map((s) => (
@@ -82,7 +82,7 @@ export default function NouvelleEntree() {
             </option>
           ))}
         </SelectField>
-        <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
           Durée
           <div className="flex items-baseline gap-3 border border-ink-700 bg-ink-800 px-4 py-3">
             <input
