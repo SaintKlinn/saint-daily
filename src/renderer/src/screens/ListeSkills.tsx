@@ -52,7 +52,7 @@ export default function ListeSkills() {
         className="flex items-center justify-between"
       >
         <h1 className="font-serif text-titre-ecran text-champagne">Skills</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Toggle bordered={false} checked={showArchived} onChange={setShowArchived} label="Voir les skills en pause" />
           <div className="flex items-center gap-2 border border-ink-700 bg-ink-900 px-4 py-2">
             <SearchIcon className="text-muted" />

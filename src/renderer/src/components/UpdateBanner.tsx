@@ -51,7 +51,7 @@ export default function UpdateBanner() {
   if (restarting) {
     return (
       <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink-950"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-ink-950"
         style={{
           backgroundImage:
             'radial-gradient(ellipse 900px 500px at 50% 8%, rgba(231, 185, 78, 0.07), transparent 70%)',
@@ -66,7 +66,7 @@ export default function UpdateBanner() {
   if (phase === 'hidden') return null;
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-accent-bright/35 bg-ink-800 px-6 py-3">
+    <div className="flex items-center justify-between gap-2 border-b border-accent-bright/35 bg-ink-800 px-6 py-3">
       {phase === 'available' && (
         <>
           <p className="font-sans text-corps text-champagne">

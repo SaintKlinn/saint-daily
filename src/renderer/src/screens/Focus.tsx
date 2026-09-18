@@ -108,7 +108,7 @@ export default function Focus() {
 
         <div className="border border-ink-700 bg-ink-800 px-6 py-6">
           {runningHere ? (
-            <div className="flex flex-wrap items-baseline gap-4">
+            <div className="flex flex-wrap items-baseline gap-2">
               <span className="font-serif text-heros tabular-nums text-accent-bright">
                 {formatRemaining(remainingMs)}
               </span>
