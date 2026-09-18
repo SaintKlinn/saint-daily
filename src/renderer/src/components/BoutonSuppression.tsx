@@ -23,7 +23,7 @@ const DOUBLE_CLICK_GUARD_MS = 300;
 // de la feuille générée, pas par l'ordre d'écriture — donc on n'en met
 // jamais deux.
 const BASE =
-  'inline-flex items-center justify-center gap-2 px-4 py-2 font-sans text-[13px] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+  'inline-flex items-center justify-center gap-2 px-4 py-2 font-sans text-secondaire transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 const IDLE = 'border border-ink-700 text-muted hover:text-champagne';
 const ARMED = 'border border-danger font-semibold text-danger';
 

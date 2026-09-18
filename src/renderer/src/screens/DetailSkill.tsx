@@ -195,7 +195,7 @@ export default function DetailSkill() {
     // « Introuvable », qui serait un diagnostic faux.
     if (skillsError) {
       return (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {skillsError}
         </p>
       );
@@ -208,7 +208,7 @@ export default function DetailSkill() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
         <Link
           to="/skills"
-          className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted transition-colors duration-150 hover:text-champagne"
+          className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
         >
           <ChevronLeftIcon />
           Retour
@@ -218,25 +218,25 @@ export default function DetailSkill() {
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
           le signaler plutôt que de montrer un graphe/journal vide. */}
       {entriesError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {entriesError}
         </p>
       )}
       {actionError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {actionError}
         </p>
       )}
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-serif text-[36px] leading-tight text-champagne">{skill.name}</h1>
+          <h1 className="font-serif text-heros leading-tight text-champagne">{skill.name}</h1>
           {skill.tags.length > 0 && (
-            <p className="mt-1.5 text-[13px] text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+            <p className="mt-1.5 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <label className="relative flex items-center gap-1.5 border border-accent-mid px-3.5 py-2 font-data text-[11px] uppercase tracking-[0.08em] text-accent-mid">
+          <label className="relative flex items-center gap-1.5 border border-accent-mid px-3.5 py-2 font-data text-libelle uppercase tracking-[0.08em] text-accent-mid">
             {LEVEL_LABELS[skill.genericLevel]}
             <ChevronDownIcon />
             <select
@@ -252,7 +252,7 @@ export default function DetailSkill() {
               ))}
             </select>
           </label>
-          <label className="relative flex items-center gap-1.5 border border-ink-700 px-3.5 py-2 font-data text-[11px] uppercase tracking-[0.08em] text-muted">
+          <label className="relative flex items-center gap-1.5 border border-ink-700 px-3.5 py-2 font-data text-libelle uppercase tracking-[0.08em] text-muted">
             {skill.projectId ? (projects.find((p) => p.id === skill.projectId)?.name ?? 'Projet') : 'Aucun projet'}
             <ChevronDownIcon />
             <select
@@ -288,9 +288,9 @@ export default function DetailSkill() {
           <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
-          <p className="relative font-data text-2xl text-champagne">{totalHours}h</p>
-          <p className="relative font-data text-[11px] uppercase tracking-[0.1em] text-muted">cumulées</p>
-          <p className="relative text-center text-sm text-muted">
+          <p className="relative font-data text-titre-ecran text-champagne">{totalHours}h</p>
+          <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">cumulées</p>
+          <p className="relative text-center text-corps text-muted">
             Streak :{' '}
             <motion.span
               // `inline-block` : un élément inline nu ignore `transform`,
@@ -309,7 +309,7 @@ export default function DetailSkill() {
 
         <div className="flex min-w-0 flex-1 flex-col gap-6">
           <section>
-            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Objectif</h2>
+            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Objectif</h2>
             {goal ? (
               <div className="flex flex-col gap-3">
                 <GoalProgress progress={goal} />
@@ -329,8 +329,8 @@ export default function DetailSkill() {
           </section>
 
           <section>
-            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Records</h2>
-            <p className="mb-3 text-sm text-muted">
+            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Records</h2>
+            <p className="mb-3 text-corps text-muted">
               Meilleur streak : <span className="text-champagne">{bestStreak} j</span> · Streak actuel :{' '}
               <span className="text-champagne">{streak} j</span>
             </p>
@@ -338,7 +338,7 @@ export default function DetailSkill() {
               {badges.map((badge) => (
                 <li
                   key={badge.key}
-                  className={`flex flex-col gap-0.5 border px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.08em] ${
+                  className={`flex flex-col gap-0.5 border px-3 py-1.5 font-data text-libelle uppercase tracking-[0.08em] ${
                     badge.unlocked ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
                   }`}
                 >
@@ -354,16 +354,16 @@ export default function DetailSkill() {
                       via `title`, donc inatteignable au clavier et absente
                       pour un lecteur d'écran. Elle est maintenant du texte
                       normal, toujours présent. */}
-                  <span className="font-sans text-[10px] normal-case tracking-normal text-muted">{badge.hint}</span>
+                  <span className="font-sans text-libelle normal-case tracking-normal text-muted">{badge.hint}</span>
                 </li>
               ))}
             </ul>
           </section>
 
           <section>
-            <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Jalons</h2>
+            <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Jalons</h2>
             {milestonesError && (
-              <p role="alert" className="mb-2 text-sm text-danger">
+              <p role="alert" className="mb-2 text-corps text-danger">
                 {milestonesError}
               </p>
             )}
@@ -397,7 +397,7 @@ export default function DetailSkill() {
                         />
                       )}
                     </span>
-                    <span className={`text-sm ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
+                    <span className={`text-corps ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
                       {m.label}
                     </span>
                   </label>
@@ -409,8 +409,8 @@ export default function DetailSkill() {
 
           <section className="flex min-h-0 flex-1 flex-col">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-sans text-sm font-semibold text-champagne">Journal</h2>
-              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-sm text-accent-bright underline">
+              <h2 className="font-sans text-corps font-semibold text-champagne">Journal</h2>
+              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-corps text-accent-bright underline">
                 + Nouvelle entrée
               </Link>
             </div>
@@ -421,7 +421,7 @@ export default function DetailSkill() {
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   <p className="w-16 font-data text-xs text-accent-bright">{entry.durationMinutes} min</p>
-                  <p className="flex-1 font-serif text-[15px] italic text-champagne">
+                  <p className="flex-1 font-serif text-corps italic text-champagne">
                     {entry.note}
                     {/* Discret et à côté de la note plutôt qu'en colonne
                         propre : l'humeur est optionnelle, une colonne vide la
@@ -437,7 +437,7 @@ export default function DetailSkill() {
           </section>
 
           <section>
-            <h2 className="mb-2 font-sans text-sm font-semibold text-champagne">Notes</h2>
+            <h2 className="mb-2 font-sans text-corps font-semibold text-champagne">Notes</h2>
             {/* Partie « second cerveau » de la spec : les réflexions libres
                 sur un skill étaient saisies à la création et cherchables,
                 mais jamais réaffichées ni modifiables ensuite. */}
@@ -499,16 +499,16 @@ function NotesSection({
         rows={4}
         aria-label="Notes sur ce skill"
         placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
-        className={`border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
+        className={`border border-ink-700 bg-ink-900 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
       />
       <div className="flex items-center gap-3">
         <Button type="button" variant="secondary" size="sm" onClick={handleSave} disabled={status === 'saving'}>
           {status === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
         </Button>
-        {status === 'saved' && <span className="text-sm text-muted">Notes enregistrées.</span>}
+        {status === 'saved' && <span className="text-corps text-muted">Notes enregistrées.</span>}
       </div>
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}
@@ -545,14 +545,14 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           aria-label="Nouveau jalon"
           placeholder="Nouveau jalon"
           disabled={submitting}
-          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
         <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
           Ajouter
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}
@@ -591,7 +591,7 @@ function GoalSetter({
           value={period}
           onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
           aria-label="Période de l'objectif"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-[15px] text-champagne ${FOCUS_RING}`}
+          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
         >
           <option value="hebdomadaire">Hebdomadaire</option>
           <option value="mensuel">Mensuel</option>
@@ -603,7 +603,7 @@ function GoalSetter({
           value={metric}
           onChange={(e) => setMetric(e.target.value as GoalMetric)}
           aria-label="Métrique de l'objectif"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-[15px] text-champagne ${FOCUS_RING}`}
+          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
         >
           <option value="seances">Séances</option>
           <option value="heures">Heures</option>
@@ -618,7 +618,7 @@ function GoalSetter({
           onChange={(e) => setTarget(e.target.value)}
           aria-label="Cible de l'objectif"
           aria-invalid={!targetIsValid}
-          className={`w-20 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-[15px] text-champagne ${FOCUS_RING}`}
+          className={`w-20 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-corps text-champagne ${FOCUS_RING}`}
         />
       </label>
       <Button type="button" variant="secondary" size="sm" onClick={handleSubmit} disabled={submitting || !targetIsValid}>

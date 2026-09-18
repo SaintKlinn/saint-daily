@@ -58,7 +58,7 @@ export default function UpdateBanner() {
         }}
       >
         <LogoMark width={92} height={61} animated />
-        <p className="font-serif text-lg text-champagne">Mise à jour en cours…</p>
+        <p className="font-serif text-titre text-champagne">Mise à jour en cours…</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ export default function UpdateBanner() {
     <div className="flex items-center justify-between gap-4 border-b border-accent-bright/35 bg-ink-800 px-6 py-3">
       {phase === 'available' && (
         <>
-          <p className="font-sans text-sm text-champagne">
+          <p className="font-sans text-corps text-champagne">
             {version ? `Version ${version} disponible.` : 'Une mise à jour est disponible.'}
           </p>
           <Button variant="accent-outline" size="sm" onClick={() => window.api?.autoUpdate?.downloadNow?.()}>
@@ -79,7 +79,7 @@ export default function UpdateBanner() {
       )}
       {phase === 'downloading' && (
         <div className="flex-1">
-          <p className="mb-1.5 font-sans text-sm text-champagne">
+          <p className="mb-1.5 font-sans text-corps text-champagne">
             Téléchargement de la mise à jour… {Math.round(percent)} %
           </p>
           {/* Même rail que partout ailleurs. C'était le seul `rounded-full`
@@ -90,7 +90,7 @@ export default function UpdateBanner() {
       )}
       {phase === 'downloaded' && (
         <>
-          <p className="font-sans text-sm text-champagne">Mise à jour prête — redémarrer pour l'appliquer.</p>
+          <p className="font-sans text-corps text-champagne">Mise à jour prête — redémarrer pour l'appliquer.</p>
           <Button variant="accent-outline" size="sm" onClick={handleRestart}>
             Redémarrer maintenant
           </Button>

@@ -14,7 +14,7 @@ export default function EmptyState({ children, role }: { children: ReactNode; ro
       className="flex flex-col items-center gap-2.5 border border-dashed border-ink-700 px-6 py-9 text-center"
     >
       <LogoMark size={26} className="opacity-50" />
-      <p className="text-sm text-muted">{children}</p>
+      <p className="text-corps text-muted">{children}</p>
     </motion.div>
   );
 }

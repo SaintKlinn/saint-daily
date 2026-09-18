@@ -65,12 +65,12 @@ export default function TaskPopover({
       >
         <RayCorner variant={1} />
         <div className="relative">
-          <p className="font-serif text-xl text-champagne">{task.name}</p>
+          <p className="font-serif text-titre text-champagne">{task.name}</p>
           {task.tags.length > 0 && (
-            <p className="mt-1 text-[13px] text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
+            <p className="mt-1 text-secondaire text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
           )}
         </div>
-        <p className="relative font-data text-[13px] text-muted">
+        <p className="relative font-data text-secondaire text-muted">
           {formatSlot(task.scheduledAt as string, task.scheduledEndsAt as string)}
         </p>
         <div className="relative flex flex-col gap-1.5">
@@ -119,7 +119,7 @@ export default function TaskPopover({
           <select
             value={task.projectId ?? ''}
             onChange={(e) => onProjectChange(e.target.value || null)}
-            className={`border border-ink-700 bg-ink-800 px-2.5 py-1.5 text-sm text-champagne ${FOCUS_RING}`}
+            className={`border border-ink-700 bg-ink-800 px-2.5 py-1.5 text-corps text-champagne ${FOCUS_RING}`}
           >
             <option value="">Aucun</option>
             {projects.map((p) => (
@@ -139,7 +139,7 @@ export default function TaskPopover({
           />
         )}
         {error && (
-          <p role="alert" className="relative text-sm text-danger">
+          <p role="alert" className="relative text-corps text-danger">
             {error}
           </p>
         )}

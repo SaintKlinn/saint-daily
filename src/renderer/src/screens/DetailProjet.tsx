@@ -41,7 +41,7 @@ export default function DetailProjet() {
   if (!project) {
     if (error) {
       return (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       );
@@ -53,7 +53,7 @@ export default function DetailProjet() {
     <div className="flex flex-col gap-6">
       <Link
         to="/projets"
-        className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted transition-colors duration-150 hover:text-champagne"
+        className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
       >
         <ChevronLeftIcon />
         Retour
@@ -61,27 +61,27 @@ export default function DetailProjet() {
 
       <div className="relative overflow-hidden border border-ink-700 bg-ink-900 p-6">
         <RayCorner variant={0} />
-        <h1 className="relative font-serif text-[30px] text-champagne">{project.name}</h1>
+        <h1 className="relative font-serif text-titre-ecran text-champagne">{project.name}</h1>
         {project.tags.length > 0 && (
-          <p className="relative mt-1.5 text-[13px] text-muted">{project.tags.map((t) => `#${t}`).join(' ')}</p>
+          <p className="relative mt-1.5 text-secondaire text-muted">{project.tags.map((t) => `#${t}`).join(' ')}</p>
         )}
-        {project.notes && <p className="relative mt-3 text-sm text-champagne">{project.notes}</p>}
+        {project.notes && <p className="relative mt-3 text-corps text-champagne">{project.notes}</p>}
       </div>
 
       <div className="flex items-center gap-3">
         <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
-        <p className="text-[13px] text-muted">
+        <p className="text-secondaire text-muted">
           Supprimer un projet envoie aussi ses engagements liés à la corbeille.
         </p>
       </div>
       {actionError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {actionError}
         </p>
       )}
 
       <section>
-        <h2 className="mb-3 font-sans text-sm font-semibold text-champagne">Engagements liés</h2>
+        <h2 className="mb-3 font-sans text-corps font-semibold text-champagne">Engagements liés</h2>
         {children.length === 0 ? (
           <EmptyState>Aucun engagement rattaché à ce projet.</EmptyState>
         ) : (
@@ -92,7 +92,7 @@ export default function DetailProjet() {
                 to={child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
                 className="flex items-center gap-3 bg-ink-800 px-[18px] py-4 transition-colors duration-200 hover:bg-ink-700"
               >
-                <span className="font-data text-[10px] uppercase tracking-[0.08em] text-muted">
+                <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
                   {child.scheduledAt ? 'Tâche' : 'Skill'}
                 </span>
                 <span className="font-serif text-champagne">{child.name}</span>

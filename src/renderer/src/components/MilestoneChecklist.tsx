@@ -21,7 +21,7 @@ export default function MilestoneChecklist({
     <div className="relative flex flex-col gap-1.5">
       <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}
@@ -43,7 +43,7 @@ export default function MilestoneChecklist({
                     {m.completedAt && <CheckIcon size={10} />}
                   </span>
                 </span>
-                <span className={`text-sm ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
+                <span className={`text-corps ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
                   {m.label}
                 </span>
               </label>
@@ -92,7 +92,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}

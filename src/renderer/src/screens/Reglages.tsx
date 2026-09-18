@@ -165,23 +165,23 @@ export default function Reglages() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="font-serif text-[30px] text-champagne"
+        className="font-serif text-titre-ecran text-champagne"
       >
         Réglages
       </motion.h1>
 
       <section className="flex flex-col gap-0">
-        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Rappels</h2>
+        <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Rappels</h2>
         {actionError && (
-          <p role="alert" className="mb-2 text-sm text-danger">
+          <p role="alert" className="mb-2 text-corps text-danger">
             {actionError}
           </p>
         )}
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
           <div>
-            <p className="text-[15px] text-champagne">Seuil de rappel</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Seuil de rappel</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               Nombre de jours sans pratique avant qu'un skill apparaisse dans les rappels dus
             </p>
           </div>
@@ -192,9 +192,9 @@ export default function Reglages() {
               value={settings.reminderThresholdDays}
               onChange={(e) => handleReminderChange(Number(e.target.value))}
               aria-label="Seuil de rappel en jours"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-data text-[15px] text-champagne">jours</span>
+            <span className="font-data text-corps text-champagne">jours</span>
           </label>
         </div>
 
@@ -206,8 +206,8 @@ export default function Reglages() {
         />
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
           <div>
-            <p className="text-[15px] text-champagne">Rappel avant une tâche planifiée</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Rappel avant une tâche planifiée</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               Combien de minutes à l'avance prévenir qu'une tâche planifiée approche
             </p>
           </div>
@@ -218,9 +218,9 @@ export default function Reglages() {
               value={settings.reminderLeadMinutes}
               onChange={(e) => handleReminderLeadChange(Number(e.target.value))}
               aria-label="Délai du rappel avant une tâche, en minutes"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-data text-[15px] text-champagne">min</span>
+            <span className="font-data text-corps text-champagne">min</span>
           </label>
         </div>
         <Toggle
@@ -232,10 +232,10 @@ export default function Reglages() {
       </section>
 
       <section className="flex flex-col gap-0">
-        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Pomodoro</h2>
+        <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Pomodoro</h2>
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
-          <p className="text-[15px] text-champagne">Travail</p>
+          <p className="text-corps text-champagne">Travail</p>
           <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
             <input
               type="number"
@@ -243,14 +243,14 @@ export default function Reglages() {
               value={settings.pomodoroWorkMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroWorkMinutes: Number(e.target.value) })}
               aria-label="Durée d'un cycle de travail en minutes"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-data text-[15px] text-champagne">min</span>
+            <span className="font-data text-corps text-champagne">min</span>
           </label>
         </div>
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
-          <p className="text-[15px] text-champagne">Pause courte</p>
+          <p className="text-corps text-champagne">Pause courte</p>
           <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
             <input
               type="number"
@@ -258,14 +258,14 @@ export default function Reglages() {
               value={settings.pomodoroShortBreakMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroShortBreakMinutes: Number(e.target.value) })}
               aria-label="Durée d'une pause courte en minutes"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-data text-[15px] text-champagne">min</span>
+            <span className="font-data text-corps text-champagne">min</span>
           </label>
         </div>
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
-          <p className="text-[15px] text-champagne">Pause longue</p>
+          <p className="text-corps text-champagne">Pause longue</p>
           <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
             <input
               type="number"
@@ -273,16 +273,16 @@ export default function Reglages() {
               value={settings.pomodoroLongBreakMinutes}
               onChange={(e) => handlePomodoroSettingChange({ pomodoroLongBreakMinutes: Number(e.target.value) })}
               aria-label="Durée d'une pause longue en minutes"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-data text-[15px] text-champagne">min</span>
+            <span className="font-data text-corps text-champagne">min</span>
           </label>
         </div>
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
           <div>
-            <p className="text-[15px] text-champagne">Cycles avant la pause longue</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Cycles avant la pause longue</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               Nombre de cycles de travail entre deux pauses longues
             </p>
           </div>
@@ -295,7 +295,7 @@ export default function Reglages() {
                 handlePomodoroSettingChange({ pomodoroCyclesBeforeLongBreak: Number(e.target.value) })
               }
               aria-label="Nombre de cycles avant la pause longue"
-              className={`w-10 bg-transparent text-right font-data text-[15px] text-champagne ${FOCUS_RING}`}
+              className={`w-10 bg-transparent text-right font-data text-corps text-champagne ${FOCUS_RING}`}
             />
           </label>
         </div>
@@ -309,12 +309,12 @@ export default function Reglages() {
       </section>
 
       <section className="flex flex-col">
-        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Données</h2>
+        <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Données</h2>
 
         <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
           <div>
-            <p className="text-[15px] text-champagne">Exporter mes données</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Exporter mes données</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               JSON pour tout conserver, CSV pour ouvrir les séances dans un tableur
             </p>
           </div>
@@ -329,25 +329,25 @@ export default function Reglages() {
         </div>
 
         {exportError && (
-          <p role="alert" className="py-2 text-[13px] text-danger">
+          <p role="alert" className="py-2 text-secondaire text-danger">
             {exportError}
           </p>
         )}
         {exportMessage && (
-          <p role="status" className="py-2 text-[13px] text-muted">
+          <p role="status" className="py-2 text-secondaire text-muted">
             {exportMessage}
           </p>
         )}
       </section>
 
       <section className="flex flex-col gap-0">
-        <h2 className="mb-1 font-data text-[11px] uppercase tracking-[0.1em] text-muted">Modèles de note</h2>
-        <p className="mb-3 text-[13px] text-muted">
+        <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Modèles de note</h2>
+        <p className="mb-3 text-secondaire text-muted">
           Des raccourcis proposés en un clic à la saisie d'une nouvelle entrée
         </p>
 
         {templateActionError && (
-          <p role="alert" className="mb-2 text-sm text-danger">
+          <p role="alert" className="mb-2 text-corps text-danger">
             {templateActionError}
           </p>
         )}
@@ -361,7 +361,7 @@ export default function Reglages() {
                 key={template.id}
                 className="flex items-center justify-between gap-3 border-b border-ink-700 py-[14px]"
               >
-                <p className="text-sm text-champagne">{template.text}</p>
+                <p className="text-corps text-champagne">{template.text}</p>
                 <Button variant="secondary" size="sm" onClick={() => handleRemoveTemplate(template.id)}>
                   Retirer
                 </Button>
@@ -376,7 +376,7 @@ export default function Reglages() {
             onChange={(e) => setNewTemplateText(e.target.value)}
             aria-label="Nouveau modèle de note"
             placeholder="Ex. : Séance courte, peu de progrès aujourd'hui"
-            className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-champagne placeholder:text-muted ${FOCUS_RING}`}
+            className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />
           <Button type="submit" variant="secondary" size="sm" disabled={!newTemplateText.trim()}>
             Ajouter
@@ -386,27 +386,27 @@ export default function Reglages() {
 
       <section className="flex flex-col gap-0">
         <div className="mb-1 flex items-baseline justify-between">
-          <h2 className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">À propos</h2>
-          {appVersion && <span className="font-data text-[11px] text-muted">Version {appVersion}</span>}
+          <h2 className="font-data text-libelle uppercase tracking-[0.1em] text-muted">À propos</h2>
+          {appVersion && <span className="font-data text-libelle text-muted">Version {appVersion}</span>}
         </div>
         <details className="border-b border-ink-700 py-4">
-          <summary className="cursor-pointer text-[15px] text-champagne">Confidentialité</summary>
-          <p className="mt-2 text-sm text-muted">
+          <summary className="cursor-pointer text-corps text-champagne">Confidentialité</summary>
+          <p className="mt-2 text-corps text-muted">
             Saint Daily est un outil 100% personnel : tes skills, jalons et entrées de pratique ne sont
             visibles que par toi. Les données sont stockées dans le projet Supabase partagé avec Saint Gym,
             protégées par des règles d'accès (RLS) qui limitent chaque ligne à son propriétaire.
           </p>
         </details>
         <details className="border-b border-ink-700 py-4">
-          <summary className="cursor-pointer text-[15px] text-champagne">Conditions d'utilisation</summary>
-          <p className="mt-2 text-sm text-muted">
+          <summary className="cursor-pointer text-corps text-champagne">Conditions d'utilisation</summary>
+          <p className="mt-2 text-corps text-muted">
             Projet personnel — pas de service tiers, pas de compte séparé à créer : Saint Daily réutilise le
             compte existant de l'écosystème Saint.
           </p>
         </details>
         <details className="border-b border-ink-700 py-4">
-          <summary className="cursor-pointer text-[15px] text-champagne">FAQ</summary>
-          <p className="mt-2 text-sm text-muted">
+          <summary className="cursor-pointer text-corps text-champagne">FAQ</summary>
+          <p className="mt-2 text-corps text-muted">
             <strong className="text-champagne">Pourquoi les rappels ne sonnent pas quand l'app est fermée ?</strong>
             <br />
             Les rappels sont calculés pendant que Saint Daily tourne (fenêtre ouverte ou réduite dans le
@@ -417,8 +417,8 @@ export default function Reglages() {
 
       <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
         <div>
-          <p className="text-[15px] text-champagne">Corbeille</p>
-          <p className="mt-0.5 text-[13px] text-muted">
+          <p className="text-corps text-champagne">Corbeille</p>
+          <p className="mt-0.5 text-secondaire text-muted">
             Restaurer ou supprimer définitivement ce qui a été supprimé
           </p>
         </div>

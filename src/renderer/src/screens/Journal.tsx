@@ -97,7 +97,7 @@ export default function Journal() {
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-[30px] text-champagne">Journal</h1>
+        <h1 className="font-serif text-titre-ecran text-champagne">Journal</h1>
         <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
           <SearchIcon />
           <input
@@ -106,18 +106,18 @@ export default function Journal() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher une note, un tag, un engagement"
             aria-label="Rechercher dans le journal"
-            className={`w-72 bg-transparent text-[13px] text-champagne placeholder:text-muted ${FOCUS_RING}`}
+            className={`w-72 bg-transparent text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />
         </label>
       </div>
 
       {engagementsError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {engagementsError}
         </p>
       )}
       {entriesError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {entriesError}
         </p>
       )}
@@ -133,20 +133,20 @@ export default function Journal() {
           {visibleRows.map((row) => (
             <article key={row.id} className="flex flex-col gap-1.5 bg-ink-800 px-[18px] py-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-serif text-[19px] text-champagne">{row.engagementName}</span>
-                <span className="font-data text-[11px] tabular-nums text-muted">
+                <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
+                <span className="font-data text-libelle tabular-nums text-muted">
                   {formatDate(row.practicedAt)}
                   {row.kind === 'seance' ? ` · ${formatMinutes(row.durationMinutes)}` : ' · bilan du soir'}
                 </span>
               </div>
-              {row.note && <p className="whitespace-pre-wrap text-[13px] text-champagne">{row.note}</p>}
+              {row.note && <p className="whitespace-pre-wrap text-secondaire text-champagne">{row.note}</p>}
               {row.tags.length > 0 && (
-                <p className="text-[13px] text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
+                <p className="text-secondaire text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
               )}
             </article>
           ))}
           {hiddenCount > 0 && (
-            <p className="bg-ink-800 px-[18px] py-3 font-data text-[11px] text-muted">
+            <p className="bg-ink-800 px-[18px] py-3 font-data text-libelle text-muted">
               + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} résultat{hiddenCount > 1 ? 's' : ''} — affine ta
               recherche pour les voir.
             </p>

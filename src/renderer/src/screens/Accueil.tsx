@@ -221,8 +221,8 @@ export default function Accueil() {
       {showMorning && (
         <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
           <div>
-            <p className="text-[15px] text-champagne">Bonjour — voici ta journée</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Bonjour — voici ta journée</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               {tasksToday.length} tâche{tasksToday.length > 1 ? 's' : ''} planifiée
               {tasksToday.length > 1 ? 's' : ''} aujourd'hui · {dueSkills.length} rappel
               {dueSkills.length > 1 ? 's' : ''} dû{dueSkills.length > 1 ? 's' : ''}
@@ -237,8 +237,8 @@ export default function Accueil() {
       {showEvening && (
         <div className="flex flex-col gap-2 border border-ink-700 bg-ink-800 px-5 py-4">
           <div>
-            <p className="text-[15px] text-champagne">Un mot sur ta journée ?</p>
-            <p className="mt-0.5 text-[13px] text-muted">Une ligne suffit — ce n'est pas un journal.</p>
+            <p className="text-corps text-champagne">Un mot sur ta journée ?</p>
+            <p className="mt-0.5 text-secondaire text-muted">Une ligne suffit — ce n'est pas un journal.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -250,7 +250,7 @@ export default function Accueil() {
               placeholder="Journée dense mais satisfaisante."
               aria-label="Bilan de la journée"
               maxLength={280}
-              className={`min-w-0 flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-[13px] text-champagne placeholder:text-muted ${FOCUS_RING}`}
+              className={`min-w-0 flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
             />
             <Button
               variant="primary"
@@ -262,7 +262,7 @@ export default function Accueil() {
             </Button>
           </div>
           {eveningError && (
-            <p role="alert" className="text-sm text-danger">
+            <p role="alert" className="text-corps text-danger">
               {eveningError}
             </p>
           )}
@@ -272,8 +272,8 @@ export default function Accueil() {
       {settings && !weeklyReviewDismissedThisMount && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
         <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
           <div>
-            <p className="text-[15px] text-champagne">Ta semaine est prête</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="text-corps text-champagne">Ta semaine est prête</p>
+            <p className="mt-0.5 text-secondaire text-muted">
               Un coup d'œil sur ce que tu as pratiqué ces derniers jours.
             </p>
           </div>
@@ -294,7 +294,7 @@ export default function Accueil() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
         className="flex items-center justify-between"
       >
-        <h1 className="font-serif text-[34px] leading-tight text-champagne">Bon retour.</h1>
+        <h1 className="font-serif text-heros leading-tight text-champagne">Bon retour.</h1>
         <div className="flex items-center gap-3">
           {resumeSkill && (
             <Link
@@ -316,17 +316,17 @@ export default function Accueil() {
       </motion.header>
 
       {skillsError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {skillsError}
         </p>
       )}
       {entriesError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {entriesError}
         </p>
       )}
       {completeTaskError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {completeTaskError}
         </p>
       )}
@@ -353,7 +353,7 @@ export default function Accueil() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-          className="font-sans text-[15px] font-semibold text-champagne"
+          className="font-sans text-corps font-semibold text-champagne"
         >
           Rappels dus
         </motion.h2>
@@ -388,12 +388,12 @@ export default function Accueil() {
                   filled={settings ? ringFillFromDaysSince(daysSince, settings.reminderThresholdDays) : 0}
                 />
                 <Link to={`/skills/${skill.id}`} className="flex-1 transition-opacity duration-150 hover:opacity-80">
-                  <p className="font-serif text-lg text-champagne">{skill.name}</p>
+                  <p className="font-serif text-titre text-champagne">{skill.name}</p>
                   {skill.tags.length > 0 && (
-                    <p className="mt-0.5 text-[13px] text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+                    <p className="mt-0.5 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
                   )}
                 </Link>
-                <p className="font-data text-[13px] text-muted">pas pratiqué depuis {daysSince} j</p>
+                <p className="font-data text-secondaire text-muted">pas pratiqué depuis {daysSince} j</p>
                 <Link to={`/entree/nouvelle?skillId=${skill.id}`} className={buttonClassName('accent-outline', 'sm')}>
                   Logger
                 </Link>
@@ -409,11 +409,11 @@ export default function Accueil() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
-            className="font-sans text-[15px] font-semibold text-champagne"
+            className="font-sans text-corps font-semibold text-champagne"
           >
             Tâches à faire
           </motion.h2>
-          <Link to="/taches/nouvelle" className="text-sm text-accent-bright underline">
+          <Link to="/taches/nouvelle" className="text-corps text-accent-bright underline">
             + Nouvelle tâche
           </Link>
         </div>
@@ -449,7 +449,7 @@ export default function Accueil() {
                   <CheckIcon size={12} />
                 </button>
                 <div className="flex-1">
-                  <p className="flex items-center gap-2 font-serif text-lg text-champagne">
+                  <p className="flex items-center gap-2 font-serif text-titre text-champagne">
                     {PRIORITY_COLORS[task.priority] && (
                       <span
                         role="img"
@@ -461,10 +461,10 @@ export default function Accueil() {
                     {task.name}
                   </p>
                   {task.tags.length > 0 && (
-                    <p className="mt-0.5 text-[13px] text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
+                    <p className="mt-0.5 text-secondaire text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
                   )}
                 </div>
-                <p className="font-data text-[13px] text-muted">
+                <p className="font-data text-secondaire text-muted">
                   {new Date(task.scheduledAt as string).toLocaleString('fr-FR', {
                     day: 'numeric',
                     month: 'short',
@@ -505,7 +505,7 @@ function StatCard({
       }}
     >
       <RayCorner variant={rayVariant} />
-      <p className="relative flex items-center gap-[7px] font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+      <p className="relative flex items-center gap-[7px] font-data text-libelle uppercase tracking-[0.1em] text-muted">
         <span
           className="h-[5px] w-[5px] rounded-full"
           style={{
@@ -516,7 +516,7 @@ function StatCard({
         {label}
       </p>
       <p
-        className={`relative font-serif text-[38px] [font-variant-numeric:tabular-nums] ${hero ? 'text-accent-bright' : 'text-champagne'}`}
+        className={`relative font-serif text-heros [font-variant-numeric:tabular-nums] ${hero ? 'text-accent-bright' : 'text-champagne'}`}
         style={hero ? { textShadow: `0 0 22px ${colors.accent.bright}4d` } : undefined}
       >
         {value}

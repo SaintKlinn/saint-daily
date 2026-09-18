@@ -51,7 +51,7 @@ export default function ListeSkills() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="flex items-center justify-between"
       >
-        <h1 className="font-serif text-[30px] text-champagne">Skills</h1>
+        <h1 className="font-serif text-titre-ecran text-champagne">Skills</h1>
         <div className="flex items-center gap-3.5">
           <Toggle bordered={false} checked={showArchived} onChange={setShowArchived} label="Voir les skills en pause" />
           <div className="flex items-center gap-2 border border-ink-700 bg-ink-900 px-3.5 py-2">
@@ -61,7 +61,7 @@ export default function ListeSkills() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un skill ou une note"
               aria-label="Rechercher un skill ou une note"
-              className="w-56 bg-transparent font-sans text-[13px] text-champagne placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+              className="w-56 bg-transparent font-sans text-secondaire text-champagne placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
             />
           </div>
           <Link to="/skills/nouveau" className={buttonClassName('primary')}>
@@ -71,7 +71,7 @@ export default function ListeSkills() {
       </motion.div>
 
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}
@@ -119,9 +119,9 @@ export default function ListeSkills() {
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-serif text-[19px] text-champagne">{skill.name}</span>
+                  <span className="font-serif text-titre text-champagne">{skill.name}</span>
                   <span
-                    className={`font-data text-[10px] uppercase tracking-[0.08em] px-2 py-0.5 border ${
+                    className={`font-data text-libelle uppercase tracking-[0.08em] px-2 py-0.5 border ${
                       skill.archivedAt ? 'border-muted text-muted' : 'border-accent-mid text-accent-mid'
                     }`}
                   >
@@ -129,10 +129,10 @@ export default function ListeSkills() {
                   </span>
                 </div>
                 {skill.tags.length > 0 && (
-                  <p className="mt-1 text-[13px] text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+                  <p className="mt-1 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
                 )}
               </div>
-              <p className="font-data text-right text-[13px] text-muted">
+              <p className="font-data text-right text-secondaire text-muted">
                 {skill.archivedAt ? (
                   'archivé'
                 ) : (

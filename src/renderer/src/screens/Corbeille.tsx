@@ -51,27 +51,27 @@ export default function Corbeille() {
     <div className="flex flex-col gap-6">
       <Link
         to="/reglages"
-        className="flex w-fit items-center gap-2 font-sans text-[13px] text-muted transition-colors duration-150 hover:text-champagne"
+        className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
       >
         <ChevronLeftIcon />
         Retour aux réglages
       </Link>
 
       <div>
-        <h1 className="font-serif text-[30px] text-champagne">Corbeille</h1>
-        <p className="mt-1.5 text-[13px] text-muted">
+        <h1 className="font-serif text-titre-ecran text-champagne">Corbeille</h1>
+        <p className="mt-1.5 text-secondaire text-muted">
           Rien n'en sort tout seul : un élément y reste jusqu'à ce que tu le restaures ou le supprimes
           définitivement.
         </p>
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {error}
         </p>
       )}
       {actionError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {actionError}
         </p>
       )}
@@ -84,12 +84,12 @@ export default function Corbeille() {
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
           {deletedEngagements.map((engagement) => (
             <div key={engagement.id} className="flex items-center gap-4 bg-ink-800 px-[18px] py-4">
-              <span className="w-14 shrink-0 font-data text-[10px] uppercase tracking-[0.08em] text-muted">
+              <span className="w-14 shrink-0 font-data text-libelle uppercase tracking-[0.08em] text-muted">
                 {typeLabel(engagement)}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-serif text-[19px] text-champagne">{engagement.name}</p>
-                <p className="mt-0.5 font-data text-[11px] text-muted">
+                <p className="truncate font-serif text-titre text-champagne">{engagement.name}</p>
+                <p className="mt-0.5 font-data text-libelle text-muted">
                   Supprimé le {formatDeletedAt(engagement.deletedAt as string)}
                 </p>
               </div>

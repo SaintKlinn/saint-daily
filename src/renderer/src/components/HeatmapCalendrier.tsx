@@ -66,7 +66,7 @@ export default function HeatmapCalendrier({
         aria-label="Engagement affiché dans la heatmap"
         value={selectedEngagementId}
         onChange={(event) => onSelectEngagement(event.target.value)}
-        className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-1.5 text-[13px] text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+        className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-1.5 text-secondaire text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
       >
         <option value="tous">Tous les engagements</option>
         {engagements.map((engagement) => (
@@ -84,7 +84,7 @@ export default function HeatmapCalendrier({
             {DAY_LABELS.map((label, index) => (
               // Un jour sur deux seulement : sept libellés sur 11px de
               // haut chacun seraient illisibles.
-              <span key={label} className="h-[11px] font-data text-[9px] leading-[11px] text-muted">
+              <span key={label} className="h-[11px] font-data text-libelle leading-[11px] text-muted">
                 {index % 2 === 1 ? label : ''}
               </span>
             ))}
@@ -106,7 +106,7 @@ export default function HeatmapCalendrier({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="font-data text-[10px] text-muted">Moins</span>
+        <span className="font-data text-libelle text-muted">Moins</span>
         {([0, 1, 2, 3] as HeatmapLevel[]).map((level) => (
           <div
             key={level}
@@ -116,7 +116,7 @@ export default function HeatmapCalendrier({
             className={`h-[11px] w-[11px] ${LEVEL_CLASS[level]}`}
           />
         ))}
-        <span className="font-data text-[10px] text-muted">Plus</span>
+        <span className="font-data text-libelle text-muted">Plus</span>
       </div>
     </div>
   );

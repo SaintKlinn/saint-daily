@@ -18,7 +18,7 @@ import EmptyState from '../components/EmptyState';
 function Section({ titre, children }: { titre: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4 border border-ink-700 bg-ink-800 p-6">
-      <h2 className="font-sans text-sm font-semibold text-champagne">{titre}</h2>
+      <h2 className="font-sans text-corps font-semibold text-champagne">{titre}</h2>
       {children}
     </section>
   );
@@ -86,15 +86,15 @@ export default function Bilan() {
 
   return (
     <div className="flex flex-col gap-7">
-      <h1 className="font-serif text-[30px] text-champagne">Bilan</h1>
+      <h1 className="font-serif text-titre-ecran text-champagne">Bilan</h1>
 
       {engagementsError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {engagementsError}
         </p>
       )}
       {entriesError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {entriesError}
         </p>
       )}

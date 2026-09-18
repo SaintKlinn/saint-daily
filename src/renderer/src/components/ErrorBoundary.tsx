@@ -27,8 +27,8 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="flex h-screen flex-col items-center justify-center gap-3 bg-ink-900 p-8 text-center text-champagne">
-          <p className="font-serif text-xl">Une erreur est survenue</p>
-          <p className="max-w-md text-sm text-muted">{this.state.error.message}</p>
+          <p className="font-serif text-titre">Une erreur est survenue</p>
+          <p className="max-w-md text-corps text-muted">{this.state.error.message}</p>
         </div>
       );
     }

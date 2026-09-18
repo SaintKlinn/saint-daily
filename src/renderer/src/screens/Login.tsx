@@ -54,7 +54,7 @@ export default function Login() {
     >
       <div className="flex flex-col items-center gap-3">
         <LogoMark width={92} height={61} animated />
-        <h1 className="font-serif text-2xl text-champagne">Saint Daily</h1>
+        <h1 className="font-serif text-titre-ecran text-champagne">Saint Daily</h1>
       </div>
       <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-900 p-9">
         <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
@@ -64,7 +64,7 @@ export default function Login() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
@@ -74,10 +74,10 @@ export default function Login() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-[15px] normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
-        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        {error && <p role="alert" className="text-corps text-danger">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
@@ -90,7 +90,7 @@ export default function Login() {
             type="button"
             onClick={handleDevLogin}
             disabled={submitting}
-            className="border border-ink-700 px-4 py-2 font-sans text-sm text-muted hover:text-champagne disabled:opacity-60"
+            className="border border-ink-700 px-4 py-2 font-sans text-corps text-muted hover:text-champagne disabled:opacity-60"
           >
             Connexion dev ({devCredentials.email})
           </button>

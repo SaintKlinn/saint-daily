@@ -36,12 +36,12 @@ export default function SkillPicker({
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher un skill"
           aria-label="Rechercher un skill"
-          className={`w-full bg-transparent font-sans text-[15px] normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`w-full bg-transparent font-sans text-corps normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
       </div>
       <div className="max-h-56 overflow-y-auto border border-ink-700">
         {visible.length === 0 && (
-          <p className="px-3.5 py-3 text-sm normal-case tracking-normal text-muted">
+          <p className="px-3.5 py-3 text-corps normal-case tracking-normal text-muted">
             {loading ? 'Chargement…' : 'Aucun skill ne correspond.'}
           </p>
         )}
@@ -58,7 +58,7 @@ export default function SkillPicker({
               aria-pressed={selected}
               className={`flex w-full items-center justify-between gap-3 border-b border-l-2 border-ink-700 bg-ink-800 px-3.5 py-2.5 text-left normal-case tracking-normal transition-colors duration-150 last:border-b-0 ${FOCUS_RING} ${selected ? 'border-l-accent-bright bg-ink-700' : 'border-l-transparent hover:bg-ink-700'}`}
             >
-              <span className={`font-serif text-[15px] ${selected ? 'text-accent-bright' : 'text-champagne'}`}>{skill.name}</span>
+              <span className={`font-serif text-corps ${selected ? 'text-accent-bright' : 'text-champagne'}`}>{skill.name}</span>
               <span className="font-data text-right text-xs text-muted">
                 dernière · {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
                 <br />

@@ -393,8 +393,8 @@ export default function Calendrier() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-[30px] text-champagne">Calendrier</h1>
-          <p className="mt-1 font-data text-[13px] text-muted">{weekRangeLabel}</p>
+          <h1 className="font-serif text-titre-ecran text-champagne">Calendrier</h1>
+          <p className="mt-1 font-data text-secondaire text-muted">{weekRangeLabel}</p>
         </div>
         <div className="flex items-center gap-3">
           <Toggle
@@ -426,32 +426,32 @@ export default function Calendrier() {
       </div>
 
       {engagementsError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {engagementsError}
         </p>
       )}
       {entriesError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {entriesError}
         </p>
       )}
       {settingsError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {settingsError}
         </p>
       )}
       {actionError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {actionError}
         </p>
       )}
       {snoozeMessage && (
-        <p role="status" className="text-sm text-accent-bright">
+        <p role="status" className="text-corps text-accent-bright">
           {snoozeMessage}
         </p>
       )}
       {recurrenceMessage && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-corps text-danger">
           {recurrenceMessage}
         </p>
       )}
@@ -461,13 +461,13 @@ export default function Calendrier() {
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
-              <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
-              <p className="font-serif text-lg text-champagne">{day.getDate()}</p>
+              <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
+              <p className="font-serif text-titre text-champagne">{day.getDate()}</p>
             </div>
           ))}
           <div>
             {HOURS.map((h) => (
-              <div key={h} className="h-16 border-b border-ink-800 pr-2 text-right font-data text-[11px] text-muted">
+              <div key={h} className="h-16 border-b border-ink-800 pr-2 text-right font-data text-libelle text-muted">
                 {String(h).padStart(2, '0')}:00
               </div>
             ))}
@@ -547,7 +547,7 @@ export default function Calendrier() {
                     }}
                   >
                     <p
-                      className={`truncate font-sans text-[11px] font-semibold ${task.skippedAt ? 'line-through text-muted' : 'text-champagne'}`}
+                      className={`truncate font-sans text-libelle font-semibold ${task.skippedAt ? 'line-through text-muted' : 'text-champagne'}`}
                     >
                       {task.name}
                     </p>
@@ -565,7 +565,7 @@ export default function Calendrier() {
                     className={`absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70 ${dragging ? 'pointer-events-none' : ''}`}
                     style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
                   >
-                    <p className="truncate font-data text-[10px] text-muted">{entry.skillName}</p>
+                    <p className="truncate font-data text-libelle text-muted">{entry.skillName}</p>
                   </div>
                 );
               })}

@@ -70,8 +70,8 @@ export default function NouvelleEntree() {
     <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
       <RayCorner variant={0} />
       <div className="relative">
-        <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
-        <h1 className="mt-1.5 font-serif text-2xl text-champagne">Journal de pratique</h1>
+        <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
+        <h1 className="mt-1.5 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
@@ -91,9 +91,9 @@ export default function NouvelleEntree() {
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               aria-label="Durée en minutes"
-              className={`w-16 bg-transparent font-data text-xl normal-case tracking-normal text-champagne ${FOCUS_RING}`}
+              className={`w-16 bg-transparent font-data text-titre normal-case tracking-normal text-champagne ${FOCUS_RING}`}
             />
-            <span className="font-sans text-[13px] normal-case tracking-normal text-muted">minutes</span>
+            <span className="font-sans text-secondaire normal-case tracking-normal text-muted">minutes</span>
           </div>
         </label>
         <SelectField label="Humeur (optionnelle)" value={mood} onChange={(e) => setMood(e.target.value as Mood | '')}>
@@ -120,7 +120,7 @@ export default function NouvelleEntree() {
                   type="button"
                   onClick={() => setNote(template.text)}
                   title={template.text}
-                  className={`max-w-[220px] truncate border border-ink-700 px-3 py-1.5 text-left text-[13px] text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
+                  className={`max-w-[220px] truncate border border-ink-700 px-3 py-1.5 text-left text-secondaire text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
                 >
                   {template.text}
                 </button>
@@ -130,7 +130,7 @@ export default function NouvelleEntree() {
         )}
         <TextAreaField label="Note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
         {error && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {error}
           </p>
         )}

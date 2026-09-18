@@ -10,8 +10,8 @@ const VARIANT_CLASSES: Record<Variant, string> = {
 };
 
 const SIZE_CLASSES: Record<Size, string> = {
-  md: 'px-5 py-3 text-sm',
-  sm: 'px-4 py-2 text-[13px]',
+  md: 'px-5 py-3 text-corps',
+  sm: 'px-4 py-2 text-secondaire',
 };
 
 const BASE =

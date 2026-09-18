@@ -6,10 +6,10 @@ export default function GoalProgress({ progress }: { progress: GoalProgressValue
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Objectif</span>
+        <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Objectif</span>
         {/* Le libellé porte l'information ; la couleur ne fait que la
             souligner, elle ne la remplace jamais. */}
-        <span className={`font-data text-[11px] tabular-nums ${reached ? 'text-accent-bright' : 'text-champagne'}`}>
+        <span className={`font-data text-libelle tabular-nums ${reached ? 'text-accent-bright' : 'text-champagne'}`}>
           {progress.label}
           {reached ? ' · atteint' : ''}
         </span>

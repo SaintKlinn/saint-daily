@@ -149,8 +149,8 @@ export default function NouvelleTache() {
     <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
       <RayCorner variant={2} />
       <div className="relative">
-        <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Nouvelle tâche</p>
-        <h1 className="mt-1.5 font-serif text-2xl text-champagne">Ajouter une tâche</h1>
+        <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle tâche</p>
+        <h1 className="mt-1.5 font-serif text-titre-ecran text-champagne">Ajouter une tâche</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <FormField label="Titre" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -258,12 +258,12 @@ export default function NouvelleTache() {
           ))}
         </SelectField>
         {error && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {error}
           </p>
         )}
         {conflictMessage && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {conflictMessage}
           </p>
         )}

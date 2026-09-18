@@ -82,9 +82,9 @@ export default function Pomodoro() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto flex w-full max-w-md flex-col gap-5"
       >
-        <h1 className="font-serif text-[30px] text-champagne">Pomodoro</h1>
+        <h1 className="font-serif text-titre-ecran text-champagne">Pomodoro</h1>
         {error && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {error}
           </p>
         )}
@@ -94,7 +94,7 @@ export default function Pomodoro() {
           // sélecteur, qui ne liste que des skills sans horaire — sans ce
           // rappel visible, l'écran arrive avec rien de surligné et semble
           // avoir ignoré la demande.
-          <p className="text-sm text-muted">
+          <p className="text-corps text-muted">
             Pomodoro pour <span className="text-champagne">{selectedSkill.name}</span>
           </p>
         )}
@@ -106,7 +106,7 @@ export default function Pomodoro() {
           loading={skillsLoading}
         />
         {entriesError && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {entriesError}
           </p>
         )}
@@ -189,7 +189,7 @@ export default function Pomodoro() {
       className="relative mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-9"
     >
       <RayCorner variant={0} />
-      <p className="relative font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+      <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">
         {session.skillName} · cycle {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
       </p>
       <div className="relative flex flex-col items-center gap-2">
@@ -207,7 +207,7 @@ export default function Pomodoro() {
         <p className="font-serif text-3xl text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
-        <p className="font-data text-[11px] uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
+        <p className="font-data text-libelle uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
         {/* Toujours monté (jamais démonté/remonté) : sinon son apparition
             pousserait la rangée de boutons Pause/Continuer/Arrêter/Épingler
             plus bas dans la colonne flex, un reflow perceptible pile au
@@ -220,14 +220,14 @@ export default function Pomodoro() {
           animate={showCycleComplete ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           role="status"
-          className="font-data text-[11px] uppercase tracking-[0.1em] text-muted"
+          className="font-data text-libelle uppercase tracking-[0.1em] text-muted"
         >
           {showCycleComplete ? 'Cycle terminé' : ''}
         </motion.p>
       </div>
 
       {error && (
-        <p role="alert" className="relative text-sm text-danger">
+        <p role="alert" className="relative text-corps text-danger">
           {error}
         </p>
       )}
@@ -248,14 +248,14 @@ export default function Pomodoro() {
           // verrou de solde et ne ferait rien : mieux vaut un bouton
           // visiblement indisponible qu'un bouton qui ignore le clic.
           disabled={switching}
-          className={`border border-ink-700 px-5 py-3 font-sans text-sm text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] disabled:opacity-60 disabled:hover:text-muted ${FOCUS_RING}`}
+          className={`border border-ink-700 px-5 py-3 font-sans text-corps text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] disabled:opacity-60 disabled:hover:text-muted ${FOCUS_RING}`}
         >
           Arrêter
         </button>
         <button
           onClick={() => setPinned(!pinned)}
           aria-pressed={pinned}
-          className={`border px-5 py-3 font-sans text-sm transition-[color,transform] duration-150 ease-out active:scale-[0.97] ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
+          className={`border px-5 py-3 font-sans text-corps transition-[color,transform] duration-150 ease-out active:scale-[0.97] ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
         >
           {pinned ? 'Détacher' : 'Épingler'}
         </button>
@@ -268,7 +268,7 @@ export default function Pomodoro() {
           onChange={(e) => setNote(e.target.value)}
           rows={2}
           placeholder="Ce sur quoi tu travailles…"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-sm normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
       </label>
 
@@ -284,7 +284,7 @@ export default function Pomodoro() {
         // 'paused') — ce serait précisément le découpage qu'on évite.
         (session.status === 'awaitingAdvance' || session.phase === 'shortBreak' || session.phase === 'longBreak') && (
           <div className="relative mt-4 flex w-full flex-col gap-2 border-t border-ink-700 pt-4">
-            <label htmlFor="pomodoro-switch" className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+            <label htmlFor="pomodoro-switch" className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
               Enchaîner sur un autre engagement
             </label>
             <select
@@ -295,7 +295,7 @@ export default function Pomodoro() {
                 const next = activeSkills.find((s) => s.id === e.target.value);
                 if (next) void switchEngagement(next.id, next.name);
               }}
-              className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-[13px] text-champagne disabled:opacity-60 ${FOCUS_RING}`}
+              className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-secondaire text-champagne disabled:opacity-60 ${FOCUS_RING}`}
             >
               <option value="">Continuer sur {session.skillName}</option>
               {activeSkills
@@ -306,7 +306,7 @@ export default function Pomodoro() {
                   </option>
                 ))}
             </select>
-            <p className="text-[13px] text-muted">
+            <p className="text-secondaire text-muted">
               Le temps déjà fait est enregistré sur {session.skillName} avant de basculer.
             </p>
           </div>

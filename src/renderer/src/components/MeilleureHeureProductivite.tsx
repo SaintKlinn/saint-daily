@@ -13,7 +13,7 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
   const max = Math.max(...buckets.map((bucket) => bucket.sessions), 0);
   const total = buckets.reduce((sum, bucket) => sum + bucket.sessions, 0);
   if (total === 0) {
-    return <p className="text-[13px] text-muted">Pas encore de séance enregistrée.</p>;
+    return <p className="text-secondaire text-muted">Pas encore de séance enregistrée.</p>;
   }
   // Toutes les périodes à égalité du maximum sont "meilleures" — un
   // `reduce` avec `>` ne garderait que la première rencontrée (toujours
@@ -42,7 +42,7 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
           const height = max === 0 ? 0 : Math.round((bucket.sessions / max) * BAR_MAX_PX);
           return (
             <div key={bucket.key} className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="font-data text-[11px] tabular-nums text-muted">{bucket.sessions}</span>
+              <span className="font-data text-libelle tabular-nums text-muted">{bucket.sessions}</span>
               {/* Rien du tout à zéro séance, plutôt qu'un filet de 1 px :
                   maintenant que les barres sont toutes de la couleur des
                   données, un trait d'or sous un « 0 » se lirait comme une
@@ -64,20 +64,20 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
           return (
             <div key={bucket.key} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <span
-                className={`max-w-full truncate border px-2 py-0.5 font-data text-[10px] uppercase tracking-[0.08em] ${
+                className={`max-w-full truncate border px-2 py-0.5 font-data text-libelle uppercase tracking-[0.08em] ${
                   isBest ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
                 }`}
               >
                 {bucket.label}
               </span>
-              <span className="font-data text-[10px] text-muted">
+              <span className="font-data text-libelle text-muted">
                 {bucket.sessions === 0 ? '—' : `${bucket.averageMinutes} min moy.`}
               </span>
             </div>
           );
         })}
       </div>
-      <p className="text-[13px] text-muted">{summary}</p>
+      <p className="text-secondaire text-muted">{summary}</p>
     </div>
   );
 }

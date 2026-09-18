@@ -68,11 +68,11 @@ export default function Focus() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-ink-900 px-8">
         {error ? (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-corps text-danger">
             {error}
           </p>
         ) : (
-          <p className="text-sm text-muted">Cet engagement n'existe plus.</p>
+          <p className="text-corps text-muted">Cet engagement n'existe plus.</p>
         )}
         <Button variant="secondary" size="sm" onClick={() => navigate('/')}>
           Retour à l'accueil
@@ -98,21 +98,21 @@ export default function Focus() {
     <div className="flex min-h-screen flex-col bg-ink-900 px-8 py-10">
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8">
         <div>
-          <p className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">Mode focus</p>
-          <h1 className="mt-2 font-serif text-[38px] leading-tight text-champagne">{engagement.name}</h1>
+          <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Mode focus</p>
+          <h1 className="mt-2 font-serif text-heros leading-tight text-champagne">{engagement.name}</h1>
           {engagement.tags.length > 0 && (
-            <p className="mt-2 text-[13px] text-muted">{engagement.tags.map((t) => `#${t}`).join(' ')}</p>
+            <p className="mt-2 text-secondaire text-muted">{engagement.tags.map((t) => `#${t}`).join(' ')}</p>
           )}
-          {engagement.notes && <p className="mt-4 text-sm text-champagne">{engagement.notes}</p>}
+          {engagement.notes && <p className="mt-4 text-corps text-champagne">{engagement.notes}</p>}
         </div>
 
         <div className="border border-ink-700 bg-ink-800 px-6 py-5">
           {runningHere ? (
             <div className="flex flex-wrap items-baseline gap-4">
-              <span className="font-serif text-[44px] tabular-nums text-accent-bright">
+              <span className="font-serif text-heros tabular-nums text-accent-bright">
                 {formatRemaining(remainingMs)}
               </span>
-              <span className="font-data text-[11px] uppercase tracking-[0.1em] text-muted">
+              <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
                 {PHASE_LABELS[runningHere.phase] ?? runningHere.phase}
               </span>
               {runningHere.status === 'paused' && (

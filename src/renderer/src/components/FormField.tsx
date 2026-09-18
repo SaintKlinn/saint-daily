@@ -23,7 +23,7 @@ export function FormField({
           </span>
         )}
       </span>
-      <input aria-required={required} {...props} className={`${FIELD} text-[15px] ${className}`.trim()} />
+      <input aria-required={required} {...props} className={`${FIELD} text-corps ${className}`.trim()} />
     </label>
   );
 }
@@ -36,7 +36,7 @@ export function TextAreaField({
   return (
     <label className={LABEL}>
       {label}
-      <textarea {...props} className={`${FIELD} text-sm ${className}`.trim()} />
+      <textarea {...props} className={`${FIELD} text-corps ${className}`.trim()} />
     </label>
   );
 }
@@ -50,7 +50,7 @@ export function SelectField({
   return (
     <label className={LABEL}>
       {label}
-      <select {...props} className={`${FIELD} text-[15px] ${className}`.trim()}>
+      <select {...props} className={`${FIELD} text-corps ${className}`.trim()}>
         {children}
       </select>
     </label>
