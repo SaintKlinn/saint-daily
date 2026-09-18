@@ -390,7 +390,7 @@ export default function Calendrier() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-titre-ecran text-champagne">Calendrier</h1>

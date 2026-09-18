@@ -17,7 +17,7 @@ import EmptyState from '../components/EmptyState';
 
 function Section({ titre, children }: { titre: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 border border-ink-700 bg-ink-800 p-6">
+    <section className="flex flex-col gap-2 border border-ink-700 bg-ink-800 p-4">
       <h2 className="font-sans text-corps font-semibold text-champagne">{titre}</h2>
       {children}
     </section>
@@ -118,7 +118,7 @@ export default function Bilan() {
             <SemaineVsSemaine comparison={comparison} />
           </Section>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2">
             <Section titre="Répartition par tag">
               <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur les engagements pratiqués." />
             </Section>

@@ -348,7 +348,7 @@ export default function Accueil() {
         <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} rayVariant={0} />
       </motion.section>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-4">
+      <section className="flex min-h-0 flex-1 flex-col gap-2">
         <motion.h2
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -403,7 +403,7 @@ export default function Accueil() {
         )}
       </section>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-4">
+      <section className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
           <motion.h2
             initial={{ opacity: 0, y: 10 }}

@@ -60,7 +60,7 @@ export default function TaskPopover({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60" onClick={onClose}>
       <div
-        className="relative flex w-full max-w-sm flex-col gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6"
+        className="relative flex w-full max-w-sm flex-col gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <RayCorner variant={1} />

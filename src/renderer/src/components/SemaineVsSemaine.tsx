@@ -28,7 +28,7 @@ export default function SemaineVsSemaine({ comparison }: SemaineVsSemaineProps) 
   const delta = thisWeek.minutes - lastWeek.minutes;
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-3">
+      <div className="flex gap-6">
         <Bloc titre="Cette semaine" minutes={thisWeek.minutes} sessions={thisWeek.sessions} accent />
         <Bloc titre="Semaine dernière" minutes={lastWeek.minutes} sessions={lastWeek.sessions} accent={false} />
       </div>
