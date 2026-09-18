@@ -417,10 +417,10 @@ export default function DetailSkill() {
             <div className="flex flex-col overflow-y-auto">
               {entries.map((entry) => (
                 <div key={entry.id} className="flex gap-[18px] border-t border-ink-700 py-3.5 last:border-b">
-                  <p className="w-20 font-data text-xs text-muted">
+                  <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
-                  <p className="w-16 font-data text-xs text-accent-bright">{entry.durationMinutes} min</p>
+                  <p className="w-16 font-data text-secondaire text-accent-bright">{entry.durationMinutes} min</p>
                   <p className="flex-1 font-serif text-corps italic text-champagne">
                     {entry.note}
                     {/* Discret et à côté de la note plutôt qu'en colonne
@@ -428,7 +428,7 @@ export default function DetailSkill() {
                         plupart du temps aurait cassé l'alignement du journal
                         pour rien. */}
                     {entry.mood && (
-                      <span className="ml-2 font-sans not-italic text-xs text-muted">· {MOOD_LABELS[entry.mood]}</span>
+                      <span className="ml-2 font-sans not-italic text-secondaire text-muted">· {MOOD_LABELS[entry.mood]}</span>
                     )}
                   </p>
                 </div>
@@ -585,7 +585,7 @@ function GoalSetter({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Période
         <select
           value={period}
@@ -597,7 +597,7 @@ function GoalSetter({
           <option value="mensuel">Mensuel</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Métrique
         <select
           value={metric}
@@ -609,7 +609,7 @@ function GoalSetter({
           <option value="heures">Heures</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Cible
         <input
           type="number"

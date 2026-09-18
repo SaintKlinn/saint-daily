@@ -55,7 +55,7 @@ export default function PomodoroOverlay() {
       <ProgressRing size={40} radius={17} filled={Math.max(0, Math.min(1, filled))} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-serif text-corps text-champagne">{session.skillName}</p>
-        <p className="font-data text-xs text-muted">
+        <p className="font-data text-secondaire text-muted">
           {phaseLabel} · {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} · cycle{' '}
           {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
         </p>

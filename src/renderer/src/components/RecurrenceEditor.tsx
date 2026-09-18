@@ -36,7 +36,7 @@ export default function RecurrenceEditor({
 }) {
   return (
     <div className="relative flex flex-col gap-1.5">
-      <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
+      <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
       <div className="flex flex-wrap items-center gap-2">
         {RECURRENCE_TYPES.map((option) => (
           <button
@@ -51,7 +51,7 @@ export default function RecurrenceEditor({
               })
             }
             aria-pressed={type === option.value}
-            className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${type === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+            className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${type === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
           >
             {option.label}
           </button>
@@ -74,7 +74,7 @@ export default function RecurrenceEditor({
                   })
                 }
                 aria-pressed={selected}
-                className={`font-data text-xs px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {day.label}
               </button>
@@ -90,9 +90,9 @@ export default function RecurrenceEditor({
             value={interval ?? 2}
             disabled={disabled}
             onChange={(e) => onChange({ type, interval: Math.max(2, Number(e.target.value) || 2), weekdays })}
-            className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-xs text-champagne ${FOCUS_RING}`}
+            className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-secondaire text-champagne ${FOCUS_RING}`}
           />
-          <span className="text-xs text-muted">jours</span>
+          <span className="text-secondaire text-muted">jours</span>
         </div>
       )}
     </div>

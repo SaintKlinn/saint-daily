@@ -168,7 +168,7 @@ export default function NouvelleTache() {
           onChange={(e) => setScheduledAt(e.target.value)}
         />
         <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Durée</p>
+          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Durée</p>
           <div className="flex flex-wrap items-center gap-2">
             {DURATION_PRESETS.map((preset) => (
               <button
@@ -176,7 +176,7 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setDurationMinutes(preset)}
                 aria-pressed={durationMinutes === preset}
-                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {preset} min
               </button>
@@ -184,7 +184,7 @@ export default function NouvelleTache() {
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
+          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
           <div className="flex flex-wrap items-center gap-2">
             {PRIORITY_LEVELS.map((level) => (
               <button
@@ -192,7 +192,7 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setPriority(level)}
                 aria-pressed={priority === level}
-                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {PRIORITY_LABELS[level]}
               </button>
@@ -200,7 +200,7 @@ export default function NouvelleTache() {
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
+          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
           <div className="flex flex-wrap items-center gap-2">
             {RECURRENCE_TYPES.map((option) => (
               <button
@@ -208,7 +208,7 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setRecurrenceType(option.value)}
                 aria-pressed={recurrenceType === option.value}
-                className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {option.label}
               </button>
@@ -228,7 +228,7 @@ export default function NouvelleTache() {
                       )
                     }
                     aria-pressed={selected}
-                    className={`font-data text-xs px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                    className={`font-data text-secondaire px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
                   >
                     {day.label}
                   </button>
@@ -243,9 +243,9 @@ export default function NouvelleTache() {
                 min={2}
                 value={recurrenceInterval}
                 onChange={(e) => setRecurrenceInterval(Math.max(2, Number(e.target.value) || 2))}
-                className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-xs text-champagne ${FOCUS_RING}`}
+                className={`w-16 border border-ink-700 bg-ink-800 px-2 py-1 font-data text-secondaire text-champagne ${FOCUS_RING}`}
               />
-              <span className="text-xs text-muted">jours</span>
+              <span className="text-secondaire text-muted">jours</span>
             </div>
           )}
         </div>

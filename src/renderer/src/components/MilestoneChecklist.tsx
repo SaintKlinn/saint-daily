@@ -19,7 +19,7 @@ export default function MilestoneChecklist({
 }) {
   return (
     <div className="relative flex flex-col gap-1.5">
-      <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
+      <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
       {error && (
         <p role="alert" className="text-corps text-danger">
           {error}
@@ -85,7 +85,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           aria-label="Nouvelle sous-tâche"
           placeholder="Nouvelle sous-tâche"
           disabled={submitting}
-          className={`flex-1 border border-ink-700 bg-ink-900 px-2.5 py-1 text-xs text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`flex-1 border border-ink-700 bg-ink-900 px-2.5 py-1 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
         <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
           Ajouter

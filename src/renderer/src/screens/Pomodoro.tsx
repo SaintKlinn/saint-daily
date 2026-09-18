@@ -112,7 +112,7 @@ export default function Pomodoro() {
         )}
         {selectedSkill && (
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted">Durée de travail</p>
+            <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Durée de travail</p>
             <div className="flex flex-wrap items-center gap-2">
               {PRESET_WORK_MINUTES.map((preset) => (
                 <button
@@ -123,7 +123,7 @@ export default function Pomodoro() {
                     setCustomMinutesInput('');
                   }}
                   aria-pressed={effectiveWorkMinutes === preset}
-                  className={`font-data text-xs px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                  className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
                 >
                   {preset} min
                 </button>
@@ -151,7 +151,7 @@ export default function Pomodoro() {
                 }}
                 placeholder="Personnalisé"
                 aria-label="Durée de travail personnalisée en minutes"
-                className={`w-28 border bg-ink-800 px-3 py-1.5 font-data text-xs normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
+                className={`w-28 border bg-ink-800 px-3 py-1.5 font-data text-secondaire normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
               />
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function Pomodoro() {
         </button>
       </div>
 
-      <label className="relative flex w-full flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="relative flex w-full flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Note (optionnelle)
         <textarea
           value={note}

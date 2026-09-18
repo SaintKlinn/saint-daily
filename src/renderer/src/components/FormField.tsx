@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
-const LABEL = 'flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-muted';
+const LABEL = 'flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted';
 // focus:outline-none supprime le contour bleu par défaut, focus-visible:ring
 // le remplace uniquement pour la navigation clavier (jamais au clic souris)
 // — même paire que Toggle.tsx, jusqu'ici jamais reprise sur les champs texte.

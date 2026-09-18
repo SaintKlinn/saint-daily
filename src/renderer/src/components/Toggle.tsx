@@ -20,7 +20,7 @@ export default function Toggle({
     >
       <span className="flex flex-col gap-0.5">
         <span className="text-corps text-champagne">{label}</span>
-        {description && <span className="text-xs text-muted">{description}</span>}
+        {description && <span className="text-secondaire text-muted">{description}</span>}
       </span>
       <span className="relative inline-flex h-[22px] w-10 shrink-0 items-center">
         <input
