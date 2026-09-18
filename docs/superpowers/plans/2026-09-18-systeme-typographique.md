@@ -497,7 +497,17 @@ sed -i "s/\b$P-9\b/\1-8/g"      $FILES   # 36 px -> 32 px
 sed -i "s/\b$P-\[18px\]/\1-4/g" $FILES   # 18 px -> 16 px
 sed -i "s/\b$P-\[22px\]/\1-6/g" $FILES   # 22 px -> 24 px
 cd ../../..
+
+# --- deux crans de niveau page, traites a la main : un seul usage chacun ---
+# Focus.tsx : `py-10` (40 px) -> `py-12` (48 px), le cran « page », qui
+# l'aligne sur le rembourrage vertical de <main> dans AppShell.
+sed -i 's/px-8 py-10/px-8 py-12/' src/renderer/src/screens/Focus.tsx
+# AppShell.tsx : `px-14` (56 px) -> `px-12` (48 px) sur <main>, la gouttiere
+# de la zone de contenu.
+sed -i 's/overflow-y-auto px-14 py-12/overflow-y-auto px-12 py-12/' src/renderer/src/components/AppShell.tsx
 ```
+
+**Ne pas toucher au `gap-10` de la ligne 80 d'`AppShell.tsx`.** C'est l'écart entre le logo et le bloc des liens dans le rail de navigation, et la spec exclut nommément le rail de l'échelle d'espacement : ses dimensions suivent sa propre logique (72 px de large, icônes sans texte), pas le rythme du contenu. C'est la seule valeur hors des sept qui doit survivre, et l'étape 4 l'attend.
 
 **`gap-px` n'est pas touché** : il dessine les filets de séparation des listes de `Journal` et `Corbeille` par la couleur de fond du conteneur. C'est un trait, pas un espacement — motivé au §2 de la spec.
 
@@ -514,11 +524,24 @@ Attendu : aucun résultat pour les deux.
 
 - [ ] **Step 4 : Vérifier qu'il ne reste aucun cran hors échelle**
 
+Ne pas traquer une liste de crans indésirables connus : **énumérer l'ensemble réellement présent**, et vérifier qu'il est contenu dans les sept valeurs autorisées.
+
 ```
-grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\|space-x\|space-y\)-\(5\|7\|9\|10\|11\|14\|16\|20\|24\)\b" src/renderer/src/screens src/renderer/src/components
+grep -roh "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\|space-x\|space-y\)-[0-9.]*\b" src/renderer/src/screens src/renderer/src/components \
+  | sed 's/.*-//' | sort -u -V | tr '\n' ' '
 ```
 
-Attendu : aucun résultat. Les seules valeurs admises sont `0`, `px`, `1`, `2`, `3`, `4`, `6`, `8`, `12`.
+Attendu, **exactement cet ensemble et rien d'autre** : `0 1 2 3 4 6 8 10 12`.
+
+Le `10` est la seule valeur hors des sept crans autorisés qui doit subsister, et elle doit provenir d'**un seul endroit** — le `gap-10` du rail de navigation, ligne 80 d'`AppShell.tsx`, que la spec exclut de l'échelle. Le confirmer plutôt que le supposer :
+
+```
+grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\|space-x\|space-y\)-10\b" src/renderer/src/screens src/renderer/src/components
+```
+
+Attendu : cette unique ligne d'`AppShell.tsx`.
+
+Toute autre valeur qui apparaît est un cran hors échelle — y compris un que la table de correspondance n'avait pas prévu. **C'est la forme de vérification à préférer partout**, et elle a déjà fait ses preuves deux fois sur ce chantier : la tâche 2 a laissé passer une taille de texte (`text-3xl`) parce que son contrôle énumérait les valeurs attendues au lieu de lister celles qui existent, et cette même énumération appliquée aux espacements a révélé les crans `10` et `14`, que la table de correspondance de la spec ne couvrait pas non plus. Un inventaire ne peut pas chercher ce qu'il n'a pas imaginé ; une énumération, si.
 
 - [ ] **Step 5 : Typecheck, tests, commit**
 
@@ -617,8 +640,11 @@ Si ces valeurs ne sont pas celles attendues, c'est la tâche 4 qui a échoué su
 
 - [ ] **Step 5 : Vérifier, typecheck, tests, commit**
 
+Reprendre l'énumération de l'étape 4 de la tâche 4 — l'ensemble doit toujours valoir exactement `0 1 2 3 4 6 8 12` :
+
 ```
-grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\)-[0-9]*\.5\b" src/renderer/src/screens src/renderer/src/components
+grep -roh "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\|space-x\|space-y\)-[0-9.]*\b" src/renderer/src/screens src/renderer/src/components \
+  | sed 's/.*-//' | sort -u -V | tr '\n' ' '
 npm run typecheck
 npx vitest run
 git add src/renderer/src/screens src/renderer/src/components
