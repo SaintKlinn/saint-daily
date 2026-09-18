@@ -603,9 +603,17 @@ Le cas le plus net de l'application : des groupes titrés (Rappels, Pomodoro, Do
 
 `ListeSkills`, `ListeProjets`, `Corbeille` : une ligne = un groupe → `6` entre les lignes, `2` dedans. `DetailSkill` et `DetailProjet` : les `<section>` sont des groupes → `8` entre elles.
 
-- [ ] **Step 4 : Traiter les composants partagés**
+- [ ] **Step 4 : Vérifier les composants partagés**
 
-Ne changer que ce qui est un espacement. `EmptyState` (`px-6 py-9` → `px-6 py-8`), `Button` (`px-5 py-3` → `px-6 py-3` pour `md`, `px-4 py-2` conservé pour `sm`). **Ne pas toucher** aux dimensions géométriques : les 72 px du rail dans `AppShell`, le diamètre de `ProgressRing`, les 40 px de `PastilleCompte`.
+Cette étape **vérifie**, elle n'applique pas : les `sed` de la tâche 4 ont déjà converti globalement `-9` → `-8` et `-5` → `-6`. `EmptyState` doit donc déjà porter `px-6 py-8` (et non plus `py-9`), et `Button` `px-6 py-3` pour la taille `md` (et non plus `px-5`), `px-4 py-2` étant conservé pour `sm`. Le confirmer :
+
+```
+grep -n "px-\|py-" src/renderer/src/components/EmptyState.tsx src/renderer/src/components/Button.tsx
+```
+
+Si ces valeurs ne sont pas celles attendues, c'est la tâche 4 qui a échoué sur ces fichiers — le signaler plutôt que de corriger ici, parce que l'écart vaudrait alors pour d'autres fichiers aussi.
+
+**Ne pas toucher** aux dimensions géométriques : les 72 px du rail dans `AppShell`, le diamètre de `ProgressRing`, les 40 px de `PastilleCompte`. Ce ne sont pas des espacements.
 
 - [ ] **Step 5 : Vérifier, typecheck, tests, commit**
 
@@ -677,7 +685,9 @@ grep -rn "\b\(gap\|gap-x\|gap-y\|p\|px\|py\|pt\|pb\|pl\|pr\|m\|mt\|mb\|ml\|mr\)-
 grep -rn "\b\(gap\|p\|px\|py\)-\[" src/renderer/src/screens src/renderer/src/components
 ```
 
-Attendu : le premier ne renvoie que les dimensions de la heatmap (`h-[13px]`, `w-[13px]`, `leading-[13px]`) — qui sont géométriques et non typographiques ; les deux autres, rien.
+Attendu : **les trois ne renvoient rien.**
+
+Ne pas se laisser induire en erreur par les dimensions de la heatmap posées à l'étape 2 : `h-[13px]`, `w-[13px]` et `leading-[13px]` sont des valeurs arbitraires, mais aucune ne contient la chaîne `text-[`, donc le premier motif ne les capture pas. Elles sont par ailleurs légitimes — ce sont des dimensions géométriques, pas des tailles de texte, et la contrainte globale ne porte que sur ces dernières.
 
 - [ ] **Step 6 : Vérification finale**
 
