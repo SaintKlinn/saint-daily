@@ -219,7 +219,7 @@ export default function Accueil() {
   return (
     <div className="flex flex-col gap-8">
       {showMorning && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border border-accent-mid bg-ink-800 px-6 py-4">
           <div>
             <p className="text-corps text-champagne">Bonjour — voici ta journée</p>
             <p className="mt-1 text-secondaire text-muted">
@@ -270,7 +270,7 @@ export default function Accueil() {
       )}
 
       {settings && !weeklyReviewDismissedThisMount && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border border-accent-mid bg-ink-800 px-6 py-4">
           <div>
             <p className="text-corps text-champagne">Ta semaine est prête</p>
             <p className="mt-1 text-secondaire text-muted">
@@ -380,7 +380,7 @@ export default function Accueil() {
                 key={skill.id}
                 variants={itemVariants}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
+                className={`flex items-center gap-2 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
               >
                 <ProgressRing
                   size={36}
@@ -438,7 +438,7 @@ export default function Accueil() {
                 key={task.id}
                 variants={itemVariants}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
+                className={`flex items-center gap-2 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
               >
                 <button
                   type="button"
