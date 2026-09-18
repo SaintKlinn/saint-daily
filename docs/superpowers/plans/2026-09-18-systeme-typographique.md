@@ -662,7 +662,25 @@ git commit -m "fix: apply the same inside/outside rhythm to the rest of the app"
 - Consumes: tout ce qui précède.
 - Produces: l'état final attendu par la spec.
 
-- [ ] **Step 1 : Les graisses**
+- [ ] **Step 1a : Retirer les `font-semibold` devenus inertes**
+
+Le rôle `libelle` porte `fontWeight: '600'` dans son tuple. Or les 20 sites `text-libelle` du dépôt portent **aussi** un `font-semibold` explicite : avant la migration il était porteur, puisque `text-xs` n'avait pas de graisse propre ; depuis, il restate à l'identique ce que le rôle fournit déjà (600 = 600).
+
+Ce n'est pas un défaut de rendu — les deux résolvent la même déclaration — mais c'est du bruit qui fait douter de la source de vérité, et qui empêcherait un changement de graisse du rôle de se propager.
+
+```
+sed -i 's/text-libelle font-semibold /text-libelle /g' src/renderer/src/screens/*.tsx src/renderer/src/components/*.tsx
+```
+
+Vérifier qu'il n'en reste aucun, puis que le poids rendu n'a pas bougé :
+
+```
+grep -rn "text-libelle font-semibold\|font-semibold text-libelle" src/renderer/src/screens src/renderer/src/components
+```
+
+Attendu : aucun résultat. **`text-corps font-semibold` n'est pas concerné** — là, `font-semibold` est bien porteur, puisque `corps` est en 400.
+
+- [ ] **Step 1b : Les graisses**
 
 Si l'étape 5 de la tâche 1 a confirmé que le balisage l'emporte, les tuples portent déjà la graisse de chaque rôle et il n'y a qu'à traiter les exceptions : les titres de section de carte gardent `font-semibold` sur `text-corps`. Vérifier qu'ils l'ont tous :
 
