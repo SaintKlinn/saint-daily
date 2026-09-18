@@ -390,7 +390,7 @@ export default function Calendrier() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-titre-ecran text-champagne">Calendrier</h1>
@@ -539,7 +539,7 @@ export default function Calendrier() {
                     // pixel couvert par un bloc est un non-cible, et déposer
                     // sur un créneau déjà occupé est silencieusement refusé —
                     // alors que la règle est d'avertir sans jamais interdire.
-                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-1.5 py-0.5 text-left ${priorityColor ? 'border-l-[3px]' : ''} ${task.skippedAt ? 'opacity-60' : ''} ${dragging ? 'pointer-events-none' : ''}`}
+                    className={`absolute inset-x-0.5 overflow-hidden border border-accent-bright/40 bg-accent-bright/15 px-2 py-1 text-left ${priorityColor ? 'border-l-[3px]' : ''} ${task.skippedAt ? 'opacity-60' : ''} ${dragging ? 'pointer-events-none' : ''}`}
                     style={{
                       top: `${topPercent}%`,
                       height: `${heightPercent}%`,
@@ -562,7 +562,7 @@ export default function Calendrier() {
                     // Même raison que les blocs de tâches : activer
                     // l'historique de pratique ajouterait sinon autant de
                     // zones mortes invisibles sur la grille.
-                    className={`absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-1.5 py-0.5 text-left opacity-70 ${dragging ? 'pointer-events-none' : ''}`}
+                    className={`absolute inset-x-0.5 overflow-hidden border border-ink-700 bg-ink-800/60 px-2 py-1 text-left opacity-70 ${dragging ? 'pointer-events-none' : ''}`}
                     style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
                   >
                     <p className="truncate font-data text-libelle text-muted">{entry.skillName}</p>

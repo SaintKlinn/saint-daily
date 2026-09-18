@@ -27,9 +27,9 @@ export default function SkillPicker({
   }, [skills, entriesBySkill, search]);
 
   return (
-    <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+    <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
       Skill
-      <div className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2.5">
+      <div className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-3">
         <SearchIcon className="text-muted" />
         <input
           value={search}
@@ -41,7 +41,7 @@ export default function SkillPicker({
       </div>
       <div className="max-h-56 overflow-y-auto border border-ink-700">
         {visible.length === 0 && (
-          <p className="px-3.5 py-3 text-corps normal-case tracking-normal text-muted">
+          <p className="px-4 py-3 text-corps normal-case tracking-normal text-muted">
             {loading ? 'Chargement…' : 'Aucun skill ne correspond.'}
           </p>
         )}
@@ -56,7 +56,7 @@ export default function SkillPicker({
               type="button"
               onClick={() => onChange(skill.id)}
               aria-pressed={selected}
-              className={`flex w-full items-center justify-between gap-3 border-b border-l-2 border-ink-700 bg-ink-800 px-3.5 py-2.5 text-left normal-case tracking-normal transition-colors duration-150 last:border-b-0 ${FOCUS_RING} ${selected ? 'border-l-accent-bright bg-ink-700' : 'border-l-transparent hover:bg-ink-700'}`}
+              className={`flex w-full items-center justify-between gap-3 border-b border-l-2 border-ink-700 bg-ink-800 px-4 py-3 text-left normal-case tracking-normal transition-colors duration-150 last:border-b-0 ${FOCUS_RING} ${selected ? 'border-l-accent-bright bg-ink-700' : 'border-l-transparent hover:bg-ink-700'}`}
             >
               <span className={`font-serif text-corps ${selected ? 'text-accent-bright' : 'text-champagne'}`}>{skill.name}</span>
               <span className="font-data text-right text-secondaire text-muted">

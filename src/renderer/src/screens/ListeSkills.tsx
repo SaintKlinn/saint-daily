@@ -44,7 +44,7 @@ export default function ListeSkills() {
   }, [skills, tag, search, showArchived]);
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -52,9 +52,9 @@ export default function ListeSkills() {
         className="flex items-center justify-between"
       >
         <h1 className="font-serif text-titre-ecran text-champagne">Skills</h1>
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-4">
           <Toggle bordered={false} checked={showArchived} onChange={setShowArchived} label="Voir les skills en pause" />
-          <div className="flex items-center gap-2 border border-ink-700 bg-ink-900 px-3.5 py-2">
+          <div className="flex items-center gap-2 border border-ink-700 bg-ink-900 px-4 py-2">
             <SearchIcon className="text-muted" />
             <input
               value={search}
@@ -77,11 +77,11 @@ export default function ListeSkills() {
       )}
 
       {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setTag(null)}
             aria-pressed={tag === null}
-            className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+            className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === null ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
           >
             Tous les tags
           </button>
@@ -90,7 +90,7 @@ export default function ListeSkills() {
               key={t}
               onClick={() => setTag(tag === t ? null : t)}
               aria-pressed={tag === t}
-              className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+              className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 ${tag === t ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
             >
               #{t}
             </button>
@@ -107,7 +107,7 @@ export default function ListeSkills() {
             <Link
               key={skill.id}
               to={`/skills/${skill.id}`}
-              className={`flex items-center gap-5 bg-ink-800 px-[22px] py-5 transition-colors duration-200 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
+              className={`flex items-center gap-6 bg-ink-800 px-6 py-6 transition-colors duration-200 hover:bg-ink-700 motion-safe:animate-[fade-up_0.4s_ease-out_backwards] ${skill.archivedAt ? 'opacity-55' : ''}`}
               style={{ animationDelay: `${i * 40}ms` }}
             >
               <ProgressRing
@@ -118,10 +118,10 @@ export default function ListeSkills() {
                 }
               />
               <div className="flex-1">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <span className="font-serif text-titre text-champagne">{skill.name}</span>
                   <span
-                    className={`font-data text-libelle uppercase tracking-[0.08em] px-2 py-0.5 border ${
+                    className={`font-data text-libelle uppercase tracking-[0.08em] px-2 py-1 border ${
                       skill.archivedAt ? 'border-muted text-muted' : 'border-accent-mid text-accent-mid'
                     }`}
                   >

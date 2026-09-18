@@ -178,14 +178,14 @@ export default function Reglages() {
           </p>
         )}
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <div>
             <p className="text-corps text-champagne">Seuil de rappel</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               Nombre de jours sans pratique avant qu'un skill apparaisse dans les rappels dus
             </p>
           </div>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -204,14 +204,14 @@ export default function Reglages() {
           label="Notifications natives"
           description="Une notification quand un skill franchit son seuil de rappel"
         />
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <div>
             <p className="text-corps text-champagne">Rappel avant une tâche planifiée</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               Combien de minutes à l'avance prévenir qu'une tâche planifiée approche
             </p>
           </div>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -234,9 +234,9 @@ export default function Reglages() {
       <section className="flex flex-col gap-0">
         <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Pomodoro</h2>
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <p className="text-corps text-champagne">Travail</p>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -249,9 +249,9 @@ export default function Reglages() {
           </label>
         </div>
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <p className="text-corps text-champagne">Pause courte</p>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -264,9 +264,9 @@ export default function Reglages() {
           </label>
         </div>
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <p className="text-corps text-champagne">Pause longue</p>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -279,14 +279,14 @@ export default function Reglages() {
           </label>
         </div>
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <div>
             <p className="text-corps text-champagne">Cycles avant la pause longue</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               Nombre de cycles de travail entre deux pauses longues
             </p>
           </div>
-          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+          <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
             <input
               type="number"
               min={1}
@@ -311,10 +311,10 @@ export default function Reglages() {
       <section className="flex flex-col">
         <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Données</h2>
 
-        <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
           <div>
             <p className="text-corps text-champagne">Exporter mes données</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               JSON pour tout conserver, CSV pour ouvrir les séances dans un tableur
             </p>
           </div>
@@ -359,7 +359,7 @@ export default function Reglages() {
             {templates.map((template) => (
               <li
                 key={template.id}
-                className="flex items-center justify-between gap-3 border-b border-ink-700 py-[14px]"
+                className="flex items-center justify-between gap-3 border-b border-ink-700 py-4"
               >
                 <p className="text-corps text-champagne">{template.text}</p>
                 <Button variant="secondary" size="sm" onClick={() => handleRemoveTemplate(template.id)}>
@@ -376,7 +376,7 @@ export default function Reglages() {
             onChange={(e) => setNewTemplateText(e.target.value)}
             aria-label="Nouveau modèle de note"
             placeholder="Ex. : Séance courte, peu de progrès aujourd'hui"
-            className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-1.5 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
+            className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />
           <Button type="submit" variant="secondary" size="sm" disabled={!newTemplateText.trim()}>
             Ajouter
@@ -415,10 +415,10 @@ export default function Reglages() {
         </details>
       </section>
 
-      <div className="flex items-center justify-between border-b border-ink-700 py-[18px]">
+      <div className="flex items-center justify-between border-b border-ink-700 py-4">
         <div>
           <p className="text-corps text-champagne">Corbeille</p>
-          <p className="mt-0.5 text-secondaire text-muted">
+          <p className="mt-1 text-secondaire text-muted">
             Restaurer ou supprimer définitivement ce qui a été supprimé
           </p>
         </div>

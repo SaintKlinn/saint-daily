@@ -232,11 +232,11 @@ export default function DetailSkill() {
         <div>
           <h1 className="font-serif text-heros leading-tight text-champagne">{skill.name}</h1>
           {skill.tags.length > 0 && (
-            <p className="mt-1.5 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+            <p className="mt-2 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <label className="relative flex items-center gap-1.5 border border-accent-mid px-3.5 py-2 font-data text-libelle uppercase tracking-[0.08em] text-accent-mid">
+          <label className="relative flex items-center gap-2 border border-accent-mid px-4 py-2 font-data text-libelle uppercase tracking-[0.08em] text-accent-mid">
             {LEVEL_LABELS[skill.genericLevel]}
             <ChevronDownIcon />
             <select
@@ -252,7 +252,7 @@ export default function DetailSkill() {
               ))}
             </select>
           </label>
-          <label className="relative flex items-center gap-1.5 border border-ink-700 px-3.5 py-2 font-data text-libelle uppercase tracking-[0.08em] text-muted">
+          <label className="relative flex items-center gap-2 border border-ink-700 px-4 py-2 font-data text-libelle uppercase tracking-[0.08em] text-muted">
             {skill.projectId ? (projects.find((p) => p.id === skill.projectId)?.name ?? 'Projet') : 'Aucun projet'}
             <ChevronDownIcon />
             <select
@@ -282,7 +282,7 @@ export default function DetailSkill() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-9">
+      <div className="flex min-h-0 flex-1 gap-8">
         <div className="relative flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6">
           <RayCorner variant={0} />
           <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
@@ -338,7 +338,7 @@ export default function DetailSkill() {
               {badges.map((badge) => (
                 <li
                   key={badge.key}
-                  className={`flex flex-col gap-0.5 border px-3 py-1.5 font-data text-libelle uppercase tracking-[0.08em] ${
+                  className={`flex flex-col gap-1 border px-3 py-2 font-data text-libelle uppercase tracking-[0.08em] ${
                     badge.unlocked ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
                   }`}
                 >
@@ -367,10 +367,10 @@ export default function DetailSkill() {
                 {milestonesError}
               </p>
             )}
-            <ul className="flex flex-col gap-0 border-l border-ink-700 pl-[18px]">
+            <ul className="flex flex-col gap-0 border-l border-ink-700 pl-4">
               {milestones.map((m) => (
                 <li key={m.id} className="flex items-center py-2">
-                  <label className="flex cursor-pointer items-center gap-2.5">
+                  <label className="flex cursor-pointer items-center gap-3">
                     {/* Marge négative sur la case seulement (pas la ligne) :
                         elle chevauche le trait vertical du <ul>, le texte
                         suivant garde une position quasi normale grâce au
@@ -416,7 +416,7 @@ export default function DetailSkill() {
             </div>
             <div className="flex flex-col overflow-y-auto">
               {entries.map((entry) => (
-                <div key={entry.id} className="flex gap-[18px] border-t border-ink-700 py-3.5 last:border-b">
+                <div key={entry.id} className="flex gap-4 border-t border-ink-700 py-4 last:border-b">
                   <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
@@ -545,7 +545,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           aria-label="Nouveau jalon"
           placeholder="Nouveau jalon"
           disabled={submitting}
-          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-1.5 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
         <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
           Ajouter
@@ -585,7 +585,7 @@ function GoalSetter({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Période
         <select
           value={period}
@@ -597,7 +597,7 @@ function GoalSetter({
           <option value="mensuel">Mensuel</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Métrique
         <select
           value={metric}
@@ -609,7 +609,7 @@ function GoalSetter({
           <option value="heures">Heures</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Cible
         <input
           type="number"

@@ -146,11 +146,11 @@ export default function NouvelleTache() {
   }
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
+    <div className="relative mx-auto flex w-full max-w-md flex-col gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-8">
       <RayCorner variant={2} />
       <div className="relative">
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle tâche</p>
-        <h1 className="mt-1.5 font-serif text-titre-ecran text-champagne">Ajouter une tâche</h1>
+        <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Ajouter une tâche</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <FormField label="Titre" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -167,7 +167,7 @@ export default function NouvelleTache() {
           value={scheduledAt}
           onChange={(e) => setScheduledAt(e.target.value)}
         />
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Durée</p>
           <div className="flex flex-wrap items-center gap-2">
             {DURATION_PRESETS.map((preset) => (
@@ -176,14 +176,14 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setDurationMinutes(preset)}
                 aria-pressed={durationMinutes === preset}
-                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {preset} min
               </button>
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
           <div className="flex flex-wrap items-center gap-2">
             {PRIORITY_LEVELS.map((level) => (
@@ -192,14 +192,14 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setPriority(level)}
                 aria-pressed={priority === level}
-                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {PRIORITY_LABELS[level]}
               </button>
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
           <div className="flex flex-wrap items-center gap-2">
             {RECURRENCE_TYPES.map((option) => (
@@ -208,7 +208,7 @@ export default function NouvelleTache() {
                 type="button"
                 onClick={() => setRecurrenceType(option.value)}
                 aria-pressed={recurrenceType === option.value}
-                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {option.label}
               </button>
@@ -228,7 +228,7 @@ export default function NouvelleTache() {
                       )
                     }
                     aria-pressed={selected}
-                    className={`font-data text-secondaire px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                    className={`font-data text-secondaire px-3 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
                   >
                     {day.label}
                   </button>

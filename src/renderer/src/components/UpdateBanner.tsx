@@ -79,7 +79,7 @@ export default function UpdateBanner() {
       )}
       {phase === 'downloading' && (
         <div className="flex-1">
-          <p className="mb-1.5 font-sans text-corps text-champagne">
+          <p className="mb-2 font-sans text-corps text-champagne">
             Téléchargement de la mise à jour… {Math.round(percent)} %
           </p>
           {/* Même rail que partout ailleurs. C'était le seul `rounded-full`

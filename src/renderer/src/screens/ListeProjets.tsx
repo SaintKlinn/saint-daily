@@ -9,7 +9,7 @@ export default function ListeProjets() {
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-titre-ecran text-champagne">Projets</h1>
         <Link to="/projets/nouveau" className={buttonClassName('primary')}>
@@ -28,7 +28,7 @@ export default function ListeProjets() {
           <Link
             key={project.id}
             to={`/projets/${project.id}`}
-            className="flex items-center gap-5 bg-ink-800 px-[22px] py-5 transition-colors duration-200 hover:bg-ink-700"
+            className="flex items-center gap-6 bg-ink-800 px-6 py-6 transition-colors duration-200 hover:bg-ink-700"
           >
             <div className="flex-1">
               <span className="font-serif text-titre text-champagne">{project.name}</span>

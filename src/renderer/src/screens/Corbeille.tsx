@@ -59,7 +59,7 @@ export default function Corbeille() {
 
       <div>
         <h1 className="font-serif text-titre-ecran text-champagne">Corbeille</h1>
-        <p className="mt-1.5 text-secondaire text-muted">
+        <p className="mt-2 text-secondaire text-muted">
           Rien n'en sort tout seul : un élément y reste jusqu'à ce que tu le restaures ou le supprimes
           définitivement.
         </p>
@@ -83,13 +83,13 @@ export default function Corbeille() {
       ) : (
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
           {deletedEngagements.map((engagement) => (
-            <div key={engagement.id} className="flex items-center gap-4 bg-ink-800 px-[18px] py-4">
+            <div key={engagement.id} className="flex items-center gap-4 bg-ink-800 px-4 py-4">
               <span className="w-14 shrink-0 font-data text-libelle uppercase tracking-[0.08em] text-muted">
                 {typeLabel(engagement)}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-serif text-titre text-champagne">{engagement.name}</p>
-                <p className="mt-0.5 font-data text-libelle text-muted">
+                <p className="mt-1 font-data text-libelle text-muted">
                   Supprimé le {formatDeletedAt(engagement.deletedAt as string)}
                 </p>
               </div>

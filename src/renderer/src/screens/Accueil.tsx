@@ -217,12 +217,12 @@ export default function Accueil() {
   }, [stats, settings]);
 
   return (
-    <div className="flex flex-col gap-9">
+    <div className="flex flex-col gap-8">
       {showMorning && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-6 py-4">
           <div>
             <p className="text-corps text-champagne">Bonjour — voici ta journée</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               {tasksToday.length} tâche{tasksToday.length > 1 ? 's' : ''} planifiée
               {tasksToday.length > 1 ? 's' : ''} aujourd'hui · {dueSkills.length} rappel
               {dueSkills.length > 1 ? 's' : ''} dû{dueSkills.length > 1 ? 's' : ''}
@@ -235,10 +235,10 @@ export default function Accueil() {
       )}
 
       {showEvening && (
-        <div className="flex flex-col gap-2 border border-ink-700 bg-ink-800 px-5 py-4">
+        <div className="flex flex-col gap-2 border border-ink-700 bg-ink-800 px-6 py-4">
           <div>
             <p className="text-corps text-champagne">Un mot sur ta journée ?</p>
-            <p className="mt-0.5 text-secondaire text-muted">Une ligne suffit — ce n'est pas un journal.</p>
+            <p className="mt-1 text-secondaire text-muted">Une ligne suffit — ce n'est pas un journal.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -270,10 +270,10 @@ export default function Accueil() {
       )}
 
       {settings && !weeklyReviewDismissedThisMount && shouldShowWeeklyReview(settings.weeklyReviewDismissedAt) && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border border-accent-mid bg-ink-800 px-6 py-4">
           <div>
             <p className="text-corps text-champagne">Ta semaine est prête</p>
-            <p className="mt-0.5 text-secondaire text-muted">
+            <p className="mt-1 text-secondaire text-muted">
               Un coup d'œil sur ce que tu as pratiqué ces derniers jours.
             </p>
           </div>
@@ -336,7 +336,7 @@ export default function Accueil() {
         animate="visible"
         variants={listVariants}
         transition={{ delayChildren: 0.25 }}
-        className="grid grid-cols-3 gap-5"
+        className="grid grid-cols-3 gap-6"
       >
         <StatCard label="Skills actifs" value={String(activeSkills.length)} rayVariant={2} />
         <StatCard
@@ -348,7 +348,7 @@ export default function Accueil() {
         <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} rayVariant={0} />
       </motion.section>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-3.5">
+      <section className="flex min-h-0 flex-1 flex-col gap-4">
         <motion.h2
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -380,7 +380,7 @@ export default function Accueil() {
                 key={skill.id}
                 variants={itemVariants}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-center gap-[18px] border border-ink-700 bg-ink-800 p-[18px] ${i > 0 ? 'border-t-0' : ''}`}
+                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
               >
                 <ProgressRing
                   size={36}
@@ -390,7 +390,7 @@ export default function Accueil() {
                 <Link to={`/skills/${skill.id}`} className="flex-1 transition-opacity duration-150 hover:opacity-80">
                   <p className="font-serif text-titre text-champagne">{skill.name}</p>
                   {skill.tags.length > 0 && (
-                    <p className="mt-0.5 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+                    <p className="mt-1 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
                   )}
                 </Link>
                 <p className="font-data text-secondaire text-muted">pas pratiqué depuis {daysSince} j</p>
@@ -403,7 +403,7 @@ export default function Accueil() {
         )}
       </section>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-3.5">
+      <section className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="flex items-center justify-between">
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -438,7 +438,7 @@ export default function Accueil() {
                 key={task.id}
                 variants={itemVariants}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-center gap-[18px] border border-ink-700 bg-ink-800 p-[18px] ${i > 0 ? 'border-t-0' : ''}`}
+                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
               >
                 <button
                   type="button"
@@ -461,7 +461,7 @@ export default function Accueil() {
                     {task.name}
                   </p>
                   {task.tags.length > 0 && (
-                    <p className="mt-0.5 text-secondaire text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
+                    <p className="mt-1 text-secondaire text-muted">{task.tags.map((t) => `#${t}`).join(' ')}</p>
                   )}
                 </div>
                 <p className="font-data text-secondaire text-muted">
@@ -496,7 +496,7 @@ function StatCard({
     <motion.div
       variants={itemVariants}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative flex flex-col gap-1.5 overflow-hidden border px-6 py-5 ${hero ? 'border-accent-bright/35' : 'border-ink-700'}`}
+      className={`relative flex flex-col gap-2 overflow-hidden border px-6 py-6 ${hero ? 'border-accent-bright/35' : 'border-ink-700'}`}
       style={{
         background: hero
           ? `linear-gradient(180deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 60%, ${colors.accent.bright}1f 100%)`
@@ -505,7 +505,7 @@ function StatCard({
       }}
     >
       <RayCorner variant={rayVariant} />
-      <p className="relative flex items-center gap-[7px] font-data text-libelle uppercase tracking-[0.1em] text-muted">
+      <p className="relative flex items-center gap-2 font-data text-libelle uppercase tracking-[0.1em] text-muted">
         <span
           className="h-[5px] w-[5px] rounded-full"
           style={{

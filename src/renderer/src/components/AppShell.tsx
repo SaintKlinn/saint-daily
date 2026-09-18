@@ -86,7 +86,7 @@ export default function AppShell() {
           style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 70%)` }}
         />
         <LogoMark width={30} height={20} animated className="relative" />
-        <div className="relative flex flex-col items-center gap-1.5">
+        <div className="relative flex flex-col items-center gap-2">
           {navItems.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
@@ -124,7 +124,7 @@ export default function AppShell() {
         <RailFlare />
       </nav>
       <main
-        className="flex-1 overflow-y-auto px-14 py-12"
+        className="flex-1 overflow-y-auto px-12 py-12"
         style={{
           backgroundImage: `radial-gradient(ellipse 1100px 560px at 62% -6%, ${colors.accent.bright}1a, transparent 62%), radial-gradient(ellipse 700px 420px at 8% 78%, ${colors.accent.bright}0c, transparent 68%)`,
         }}

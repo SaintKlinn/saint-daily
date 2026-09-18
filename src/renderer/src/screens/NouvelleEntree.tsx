@@ -67,11 +67,11 @@ export default function NouvelleEntree() {
   }
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
+    <div className="relative mx-auto flex w-full max-w-md flex-col gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-8">
       <RayCorner variant={0} />
       <div className="relative">
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
-        <h1 className="mt-1.5 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
+        <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
@@ -82,9 +82,9 @@ export default function NouvelleEntree() {
             </option>
           ))}
         </SelectField>
-        <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
           Durée
-          <div className="flex items-baseline gap-2.5 border border-ink-700 bg-ink-800 px-3.5 py-3">
+          <div className="flex items-baseline gap-3 border border-ink-700 bg-ink-800 px-4 py-3">
             <input
               type="number"
               min={1}
@@ -111,7 +111,7 @@ export default function NouvelleEntree() {
           placeholder="technique, difficile"
         />
         {templates.length > 0 && (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Modèles de note</p>
             <div className="flex flex-wrap gap-2">
               {templates.map((template) => (
@@ -120,7 +120,7 @@ export default function NouvelleEntree() {
                   type="button"
                   onClick={() => setNote(template.text)}
                   title={template.text}
-                  className={`max-w-[220px] truncate border border-ink-700 px-3 py-1.5 text-left text-secondaire text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
+                  className={`max-w-[220px] truncate border border-ink-700 px-3 py-2 text-left text-secondaire text-muted transition-colors hover:text-champagne ${FOCUS_RING}`}
                 >
                   {template.text}
                 </button>

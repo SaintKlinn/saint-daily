@@ -56,32 +56,32 @@ export default function Login() {
         <LogoMark width={92} height={61} animated />
         <h1 className="font-serif text-titre-ecran text-champagne">Saint Daily</h1>
       </div>
-      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-900 p-9">
-        <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4 border border-ink-700 bg-ink-900 p-8">
+        <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
           Email
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-3 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
           Mot de passe
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
+            className="border border-ink-700 bg-ink-800 px-3 py-3 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
         {error && <p role="alert" className="text-corps text-danger">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="bg-accent-bright px-4 py-2.5 font-sans font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
+          className="bg-accent-bright px-4 py-3 font-sans font-semibold text-ink-900 hover:bg-accent-hover disabled:opacity-60"
         >
           {submitting ? 'Connexion…' : 'Se connecter'}
         </button>

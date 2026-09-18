@@ -66,7 +66,7 @@ export default function HeatmapCalendrier({
         aria-label="Engagement affiché dans la heatmap"
         value={selectedEngagementId}
         onChange={(event) => onSelectEngagement(event.target.value)}
-        className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-1.5 text-secondaire text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+        className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-2 text-secondaire text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
       >
         <option value="tous">Tous les engagements</option>
         {engagements.map((engagement) => (
@@ -79,8 +79,8 @@ export default function HeatmapCalendrier({
       {/* La grille dépasse la largeur disponible : elle défile dans son
           propre conteneur, jamais la page entière. */}
       <div className="overflow-x-auto pb-1">
-        <div className="flex gap-1.5" role="img" aria-label={gridLabel}>
-          <div className="flex shrink-0 flex-col gap-[3px] pr-1">
+        <div className="flex gap-2" role="img" aria-label={gridLabel}>
+          <div className="flex shrink-0 flex-col gap-1 pr-1">
             {DAY_LABELS.map((label, index) => (
               // Un jour sur deux seulement : sept libellés sur 11px de
               // haut chacun seraient illisibles.
@@ -89,9 +89,9 @@ export default function HeatmapCalendrier({
               </span>
             ))}
           </div>
-          <div className="flex gap-[3px]">
+          <div className="flex gap-1">
             {grid.map((column) => (
-              <div key={column[0].dayKey} className="flex flex-col gap-[3px]">
+              <div key={column[0].dayKey} className="flex flex-col gap-1">
                 {column.map((cell) => (
                   <div
                     key={cell.dayKey}

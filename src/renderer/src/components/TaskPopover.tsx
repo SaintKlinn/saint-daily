@@ -73,7 +73,7 @@ export default function TaskPopover({
         <p className="relative font-data text-secondaire text-muted">
           {formatSlot(task.scheduledAt as string, task.scheduledEndsAt as string)}
         </p>
-        <div className="relative flex flex-col gap-1.5">
+        <div className="relative flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
           <div className="flex flex-wrap items-center gap-2">
             {PRIORITY_LEVELS.map((level) => (
@@ -82,27 +82,27 @@ export default function TaskPopover({
                 type="button"
                 onClick={() => onPriorityChange(level)}
                 aria-pressed={task.priority === level}
-                className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${task.priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${task.priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {PRIORITY_LABELS[level]}
               </button>
             ))}
           </div>
         </div>
-        <div className="relative flex flex-col gap-1.5">
+        <div className="relative flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Reporter</p>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => onSnooze('aujourdhui')}
-              className={`font-data text-secondaire px-3 py-1.5 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
+              className={`font-data text-secondaire px-3 py-2 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
             >
               Plus tard aujourd'hui
             </button>
             <button
               type="button"
               onClick={() => onSnooze('demain')}
-              className={`font-data text-secondaire px-3 py-1.5 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
+              className={`font-data text-secondaire px-3 py-2 border border-ink-700 text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
             >
               Demain
             </button>
@@ -114,12 +114,12 @@ export default function TaskPopover({
           onAdd={addMilestone}
           error={milestonesError}
         />
-        <div className="relative flex flex-col gap-1.5">
+        <div className="relative flex flex-col gap-2">
           <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Projet</p>
           <select
             value={task.projectId ?? ''}
             onChange={(e) => onProjectChange(e.target.value || null)}
-            className={`border border-ink-700 bg-ink-800 px-2.5 py-1.5 text-corps text-champagne ${FOCUS_RING}`}
+            className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
           >
             <option value="">Aucun</option>
             {projects.map((p) => (

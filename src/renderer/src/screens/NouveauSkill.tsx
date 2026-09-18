@@ -47,11 +47,11 @@ export default function NouveauSkill() {
   }
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 overflow-hidden border border-ink-700 bg-ink-900 p-9">
+    <div className="relative mx-auto flex w-full max-w-md flex-col gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-8">
       <RayCorner variant={2} />
       <div className="relative">
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouveau skill</p>
-        <h1 className="mt-1.5 font-serif text-titre-ecran text-champagne">Commencer à suivre</h1>
+        <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Commencer à suivre</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
         <FormField label="Nom" required value={name} onChange={(e) => setName(e.target.value)} />

@@ -85,7 +85,7 @@ export default function Bilan() {
   const creneaux = useMemo(() => timeOfDayBuckets(entries), [entries]);
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       <h1 className="font-serif text-titre-ecran text-champagne">Bilan</h1>
 
       {engagementsError && (
@@ -118,7 +118,7 @@ export default function Bilan() {
             <SemaineVsSemaine comparison={comparison} />
           </Section>
 
-          <div className="grid gap-7 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2">
             <Section titre="Répartition par tag">
               <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur les engagements pratiqués." />
             </Section>

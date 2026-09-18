@@ -80,7 +80,7 @@ export default function Pomodoro() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto flex w-full max-w-md flex-col gap-5"
+        className="mx-auto flex w-full max-w-md flex-col gap-6"
       >
         <h1 className="font-serif text-titre-ecran text-champagne">Pomodoro</h1>
         {error && (
@@ -123,7 +123,7 @@ export default function Pomodoro() {
                     setCustomMinutesInput('');
                   }}
                   aria-pressed={effectiveWorkMinutes === preset}
-                  className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                  className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
                 >
                   {preset} min
                 </button>
@@ -151,7 +151,7 @@ export default function Pomodoro() {
                 }}
                 placeholder="Personnalisé"
                 aria-label="Durée de travail personnalisée en minutes"
-                className={`w-28 border bg-ink-800 px-3 py-1.5 font-data text-secondaire normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
+                className={`w-28 border bg-ink-800 px-3 py-2 font-data text-secondaire normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function Pomodoro() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="relative mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-9"
+      className="relative mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-8"
     >
       <RayCorner variant={0} />
       <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">
@@ -253,27 +253,27 @@ export default function Pomodoro() {
           // verrou de solde et ne ferait rien : mieux vaut un bouton
           // visiblement indisponible qu'un bouton qui ignore le clic.
           disabled={switching}
-          className={`border border-ink-700 px-5 py-3 font-sans text-corps text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] disabled:opacity-60 disabled:hover:text-muted ${FOCUS_RING}`}
+          className={`border border-ink-700 px-6 py-3 font-sans text-corps text-muted transition-[color,transform] duration-150 ease-out hover:text-danger active:scale-[0.97] disabled:opacity-60 disabled:hover:text-muted ${FOCUS_RING}`}
         >
           Arrêter
         </button>
         <button
           onClick={() => setPinned(!pinned)}
           aria-pressed={pinned}
-          className={`border px-5 py-3 font-sans text-corps transition-[color,transform] duration-150 ease-out active:scale-[0.97] ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
+          className={`border px-6 py-3 font-sans text-corps transition-[color,transform] duration-150 ease-out active:scale-[0.97] ${FOCUS_RING} ${pinned ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted hover:text-champagne'}`}
         >
           {pinned ? 'Détacher' : 'Épingler'}
         </button>
       </div>
 
-      <label className="relative flex w-full flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="relative flex w-full flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
         Note (optionnelle)
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
           placeholder="Ce sur quoi tu travailles…"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans text-corps normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`border border-ink-700 bg-ink-800 px-3 py-3 font-sans text-corps normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
       </label>
 

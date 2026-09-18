@@ -63,7 +63,7 @@ export default function DetailProjet() {
         <RayCorner variant={0} />
         <h1 className="relative font-serif text-titre-ecran text-champagne">{project.name}</h1>
         {project.tags.length > 0 && (
-          <p className="relative mt-1.5 text-secondaire text-muted">{project.tags.map((t) => `#${t}`).join(' ')}</p>
+          <p className="relative mt-2 text-secondaire text-muted">{project.tags.map((t) => `#${t}`).join(' ')}</p>
         )}
         {project.notes && <p className="relative mt-3 text-corps text-champagne">{project.notes}</p>}
       </div>
@@ -90,7 +90,7 @@ export default function DetailProjet() {
               <Link
                 key={child.id}
                 to={child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
-                className="flex items-center gap-3 bg-ink-800 px-[18px] py-4 transition-colors duration-200 hover:bg-ink-700"
+                className="flex items-center gap-3 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
               >
                 <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
                   {child.scheduledAt ? 'Tâche' : 'Skill'}

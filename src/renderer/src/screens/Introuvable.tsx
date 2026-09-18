@@ -9,7 +9,7 @@ export default function Introuvable() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex h-full flex-col items-center justify-center gap-5 text-champagne"
+      className="flex h-full flex-col items-center justify-center gap-6 text-champagne"
     >
       <LogoMark size={80} className="opacity-30" animated />
       <h1 className="font-serif text-titre-ecran text-champagne">Introuvable</h1>

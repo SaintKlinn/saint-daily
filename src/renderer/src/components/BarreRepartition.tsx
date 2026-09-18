@@ -16,7 +16,7 @@ export default function BarreRepartition({ rows, emptyLabel }: BarreRepartitionP
   return (
     <ul className="flex flex-col gap-3">
       {rows.map((row) => (
-        <li key={row.key} className="flex flex-col gap-1.5">
+        <li key={row.key} className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
             <span className="min-w-0 truncate text-secondaire text-champagne">{row.label}</span>
             <span className="shrink-0 font-data text-libelle tabular-nums text-muted">

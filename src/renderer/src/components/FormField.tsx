@@ -1,11 +1,11 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
-const LABEL = 'flex flex-col gap-1.5 text-libelle font-semibold uppercase tracking-[0.04em] text-muted';
+const LABEL = 'flex flex-col gap-2 text-libelle font-semibold uppercase tracking-[0.04em] text-muted';
 // focus:outline-none supprime le contour bleu par défaut, focus-visible:ring
 // le remplace uniquement pour la navigation clavier (jamais au clic souris)
 // — même paire que Toggle.tsx, jusqu'ici jamais reprise sur les champs texte.
 const FIELD =
-  'border border-ink-700 bg-ink-800 px-3 py-2.5 font-sans normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+  'border border-ink-700 bg-ink-800 px-3 py-3 font-sans normal-case tracking-normal text-champagne placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export function FormField({
   label,

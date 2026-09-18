@@ -95,7 +95,7 @@ export default function Focus() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink-900 px-8 py-10">
+    <div className="flex min-h-screen flex-col bg-ink-900 px-8 py-12">
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8">
         <div>
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Mode focus</p>
@@ -106,7 +106,7 @@ export default function Focus() {
           {engagement.notes && <p className="mt-4 text-corps text-champagne">{engagement.notes}</p>}
         </div>
 
-        <div className="border border-ink-700 bg-ink-800 px-6 py-5">
+        <div className="border border-ink-700 bg-ink-800 px-6 py-6">
           {runningHere ? (
             <div className="flex flex-wrap items-baseline gap-4">
               <span className="font-serif text-heros tabular-nums text-accent-bright">

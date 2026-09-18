@@ -11,7 +11,7 @@ export default function EmptyState({ children, role }: { children: ReactNode; ro
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col items-center gap-2.5 border border-dashed border-ink-700 px-6 py-9 text-center"
+      className="flex flex-col items-center gap-3 border border-dashed border-ink-700 px-6 py-8 text-center"
     >
       <LogoMark size={26} className="opacity-50" />
       <p className="text-corps text-muted">{children}</p>

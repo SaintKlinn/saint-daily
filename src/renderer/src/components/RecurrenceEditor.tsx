@@ -35,7 +35,7 @@ export default function RecurrenceEditor({
   disabled?: boolean;
 }) {
   return (
-    <div className="relative flex flex-col gap-1.5">
+    <div className="relative flex flex-col gap-2">
       <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
       <div className="flex flex-wrap items-center gap-2">
         {RECURRENCE_TYPES.map((option) => (
@@ -51,7 +51,7 @@ export default function RecurrenceEditor({
               })
             }
             aria-pressed={type === option.value}
-            className={`font-data text-secondaire px-3 py-1.5 transition-colors duration-150 ${FOCUS_RING} ${type === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+            className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${type === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
           >
             {option.label}
           </button>
@@ -74,7 +74,7 @@ export default function RecurrenceEditor({
                   })
                 }
                 aria-pressed={selected}
-                className={`font-data text-secondaire px-2.5 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-3 py-1 transition-colors duration-150 ${FOCUS_RING} ${selected ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {day.label}
               </button>

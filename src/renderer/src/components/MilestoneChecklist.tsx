@@ -18,7 +18,7 @@ export default function MilestoneChecklist({
   error: string | null;
 }) {
   return (
-    <div className="relative flex flex-col gap-1.5">
+    <div className="relative flex flex-col gap-2">
       <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
       {error && (
         <p role="alert" className="text-corps text-danger">
@@ -28,7 +28,7 @@ export default function MilestoneChecklist({
       {milestones.length > 0 && (
         <ul className="flex flex-col gap-0 border-l border-ink-700 pl-[14px]">
           {milestones.map((m) => (
-            <li key={m.id} className="flex items-center py-1.5">
+            <li key={m.id} className="flex items-center py-2">
               <label className="flex cursor-pointer items-center gap-2">
                 <span className="relative -ml-[21px] flex h-[16px] w-[16px] shrink-0 items-center justify-center">
                   <input
@@ -77,7 +77,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
         }
         input.value = '';
       }}
-      className="mt-1 flex flex-col gap-1.5"
+      className="mt-1 flex flex-col gap-2"
     >
       <div className="flex gap-2">
         <input
@@ -85,7 +85,7 @@ function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error
           aria-label="Nouvelle sous-tâche"
           placeholder="Nouvelle sous-tâche"
           disabled={submitting}
-          className={`flex-1 border border-ink-700 bg-ink-900 px-2.5 py-1 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
+          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-1 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
         />
         <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
           Ajouter

@@ -18,7 +18,7 @@ export default function Toggle({
     <label
       className={`flex cursor-pointer items-center justify-between gap-4 py-4 ${bordered ? 'border-b border-ink-700 last:border-b-0' : ''}`}
     >
-      <span className="flex flex-col gap-0.5">
+      <span className="flex flex-col gap-1">
         <span className="text-corps text-champagne">{label}</span>
         {description && <span className="text-secondaire text-muted">{description}</span>}
       </span>

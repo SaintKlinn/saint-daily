@@ -41,7 +41,7 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
         {buckets.map((bucket) => {
           const height = max === 0 ? 0 : Math.round((bucket.sessions / max) * BAR_MAX_PX);
           return (
-            <div key={bucket.key} className="flex flex-1 flex-col items-center gap-1.5">
+            <div key={bucket.key} className="flex flex-1 flex-col items-center gap-2">
               <span className="font-data text-libelle tabular-nums text-muted">{bucket.sessions}</span>
               {/* Rien du tout à zéro séance, plutôt qu'un filet de 1 px :
                   maintenant que les barres sont toutes de la couleur des
@@ -64,7 +64,7 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
           return (
             <div key={bucket.key} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <span
-                className={`max-w-full truncate border px-2 py-0.5 font-data text-libelle uppercase tracking-[0.08em] ${
+                className={`max-w-full truncate border px-2 py-1 font-data text-libelle uppercase tracking-[0.08em] ${
                   isBest ? 'border-accent-bright text-accent-bright' : 'border-ink-700 text-muted'
                 }`}
               >

@@ -95,10 +95,10 @@ export default function Journal() {
   const hiddenCount = visible.length - visibleRows.length;
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-serif text-titre-ecran text-champagne">Journal</h1>
-        <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-3.5 py-2">
+        <label className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-2">
           <SearchIcon />
           <input
             type="search"
@@ -131,7 +131,7 @@ export default function Journal() {
       ) : (
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
           {visibleRows.map((row) => (
-            <article key={row.id} className="flex flex-col gap-1.5 bg-ink-800 px-[18px] py-4">
+            <article key={row.id} className="flex flex-col gap-2 bg-ink-800 px-4 py-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
                 <span className="font-data text-libelle tabular-nums text-muted">
@@ -146,7 +146,7 @@ export default function Journal() {
             </article>
           ))}
           {hiddenCount > 0 && (
-            <p className="bg-ink-800 px-[18px] py-3 font-data text-libelle text-muted">
+            <p className="bg-ink-800 px-4 py-3 font-data text-libelle text-muted">
               + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} résultat{hiddenCount > 1 ? 's' : ''} — affine ta
               recherche pour les voir.
             </p>

@@ -60,12 +60,12 @@ export default function PomodoroOverlay() {
           {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5 [-webkit-app-region:no-drag]">
+      <div className="flex shrink-0 items-center gap-2 [-webkit-app-region:no-drag]">
         {session.status === 'awaitingAdvance' ? (
           <button
             onClick={() => sendControl('advance')}
             aria-label="Continuer"
-            className="border border-accent-bright px-2.5 py-1.5 font-data text-libelle uppercase tracking-[0.1em] text-accent-bright hover:bg-accent-bright hover:text-ink-900"
+            className="border border-accent-bright px-3 py-2 font-data text-libelle uppercase tracking-[0.1em] text-accent-bright hover:bg-accent-bright hover:text-ink-900"
           >
             Suite
           </button>
@@ -73,7 +73,7 @@ export default function PomodoroOverlay() {
           <button
             onClick={() => sendControl(session.status === 'paused' ? 'resume' : 'pause')}
             aria-label={session.status === 'paused' ? 'Reprendre' : 'Mettre en pause'}
-            className="border border-ink-700 px-2.5 py-1.5 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-champagne"
+            className="border border-ink-700 px-3 py-2 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-champagne"
           >
             {session.status === 'paused' ? '▶' : '⏸'}
           </button>
@@ -81,7 +81,7 @@ export default function PomodoroOverlay() {
         <button
           onClick={() => sendControl('stop')}
           aria-label="Arrêter le pomodoro"
-          className="border border-ink-700 px-2.5 py-1.5 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-danger"
+          className="border border-ink-700 px-3 py-2 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-danger"
         >
           ■
         </button>

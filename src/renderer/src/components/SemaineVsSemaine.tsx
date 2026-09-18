@@ -11,7 +11,7 @@ function Bloc({ titre, minutes, sessions, accent }: { titre: string; minutes: nu
   // en retrait, avec `border-ink-700` (plus clair que ce fond-là) pour le
   // délimiter — même logique que le "puits" du niveau 0 de la heatmap.
   return (
-    <div className="flex flex-1 flex-col gap-1 border border-ink-700 bg-ink-950 px-5 py-4">
+    <div className="flex flex-1 flex-col gap-1 border border-ink-700 bg-ink-950 px-6 py-4">
       <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{titre}</p>
       <p className={`font-serif text-titre-ecran tabular-nums ${accent ? 'text-accent-bright' : 'text-champagne'}`}>
         {formatMinutes(minutes)}
