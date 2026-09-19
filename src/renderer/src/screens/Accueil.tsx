@@ -288,13 +288,21 @@ export default function Accueil() {
         </div>
       )}
 
+      {/* Le repli et l'écart de 24 px : sans eux la rangée n'avait aucune
+          issue quand elle débordait, et comprimait le titre et les boutons
+          jusqu'à les casser chacun en deux lignes. À la largeur minimale de
+          la fenêtre (960 px, voir src/main/index.ts) l'en-tête réclame
+          désormais plus que la colonne ne mesure, depuis que le titre est
+          passé à 40 px et les boutons à 15 px. Replier met la grappe
+          d'actions sous le titre, ce qui reste lisible ; 24 px parce que le
+          titre et les actions sont deux groupes. */}
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-        className="flex items-center justify-between"
+        className="flex flex-wrap items-center justify-between gap-6"
       >
-        <h1 className="font-serif text-heros leading-tight text-champagne">Bon retour.</h1>
+        <h1 className="font-serif text-heros text-champagne">Bon retour.</h1>
         <div className="flex items-center gap-3">
           {resumeSkill && (
             <Link

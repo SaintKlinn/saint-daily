@@ -46,7 +46,7 @@ Six paliers, rapport voisin de 1,3, avec un cran secondaire volontairement resse
 | `corps` | 15 px | 1,6 | 400 | sans | le texte courant de l'application |
 | `titre` | 20 px | 1,35 | 500 | serif | titres d'élément de liste |
 | `titre-ecran` | 28 px | 1,2 | 500 | serif | en-tête d'écran, et chiffre de mise en avant dans une carte |
-| `heros` | 40 px | 1,05 | 400 | serif | les moments d'affichage : salutation d'accueil, nom en mode focus, minuteur Pomodoro |
+| `heros` | 40 px | 1,15 | 400 | serif | les moments d'affichage : salutation d'accueil, nom en mode focus, minuteur Pomodoro |
 
 **Pourquoi 15 px pour le corps.** Les trois tailles de texte courant d'aujourd'hui — 13 px (49 usages), 14 px (81) et 15 px (39), soit 169 au total — se replient sur une seule. 15 px est la plus haute des trois : le regroupement se fait donc vers le haut, ce qui améliore la lisibilité sans que ce soit l'objectif affiché.
 

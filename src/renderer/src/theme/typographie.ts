@@ -30,7 +30,14 @@ export const fontSize = {
   corps: ['15px', { lineHeight: '1.6', fontWeight: '400' }],
   titre: ['20px', { lineHeight: '1.35', fontWeight: '500' }],
   'titre-ecran': ['28px', { lineHeight: '1.2', fontWeight: '500' }],
-  heros: ['40px', { lineHeight: '1.05', fontWeight: '400' }],
+  // 1,15 et non 1,05 : ce rôle sert à la fois des lignes uniques — les
+  // minuteurs du Pomodoro et du mode focus — et des titres qui se
+  // replient, comme le nom d'un skill ou d'un engagement. 1,05 convenait
+  // aux premiers et serrait les seconds au point que trois d'entre eux
+  // portaient un `leading` correctif dans le balisage, lequel gagnait
+  // silencieusement sur le rôle : `heros` rendait à deux interlignages
+  // différents dans la même application. Un rôle porte un interlignage.
+  heros: ['40px', { lineHeight: '1.15', fontWeight: '400' }],
 } as const;
 
 // Les sept valeurs d'espacement autorisées, en pixels, avec le cran

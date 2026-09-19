@@ -230,7 +230,7 @@ export default function DetailSkill() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-serif text-heros leading-tight text-champagne">{skill.name}</h1>
+          <h1 className="font-serif text-heros text-champagne">{skill.name}</h1>
           {skill.tags.length > 0 && (
             <p className="mt-2 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
           )}

@@ -99,7 +99,7 @@ export default function Focus() {
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8">
         <div>
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Mode focus</p>
-          <h1 className="mt-2 font-serif text-heros leading-tight text-champagne">{engagement.name}</h1>
+          <h1 className="mt-2 font-serif text-heros text-champagne">{engagement.name}</h1>
           {engagement.tags.length > 0 && (
             <p className="mt-2 text-secondaire text-muted">{engagement.tags.map((t) => `#${t}`).join(' ')}</p>
           )}
