@@ -61,7 +61,7 @@ export default function HeatmapCalendrier({
   const gridLabel = `Calendrier d'activité sur les douze derniers mois : ${totalSessions} séance${totalSessions > 1 ? 's' : ''} enregistrée${totalSessions > 1 ? 's' : ''}.`;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <select
         aria-label="Engagement affiché dans la heatmap"
         value={selectedEngagementId}
