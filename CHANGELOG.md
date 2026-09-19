@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.8.0](https://github.com/SaintKlinn/saint-daily/compare/v1.7.0...v1.8.0) (2026-09-19)
+
+
+### Nouveautés
+
+* add the single source for the type and spacing scales ([824897c](https://github.com/SaintKlinn/saint-daily/commit/824897c159689ddd1af816aa1e8af45765694866))
+
+
+### Corrections
+
+* apply the same inside/outside rhythm to the rest of the app ([d54daca](https://github.com/SaintKlinn/saint-daily/commit/d54dacaad912a180febf546741ef51d9e6f4246a))
+* enlarge the heatmap, note the two window exceptions, verify the scales ([5fff7aa](https://github.com/SaintKlinn/saint-daily/commit/5fff7aaa4a00245619f5fa08d67a096cffd15340))
+* extend the one-unit rule to four gaps the pass left at 16px ([ee8ad16](https://github.com/SaintKlinn/saint-daily/commit/ee8ad166391bf889301cd21593ba12cb3a8497ef))
+* give the four Bilan widgets one internal rhythm ([8fc979c](https://github.com/SaintKlinn/saint-daily/commit/8fc979c0ffeaf25346006e7dd2a14d7d03068267))
+* load the mono 600 face, stop the header overflowing, unify heros leading ([1daf342](https://github.com/SaintKlinn/saint-daily/commit/1daf34238997ba9984674738d0e62a13f17f8200))
+* map the Pomodoro timer, a size the inventory never looked for ([324f361](https://github.com/SaintKlinn/saint-daily/commit/324f36137be38b99050b27dae3dacee8ce478fb4))
+* restore the checkbox offsets the spacing pass silently broke ([05adbfa](https://github.com/SaintKlinn/saint-daily/commit/05adbfa8681a3dec586b12162dd024971cc52756))
+* separate groups by 24px on the four screens the user named ([5a65861](https://github.com/SaintKlinn/saint-daily/commit/5a65861790121feaa3767f687a4b9d6c40df8e2e))
+* tighten the four Accueil gaps the judgement pass left at 16px ([394d2bb](https://github.com/SaintKlinn/saint-daily/commit/394d2bb6be317bf0aca94353b7b190b439973676))
+
+
+### Améliorations internes
+
+* map every spacing value onto the seven-step scale ([8843e41](https://github.com/SaintKlinn/saint-daily/commit/8843e41bd4f7b5557ff94b6fa1e55dada6d06150))
+* map every text size onto the six named roles ([9856ca9](https://github.com/SaintKlinn/saint-daily/commit/9856ca96ac37ac42e5fe0102fa8ead55a51e872d))
+* split the 12px size between label and secondary roles ([3648e29](https://github.com/SaintKlinn/saint-daily/commit/3648e293896abdf7367e4102336be1bcbd36f692))
+
+
+### Documentation
+
+* add the design spec for the typography and spacing system ([9bad422](https://github.com/SaintKlinn/saint-daily/commit/9bad4223e2a6b53759f34056f056c3b46c060118))
+* add the implementation plan for the typography and spacing system ([1ec9491](https://github.com/SaintKlinn/saint-daily/commit/1ec9491142b93bb95fb7ac3028cede1b5f620fe2))
+* correct the heatmap width estimate for the wider cell gutter ([f5d3f78](https://github.com/SaintKlinn/saint-daily/commit/f5d3f78135a7ab9555761008c1900c9e5c6881eb))
+* enumerate spacing values instead of hunting expected ones ([88b6f81](https://github.com/SaintKlinn/saint-daily/commit/88b6f81326bb40c7e274ed9431d4cb40d2ee59f8))
+* fix two plan defects found by the pre-flight conflict scan ([fefcdef](https://github.com/SaintKlinn/saint-daily/commit/fefcdef7f1d3de94c4dfe68671a5e9b14a8a2850))
+* schedule removal of the font-semibold classes the role now supersedes ([23c5227](https://github.com/SaintKlinn/saint-daily/commit/23c5227173fa8bb6df974600e1ae31831236cebd))
+
 ## [1.7.0](https://github.com/SaintKlinn/saint-daily/compare/v1.6.0...v1.7.0) (2026-09-17)
 
 
