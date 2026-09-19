@@ -112,7 +112,7 @@ export default function Pomodoro() {
         )}
         {selectedSkill && (
           <div className="flex flex-col gap-2">
-            <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Durée de travail</p>
+            <p className="text-libelle uppercase tracking-[0.04em] text-muted">Durée de travail</p>
             <div className="flex flex-wrap items-center gap-2">
               {PRESET_WORK_MINUTES.map((preset) => (
                 <button
@@ -266,7 +266,7 @@ export default function Pomodoro() {
         </button>
       </div>
 
-      <label className="relative flex w-full flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="relative flex w-full flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
         Note (optionnelle)
         <textarea
           value={note}

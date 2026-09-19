@@ -36,7 +36,7 @@ export default function RecurrenceEditor({
 }) {
   return (
     <div className="relative flex flex-col gap-2">
-      <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Récurrence</p>
+      <p className="text-libelle uppercase tracking-[0.04em] text-muted">Récurrence</p>
       <div className="flex flex-wrap items-center gap-2">
         {RECURRENCE_TYPES.map((option) => (
           <button

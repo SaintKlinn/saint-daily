@@ -27,7 +27,7 @@ export default function SkillPicker({
   }, [skills, entriesBySkill, search]);
 
   return (
-    <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+    <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
       Skill
       <div className="flex items-center gap-2 border border-ink-700 bg-ink-800 px-4 py-3">
         <SearchIcon className="text-muted" />

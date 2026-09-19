@@ -82,9 +82,13 @@ export default function HeatmapCalendrier({
         <div className="flex gap-2" role="img" aria-label={gridLabel}>
           <div className="flex shrink-0 flex-col gap-1 pr-1">
             {DAY_LABELS.map((label, index) => (
-              // Un jour sur deux seulement : sept libellés sur 11px de
+              // Un jour sur deux seulement : sept libellés sur 13px de
               // haut chacun seraient illisibles.
-              <span key={label} className="h-[11px] font-data text-libelle leading-[11px] text-muted">
+              //
+              // Les cases passent de 11 à 13 px : `text-libelle` fait 11 px, et un
+              // libellé de 11 px dans une ligne de 11 px ne tient pas. La heatmap y
+              // gagne en lisibilité, ce qui est le sujet de cette refonte.
+              <span key={label} className="h-[13px] font-data text-libelle leading-[13px] text-muted">
                 {index % 2 === 1 ? label : ''}
               </span>
             ))}
@@ -96,7 +100,7 @@ export default function HeatmapCalendrier({
                   <div
                     key={cell.dayKey}
                     title={cell.isFuture ? undefined : cellTitle(cell)}
-                    className={`h-[11px] w-[11px] ${cell.isFuture ? 'bg-ink-800' : LEVEL_CLASS[cell.level]}`}
+                    className={`h-[13px] w-[13px] ${cell.isFuture ? 'bg-ink-800' : LEVEL_CLASS[cell.level]}`}
                   />
                 ))}
               </div>
@@ -113,7 +117,7 @@ export default function HeatmapCalendrier({
             role="img"
             aria-label={LEVEL_RANGE_LABEL[level]}
             title={LEVEL_RANGE_LABEL[level]}
-            className={`h-[11px] w-[11px] ${LEVEL_CLASS[level]}`}
+            className={`h-[13px] w-[13px] ${LEVEL_CLASS[level]}`}
           />
         ))}
         <span className="font-data text-libelle text-muted">Plus</span>

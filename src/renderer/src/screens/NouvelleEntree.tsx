@@ -82,7 +82,7 @@ export default function NouvelleEntree() {
             </option>
           ))}
         </SelectField>
-        <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
           Durée
           <div className="flex items-baseline gap-3 border border-ink-700 bg-ink-800 px-4 py-3">
             <input
@@ -112,7 +112,7 @@ export default function NouvelleEntree() {
         />
         {templates.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Modèles de note</p>
+            <p className="text-libelle uppercase tracking-[0.04em] text-muted">Modèles de note</p>
             <div className="flex flex-wrap gap-2">
               {templates.map((template) => (
                 <button

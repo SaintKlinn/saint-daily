@@ -547,7 +547,7 @@ export default function Calendrier() {
                     }}
                   >
                     <p
-                      className={`truncate font-sans text-libelle font-semibold ${task.skippedAt ? 'line-through text-muted' : 'text-champagne'}`}
+                      className={`truncate font-sans text-libelle ${task.skippedAt ? 'line-through text-muted' : 'text-champagne'}`}
                     >
                       {task.name}
                     </p>

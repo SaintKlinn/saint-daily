@@ -74,7 +74,7 @@ export default function TaskPopover({
           {formatSlot(task.scheduledAt as string, task.scheduledEndsAt as string)}
         </p>
         <div className="relative flex flex-col gap-2">
-          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Priorité</p>
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Priorité</p>
           <div className="flex flex-wrap items-center gap-2">
             {PRIORITY_LEVELS.map((level) => (
               <button
@@ -90,7 +90,7 @@ export default function TaskPopover({
           </div>
         </div>
         <div className="relative flex flex-col gap-2">
-          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Reporter</p>
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Reporter</p>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -115,7 +115,7 @@ export default function TaskPopover({
           error={milestonesError}
         />
         <div className="relative flex flex-col gap-2">
-          <p className="text-libelle font-semibold uppercase tracking-[0.04em] text-muted">Projet</p>
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Projet</p>
           <select
             value={task.projectId ?? ''}
             onChange={(e) => onProjectChange(e.target.value || null)}

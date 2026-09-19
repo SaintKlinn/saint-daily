@@ -57,7 +57,7 @@ export default function Login() {
         <h1 className="font-serif text-titre-ecran text-champagne">Saint Daily</h1>
       </div>
       <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-6 border border-ink-700 bg-ink-900 p-8">
-        <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
           Email
           <input
             type="email"
@@ -67,7 +67,7 @@ export default function Login() {
             className="border border-ink-700 bg-ink-800 px-3 py-3 font-sans text-corps normal-case tracking-normal text-champagne outline-none focus:border-accent-bright"
           />
         </label>
-        <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+        <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
           Mot de passe
           <input
             type="password"

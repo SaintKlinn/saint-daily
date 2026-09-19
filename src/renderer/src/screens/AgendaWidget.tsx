@@ -5,6 +5,12 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Exception assumée à l'échelle d'espacement (voir la spec du système
+// typographique, §5) : ces fenêtres sont distinctes et minuscules. Une
+// fenêtre de 300 px n'obéit pas au rythme d'une fenêtre de 1280 — un
+// écart de 24 px entre groupes y mangerait le contenu. Elles adoptent
+// l'échelle de TEXTE, et conservent leurs espacements propres.
+
 // Ne passe JAMAIS par les hooks de données : cette fenêtre est un pur
 // relais d'affichage, comme l'overlay Pomodoro. Un second client Supabase
 // rafraîchirait la même session persistée que la fenêtre principale.

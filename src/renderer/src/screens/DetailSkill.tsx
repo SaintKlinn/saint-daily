@@ -600,7 +600,7 @@ function GoalSetter({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
         Période
         <select
           value={period}
@@ -612,7 +612,7 @@ function GoalSetter({
           <option value="mensuel">Mensuel</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
         Métrique
         <select
           value={metric}
@@ -624,7 +624,7 @@ function GoalSetter({
           <option value="heures">Heures</option>
         </select>
       </label>
-      <label className="flex flex-col gap-1 text-libelle font-semibold uppercase tracking-[0.04em] text-muted">
+      <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
         Cible
         <input
           type="number"
