@@ -126,7 +126,7 @@ export default function AppShell() {
           className="rail-halo pointer-events-none absolute -top-16 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full"
           style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 70%)` }}
         />
-        <LogoMark width={30} height={20} animated className="relative" />
+        <LogoMark width={48} height={32} animation="boucle" className="relative" />
         {/* `flex-1` : c'est ce bloc, et non la pastille, qui porte
             désormais la poussée vers le bas — `mt-auto` s'applique au
             groupe Réglages à l'intérieur. */}
