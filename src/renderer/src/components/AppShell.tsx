@@ -1,27 +1,38 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, type JSX } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import PastilleCompte from './PastilleCompte';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
-import { HomeIcon, ListIcon, CalendarIcon, FolderIcon, ChartIcon, NotebookIcon, GearIcon } from './icons';
+import {
+  HomeIcon,
+  SkillIcon,
+  CalendarIcon,
+  FolderIcon,
+  ChartIcon,
+  NotebookIcon,
+  GearIcon,
+} from './icons';
+import { GROUPES_NAV, type CleIcone } from '../lib/navigation';
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
 
-// Rail à icônes (maquettes : nav 72px, pas de libellé texte) — remplace la
-// nav large en texte de la v1 (audit ui-ux-pro-max, passe V2).
-const navItems = [
-  { to: '/', label: 'Accueil', Icon: HomeIcon },
-  { to: '/skills', label: 'Skills', Icon: ListIcon },
-  { to: '/calendrier', label: 'Calendrier', Icon: CalendarIcon },
-  { to: '/projets', label: 'Projets', Icon: FolderIcon },
-  { to: '/bilan', label: 'Bilan', Icon: ChartIcon },
-  { to: '/journal', label: 'Journal', Icon: NotebookIcon },
-  { to: '/reglages', label: 'Réglages', Icon: GearIcon },
-];
+// La correspondance clé -> composant vit ici et non dans navigation.ts,
+// qui doit rester libre de React pour être testable sans moteur de rendu.
+// Le `Record<CleIcone, …>` la rend exhaustive : ajouter une clé sans son
+// icône ne compile pas.
+const ICONES: Record<CleIcone, (props: { size?: number; className?: string }) => JSX.Element> = {
+  accueil: HomeIcon,
+  calendrier: CalendarIcon,
+  skill: SkillIcon,
+  projets: FolderIcon,
+  journal: NotebookIcon,
+  bilan: ChartIcon,
+  reglages: GearIcon,
+};
 
 export default function AppShell() {
   const { engagements, loading, createEngagements } = useEngagements();
@@ -86,38 +97,92 @@ export default function AppShell() {
           style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 70%)` }}
         />
         <LogoMark width={30} height={20} animated className="relative" />
-        <div className="relative flex flex-col items-center gap-2">
-          {navItems.map(({ to, label, Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              title={label}
-              aria-label={label}
-              className="relative flex h-10 w-10 items-center justify-center rounded-[10px] text-muted transition-colors hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-pill"
-                      className="absolute inset-0 rounded-[10px]"
-                      style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 72%)` }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                  <Icon className={`relative ${isActive ? 'text-accent-bright' : ''}`} />
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-bar"
-                      className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent-bright"
-                      style={{ boxShadow: `0 0 10px ${colors.accent.bright}b3` }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                </>
+        {/* `flex-1` : c'est ce bloc, et non la pastille, qui porte
+            désormais la poussée vers le bas — `mt-auto` s'applique au
+            groupe Réglages à l'intérieur. */}
+        <div className="relative flex w-full flex-1 flex-col items-center gap-3">
+          {GROUPES_NAV.map((groupe, index) => (
+            <Fragment key={groupe.entrees[0].to}>
+              {/* Filet entre les deux premiers groupes. 12 px de part et
+                  d'autre (cran 3) : la distance entre groupes se lit 24 px,
+                  plus l'épaisseur du trait, qui est un filet et non un
+                  espacement — même statut que `gap-px` dans la spec
+                  typographique. Pas de filet devant le groupe ancré en
+                  bas : `mt-auto` l'éloigne déjà sans ambiguïté. */}
+              {index > 0 && !groupe.ancreEnBas && (
+                <span aria-hidden="true" className="h-px w-8 shrink-0 bg-ink-700" />
               )}
-            </NavLink>
+              <div
+                className={`flex w-full flex-col items-center gap-2 ${groupe.ancreEnBas ? 'mt-auto' : ''}`}
+              >
+                {groupe.entrees.map(({ to, libelle, icone, exact }) => {
+                  const Icon = ICONES[icone];
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={exact}
+                      title={libelle}
+                      aria-label={libelle}
+                      // Pleine largeur dès maintenant, même si rien n'est
+                      // encore affiché à droite de l'icône : c'est ce qui
+                      // permet d'ancrer la barre active au bord du RAIL et
+                      // non au bord de l'icône, donc de lui garder le même
+                      // x quand la tâche 5 introduira la seconde largeur.
+                      // `px-4` (16 px) de chaque côté d'une icône de 40
+                      // donne exactement les 72 px du rail replié.
+                      className="relative flex h-10 w-full items-center rounded-[10px] px-4 text-muted transition-colors hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {isActive && (
+                            <motion.span
+                              layoutId="nav-active-bar"
+                              // PIÈGE : surtout pas de `-translate-y-1/2`
+                              // ici. Motion pilote `transform` en propre
+                              // pendant une animation de `layoutId` et le
+                              // remet à `none` quand l'animation de layout
+                              // se pose, ce qui laissait la barre 10 px
+                              // trop bas — le défaut que cette tâche
+                              // corrige. Le centrage passe donc par
+                              // `top-0 bottom-0 my-auto`, qui ne touche
+                              // pas à `transform`.
+                              className="absolute left-1 top-0 bottom-0 my-auto h-5 w-[3px] rounded-full bg-accent-bright"
+                              style={{ boxShadow: `0 0 10px ${colors.accent.bright}b3` }}
+                              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                            />
+                          )}
+                          {isActive && (
+                            // La pastille est posée sur le LIEN et non sur
+                            // la case d'icône : elle couvre donc la ligne
+                            // entière, et s'étendra d'elle-même à 200 px
+                            // quand la tâche 5 dépliera le rail, pour que
+                            // l'état actif porte icône ET libellé.
+                            //
+                            // Conséquence visible à contrôler en live : le
+                            // halo de l'élément actif fait désormais 72 px
+                            // de large au lieu de 40 même rail replié.
+                            // C'est voulu — c'est une ligne active, plus
+                            // une case active.
+                            <motion.span
+                              layoutId="nav-active-pill"
+                              className="absolute inset-0 rounded-[10px]"
+                              style={{
+                                background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 72%)`,
+                              }}
+                              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                            />
+                          )}
+                          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                            <Icon className={`relative ${isActive ? 'text-accent-bright' : ''}`} />
+                          </span>
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </Fragment>
           ))}
         </div>
         <PastilleCompte />

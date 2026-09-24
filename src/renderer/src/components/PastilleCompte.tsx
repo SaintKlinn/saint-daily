@@ -23,13 +23,14 @@ export default function PastilleCompte() {
   return (
     // `relative` pour passer devant RailFlare, qui est en `absolute` et
     // vient après dans le DOM — même raison que le bloc des liens de nav.
-    // `mt-auto` colle la pastille en bas quelle que soit la hauteur.
+    // Plus de `mt-auto` ici : c'est le bloc de nav qui porte `flex-1`, donc
+    // la poussée vers le bas, depuis que Réglages s'ancre en bas de ce bloc.
     // `rounded-[10px]` : le rail a sa propre grammaire d'arrondi, celle des
     // pastilles de nav de 40×40 juste au-dessus ; des angles vifs y
     // jureraient, même si le reste de l'app n'a aucun rayon.
     <div
       title={libelle}
-      className="relative mt-auto mb-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-ink-700 bg-ink-800 font-data text-corps text-muted"
+      className="relative mb-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-ink-700 bg-ink-800 font-data text-corps text-muted"
     >
       {/* Pas de `tracking` ici : sur une seule lettre, l'interlettrage
           n'ajoute qu'une chasse à droite et décentre le glyphe. */}
