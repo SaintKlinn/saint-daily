@@ -61,13 +61,13 @@ describe('ecrireRailEpingle', () => {
     expect(s.donnees[CLE_RAIL_EPINGLE]).toBe('false');
   });
 
-  it("n'explose pas quand le stockage lève", () => {
+  it('n’explose pas quand le stockage lève', () => {
     // Perdre une préférence d'affichage ne mérite pas de faire tomber
     // l'écran qui la porte.
     expect(() => ecrireRailEpingle(true, stockageQuiLeve)).not.toThrow();
   });
 
-  it("n'explose pas sans stockage du tout", () => {
+  it('n’explose pas sans stockage du tout', () => {
     expect(() => ecrireRailEpingle(true, null)).not.toThrow();
   });
 });
