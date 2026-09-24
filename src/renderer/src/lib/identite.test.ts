@@ -82,9 +82,18 @@ describe('salutation', () => {
     const s = salutation({});
     expect(s.avant.endsWith(' ')).toBe(false);
     expect(s.apres).toBe('');
+    expect(s.avant + s.apres).toBe('Bon retour.');
   });
 
   it('retombe sur la partie locale de l’e-mail', () => {
     expect(salutation({ email: 'jason@example.com' }).pseudo).toBe('jason');
+  });
+
+  it('rend « Bon retour. » avant que la session soit chargée', () => {
+    // `session?.user` vaut `undefined` au premier rendu : c'est le cas réel,
+    // pas une hypothèse — la phrase doit déjà être correcte à ce moment-là.
+    const s = salutation(undefined);
+    expect(s.pseudo).toBeNull();
+    expect(s.avant + s.apres).toBe('Bon retour.');
   });
 });
