@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
-import PastilleCompte from './PastilleCompte';
+import LigneCompte from './LigneCompte';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import {
@@ -230,7 +230,7 @@ export default function AppShell() {
             </Fragment>
           ))}
         </div>
-        <PastilleCompte />
+        <LigneCompte deplie={epingle} />
         <button
           type="button"
           onClick={basculerEpinglage}
