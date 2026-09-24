@@ -30,7 +30,7 @@ export default function PastilleCompte() {
     // jureraient, même si le reste de l'app n'a aucun rayon.
     <div
       title={libelle}
-      className="relative mb-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-ink-700 bg-ink-800 font-data text-corps text-muted"
+      className="relative mb-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-ink-700 bg-ink-800 font-data text-corps text-muted"
     >
       {/* Pas de `tracking` ici : sur une seule lettre, l'interlettrage
           n'ajoute qu'une chasse à droite et décentre le glyphe. */}

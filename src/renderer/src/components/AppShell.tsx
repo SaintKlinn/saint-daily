@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, type JSX } from 'react';
+import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
@@ -13,12 +13,14 @@ import {
   ChartIcon,
   NotebookIcon,
   GearIcon,
+  ChevronsIcon,
 } from './icons';
 import { GROUPES_NAV, type CleIcone } from '../lib/navigation';
 import { colors } from '../theme/colors';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
+import { ecrireRailEpingle, lireRailEpingle } from '../lib/preferencesAffichage';
 
 // La correspondance clé -> composant vit ici et non dans navigation.ts,
 // qui doit rester libre de React pour être testable sans moteur de rendu.
@@ -34,9 +36,28 @@ const ICONES: Record<CleIcone, (props: { size?: number; className?: string }) =>
   reglages: GearIcon,
 };
 
+// Constantes de MISE EN PAGE, pas crans d'espacement — le 72 d'origine ne
+// l'a jamais été non plus. 200 se calcule : 16 de marge + 40 d'icône + 12
+// d'écart + 96 de colonne de libellé + 16 de marge = 180, arrondis à 200
+// pour que « Calendrier » en 13 px ne soit pas serré contre le bord.
+const RAIL_REPLIE = 72;
+const RAIL_DEPLIE = 200;
+
 export default function AppShell() {
   const { engagements, loading, createEngagements } = useEngagements();
   const hasSyncedRecurrenceRef = useRef(false);
+
+  // Initialisation paresseuse : la lecture du stockage ne doit avoir lieu
+  // qu'une fois, pas à chaque rendu du shell.
+  const [epingle, setEpingle] = useState(() => lireRailEpingle());
+
+  function basculerEpinglage() {
+    setEpingle((actuel) => {
+      const suivant = !actuel;
+      ecrireRailEpingle(suivant);
+      return suivant;
+    });
+  }
 
   // useEngagementReminders et useTrayNextEngagement sont montés dans
   // AppProvidersLayout (App.tsx), pas ici : ce sont des propriétés de « l'app
@@ -87,9 +108,18 @@ export default function AppShell() {
     <div className="flex h-screen flex-col bg-ink-900 text-champagne">
       <UpdateBanner />
       <div className="flex flex-1 overflow-hidden">
-      <nav
-        className="relative flex w-[72px] min-w-[72px] flex-col items-center gap-10 overflow-hidden border-r border-ink-700 pt-6"
-        style={{ background: `linear-gradient(180deg, ${colors.ink[900]} 0%, #054838 55%, ${colors.ink[950]} 100%)` }}
+      <motion.nav
+        // Tween et non ressort : un ressort dépasse sa cible, et chaque
+        // image de dépassement force un recalcul de mise en page de tout
+        // <main>. 0,16/1/0,3/1 est la courbe déjà employée par
+        // logo-ray-reveal et l'en-tête d'Accueil.
+        animate={{ width: epingle ? RAIL_DEPLIE : RAIL_REPLIE }}
+        initial={false}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex shrink-0 flex-col items-center gap-10 overflow-hidden border-r border-ink-700 pt-6"
+        style={{
+          background: `linear-gradient(180deg, ${colors.ink[900]} 0%, #054838 55%, ${colors.ink[950]} 100%)`,
+        }}
       >
         <div
           aria-hidden="true"
@@ -122,7 +152,7 @@ export default function AppShell() {
                       key={to}
                       to={to}
                       end={exact}
-                      title={libelle}
+                      title={epingle ? undefined : libelle}
                       aria-label={libelle}
                       // Pleine largeur dès maintenant, même si rien n'est
                       // encore affiché à droite de l'icône : c'est ce qui
@@ -176,6 +206,21 @@ export default function AppShell() {
                           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center">
                             <Icon className={`relative ${isActive ? 'text-accent-bright' : ''}`} />
                           </span>
+                          {/* Monté dans les deux états, jamais démonté :
+                              le démonter couperait la transition en deux
+                              et ferait apparaître le texte d'un bloc à la
+                              fin. `aria-hidden` dans les deux états aussi,
+                              parce que l'`aria-label` du lien est déjà le
+                              nom accessible — sans quoi il serait annoncé
+                              deux fois une fois le rail déplié. */}
+                          <span
+                            aria-hidden="true"
+                            className={`ml-3 truncate text-secondaire transition-opacity duration-200 ${
+                              epingle ? 'opacity-100' : 'pointer-events-none opacity-0'
+                            } ${isActive ? 'text-accent-bright' : ''}`}
+                          >
+                            {libelle}
+                          </span>
                         </>
                       )}
                     </NavLink>
@@ -186,8 +231,18 @@ export default function AppShell() {
           ))}
         </div>
         <PastilleCompte />
+        <button
+          type="button"
+          onClick={basculerEpinglage}
+          aria-pressed={epingle}
+          aria-label={epingle ? 'Replier le rail de navigation' : 'Déplier le rail de navigation'}
+          title={epingle ? 'Replier le rail' : 'Déplier le rail'}
+          className="relative mb-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-muted transition-colors hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+        >
+          <ChevronsIcon direction={epingle ? 'gauche' : 'droite'} />
+        </button>
         <RailFlare />
-      </nav>
+      </motion.nav>
       <main
         className="flex-1 overflow-y-auto px-12 py-12"
         style={{
