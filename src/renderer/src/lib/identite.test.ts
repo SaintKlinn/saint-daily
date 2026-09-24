@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initiale, pseudonyme } from './identite';
+import { initiale, pseudonyme, salutation } from './identite';
 
 describe('pseudonyme', () => {
   it('préfère username quand il est présent', () => {
@@ -59,5 +59,32 @@ describe('initiale', () => {
   it('renvoie une chaîne vide plutôt que de planter sur une entrée vide', () => {
     expect(initiale('')).toBe('');
     expect(initiale('   ')).toBe('');
+  });
+});
+
+describe('salutation', () => {
+  it('insère le pseudonyme entre les deux morceaux', () => {
+    const s = salutation({ user_metadata: { username: 'Jason' } });
+    expect(s).toEqual({ avant: 'Bon retour ', pseudo: 'Jason', apres: '.' });
+    expect(s.avant + s.pseudo + s.apres).toBe('Bon retour Jason.');
+  });
+
+  it('rend exactement « Bon retour. » quand il n’y a rien d’affichable', () => {
+    const s = salutation(null);
+    expect(s.pseudo).toBeNull();
+    expect(s.avant + s.apres).toBe('Bon retour.');
+  });
+
+  it('ne laisse jamais d’espace orphelin sans pseudonyme', () => {
+    // Le piège que ce test garde : un `avant` resté à « Bon retour » (sans
+    // point) laisserait la phrase inachevée, et « Bon retour » suivi d'une
+    // espace laisserait un blanc avant le point.
+    const s = salutation({});
+    expect(s.avant.endsWith(' ')).toBe(false);
+    expect(s.apres).toBe('');
+  });
+
+  it('retombe sur la partie locale de l’e-mail', () => {
+    expect(salutation({ email: 'jason@example.com' }).pseudo).toBe('jason');
   });
 });
