@@ -133,7 +133,14 @@ export default function AppShell() {
           className="rail-halo pointer-events-none absolute -top-16 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full"
           style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 70%)` }}
         />
-        <LogoMark width={48} height={32} animation="boucle" className="relative" />
+        {/* `shrink-0` : sans lui, le logo est le seul enfant rétrécissable de
+            ce `flex-col` et devient donc le premier sacrifié quand le rail
+            manque de hauteur. Mesuré : à 637 px de fenêtre il garde ses
+            32 px, à 632 px il tombe à 27. La fenêtre impose `minHeight: 640`
+            (main/index.ts), soit trois pixels de marge — la prochaine entrée
+            ajoutée au rail (40 + 8) l'écraserait silencieusement à la taille
+            minimale autorisée. */}
+        <LogoMark width={48} height={32} animation="boucle" className="relative shrink-0" />
         {/* `flex-1` : c'est ce bloc, et non la ligne de compte, qui porte
             la poussée vers le bas — `mt-auto` s'applique au groupe
             Réglages à l'intérieur. */}
