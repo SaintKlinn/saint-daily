@@ -33,7 +33,7 @@ export default function LigneCompte({ deplie }: { deplie: boolean }) {
       to="/reglages"
       aria-label={libelle}
       title={deplie ? undefined : libelle}
-      className="relative mb-2 flex h-10 w-full shrink-0 items-center rounded-[10px] px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+      className="group relative mb-2 flex h-10 w-full shrink-0 items-center rounded-[10px] px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 focus-visible:ring-inset"
     >
       {/* Pas de `tracking` sur l'initiale : sur une seule lettre,
           l'interlettrage n'ajoute qu'une chasse à droite et décentre le
@@ -49,7 +49,7 @@ export default function LigneCompte({ deplie }: { deplie: boolean }) {
           lien porte déjà le nom accessible complet. */}
       <span
         aria-hidden="true"
-        className={`ml-3 truncate text-secondaire text-muted transition-opacity duration-200 ${
+        className={`ml-3 truncate text-secondaire text-muted transition-colors group-hover:text-champagne transition-opacity duration-200 ${
           deplie ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >

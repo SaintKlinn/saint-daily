@@ -51,12 +51,19 @@ export default function AppShell() {
   // qu'une fois, pas à chaque rendu du shell.
   const [epingle, setEpingle] = useState(() => lireRailEpingle());
 
+  // Persistance dans un effet, et non dans l'updater de `setEpingle` :
+  // React exige que les updaters soient purs et les invoque deux fois sous
+  // StrictMode pour faire apparaître les effets de bord qui s'y cachent —
+  // l'écriture y aurait donc eu lieu deux fois par bascule en développement.
+  // Le dépôt s'est déjà fait prendre par cette double invocation, voir
+  // hooks/useSettings.ts. L'updater reste fonctionnel pour ne pas capturer
+  // un `epingle` périmé sur deux clics rapprochés.
+  useEffect(() => {
+    ecrireRailEpingle(epingle);
+  }, [epingle]);
+
   function basculerEpinglage() {
-    setEpingle((actuel) => {
-      const suivant = !actuel;
-      ecrireRailEpingle(suivant);
-      return suivant;
-    });
+    setEpingle((actuel) => !actuel);
   }
 
   // useEngagementReminders et useTrayNextEngagement sont montés dans
@@ -127,9 +134,9 @@ export default function AppShell() {
           style={{ background: `radial-gradient(circle, ${colors.accent.bright}29, transparent 70%)` }}
         />
         <LogoMark width={48} height={32} animation="boucle" className="relative" />
-        {/* `flex-1` : c'est ce bloc, et non la pastille, qui porte
-            désormais la poussée vers le bas — `mt-auto` s'applique au
-            groupe Réglages à l'intérieur. */}
+        {/* `flex-1` : c'est ce bloc, et non la ligne de compte, qui porte
+            la poussée vers le bas — `mt-auto` s'applique au groupe
+            Réglages à l'intérieur. */}
         <div className="relative flex w-full flex-1 flex-col items-center gap-3">
           {GROUPES_NAV.map((groupe, index) => (
             <Fragment key={groupe.entrees[0].to}>
@@ -154,14 +161,20 @@ export default function AppShell() {
                       end={exact}
                       title={epingle ? undefined : libelle}
                       aria-label={libelle}
-                      // Pleine largeur dès maintenant, même si rien n'est
-                      // encore affiché à droite de l'icône : c'est ce qui
-                      // permet d'ancrer la barre active au bord du RAIL et
-                      // non au bord de l'icône, donc de lui garder le même
-                      // x quand la tâche 5 introduira la seconde largeur.
-                      // `px-4` (16 px) de chaque côté d'une icône de 40
-                      // donne exactement les 72 px du rail replié.
-                      className="relative flex h-10 w-full items-center rounded-[10px] px-4 text-muted transition-colors hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                      // Pleine largeur, et rien d'autre que l'icône à droite
+                      // quand le rail est replié : c'est ce qui permet
+                      // d'ancrer la barre active au bord du RAIL et non au
+                      // bord de l'icône, donc de lui garder le même x dans
+                      // les deux largeurs. `px-4` (16 px) de chaque côté
+                      // d'une icône de 40 donne exactement les 72 px du
+                      // rail replié.
+                      //
+                      // `focus-visible:ring-inset` : la ligne est pleine
+                      // largeur et flush avec un rail qui masque son
+                      // dépassement (`overflow-hidden`) — un anneau vers
+                      // l'extérieur serait donc coupé des deux côtés. On le
+                      // dessine plutôt vers l'intérieur.
+                      className="relative flex h-10 w-full items-center rounded-[10px] px-4 text-muted transition-colors hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 focus-visible:ring-inset"
                     >
                       {({ isActive }) => (
                         <>
@@ -185,9 +198,9 @@ export default function AppShell() {
                           {isActive && (
                             // La pastille est posée sur le LIEN et non sur
                             // la case d'icône : elle couvre donc la ligne
-                            // entière, et s'étendra d'elle-même à 200 px
-                            // quand la tâche 5 dépliera le rail, pour que
-                            // l'état actif porte icône ET libellé.
+                            // entière et s'étend d'elle-même à 200 px quand
+                            // le rail est déplié, pour que l'état actif
+                            // porte icône ET libellé.
                             //
                             // Conséquence visible à contrôler en live : le
                             // halo de l'élément actif fait désormais 72 px
