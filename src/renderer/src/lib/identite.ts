@@ -34,18 +34,6 @@ export function pseudonyme(utilisateur: UtilisateurLike | null | undefined): str
 }
 
 /**
- * La lettre affichée dans la pastille du rail.
- *
- * `Array.from` plutôt que `[0]` : une initiale peut être un caractère hors
- * du plan multilingue de base (un emoji, par exemple), que `[0]` couperait
- * au milieu d'une paire de substitution et rendrait comme un losange.
- */
-export function initiale(pseudo: string): string {
-  const premier = Array.from(pseudo.trim())[0] ?? '';
-  return premier.toLocaleUpperCase('fr-FR');
-}
-
-/**
  * Les trois morceaux du salut d'accueil, le pseudonyme isolé parce qu'il
  * est le seul à être cliquable.
  *

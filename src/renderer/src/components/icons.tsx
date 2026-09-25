@@ -27,27 +27,6 @@ export function HomeIcon({ size = 20, className }: IconProps) {
   );
 }
 
-export function ListIcon({ size = 20, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <line x1="4" y1="18" x2="14" y2="18" />
-    </svg>
-  );
-}
-
 export function GearIcon({ size = 20, className }: IconProps) {
   return (
     <svg
@@ -243,12 +222,11 @@ export function NotebookIcon({ size = 20, className }: IconProps) {
   );
 }
 
-// Skills était servi par `ListIcon` — trois traits horizontaux, soit
-// exactement le signe d'une liste de tâches, et sa voisine `NotebookIcon`
-// porte elle aussi trois traits sur sa reliure. Aucune convention
-// graphique ne porte « skill » ; « ce qui revient » en a une, et depuis la
-// migration 0004 un skill est précisément un engagement sans
-// `scheduled_at` — c'est-à-dire ce qui revient. D'où la flèche circulaire.
+// Aucune convention graphique ne porte « skill » ; « ce qui revient » en a
+// une, et depuis la migration 0004 un skill est précisément un engagement
+// sans `scheduled_at` — c'est-à-dire ce qui revient. D'où la flèche
+// circulaire, et non les trois traits d'une liste : une liste dit le
+// contenu, pas la récurrence.
 export function SkillIcon({ size = 20, className }: IconProps) {
   return (
     <svg

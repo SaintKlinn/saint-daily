@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initiale, pseudonyme, salutation } from './identite';
+import { pseudonyme, salutation } from './identite';
 
 describe('pseudonyme', () => {
   it('préfère username quand il est présent', () => {
@@ -35,30 +35,6 @@ describe('pseudonyme', () => {
     expect(pseudonyme(undefined)).toBeNull();
     expect(pseudonyme({})).toBeNull();
     expect(pseudonyme({ email: '   ', user_metadata: null })).toBeNull();
-  });
-});
-
-describe('initiale', () => {
-  it('met la première lettre en majuscule', () => {
-    expect(initiale('dev')).toBe('D');
-  });
-
-  it('gère les lettres accentuées', () => {
-    expect(initiale('élodie')).toBe('É');
-  });
-
-  it('ne coupe pas un caractère hors du plan multilingue de base', () => {
-    // Un `[0]` nu rendrait ici une demi-paire de substitution.
-    expect(initiale('🚀fusée')).toBe('🚀');
-  });
-
-  it('ignore les espaces de tête', () => {
-    expect(initiale('  dev')).toBe('D');
-  });
-
-  it('renvoie une chaîne vide plutôt que de planter sur une entrée vide', () => {
-    expect(initiale('')).toBe('');
-    expect(initiale('   ')).toBe('');
   });
 });
 
