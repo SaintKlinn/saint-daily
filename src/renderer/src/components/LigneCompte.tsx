@@ -46,10 +46,17 @@ export default function LigneCompte({ deplie }: { deplie: boolean }) {
       </span>
       {/* Monté dans les deux états et seulement estompé — même raison que
           les libellés de nav. `aria-hidden` parce que l'`aria-label` du
-          lien porte déjà le nom accessible complet. */}
+          lien porte déjà le nom accessible complet.
+
+          `transition-[color,opacity]` en un seul utilitaire, et surtout pas
+          `transition-colors` ET `transition-opacity` côte à côte : les deux
+          posent la même propriété CSS, à spécificité égale, donc le second
+          émis par Tailwind gagne et la première propriété disparaît de la
+          transition. C'est le cas rencontré ici — l'opacité l'emportait et
+          la couleur du survol changeait d'un coup. */}
       <span
         aria-hidden="true"
-        className={`ml-3 truncate text-secondaire text-muted transition-colors group-hover:text-champagne transition-opacity duration-200 ${
+        className={`ml-3 truncate text-secondaire text-muted transition-[color,opacity] duration-200 group-hover:text-champagne ${
           deplie ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
