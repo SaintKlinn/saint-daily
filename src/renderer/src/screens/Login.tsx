@@ -53,7 +53,7 @@ export default function Login() {
       }}
     >
       <div className="flex flex-col items-center gap-3">
-        <LogoMark width={92} height={61} animated />
+        <LogoMark width={92} height={61} animation="revelation" />
         <h1 className="font-serif text-titre-ecran text-champagne">Saint Daily</h1>
       </div>
       <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-6 border border-ink-700 bg-ink-900 p-8">

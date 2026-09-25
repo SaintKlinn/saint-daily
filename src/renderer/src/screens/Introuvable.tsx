@@ -11,7 +11,7 @@ export default function Introuvable() {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="flex h-full flex-col items-center justify-center gap-6 text-champagne"
     >
-      <LogoMark size={80} className="opacity-30" animated />
+      <LogoMark size={80} className="opacity-30" animation="revelation" />
       <h1 className="font-serif text-titre-ecran text-champagne">Introuvable</h1>
       <p className="max-w-[360px] text-center text-corps text-muted">
         Ce skill n'existe plus, ou a été supprimé. Le lien qui vous a mené ici n'est plus valide.

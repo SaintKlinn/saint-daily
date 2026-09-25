@@ -57,7 +57,7 @@ export default function UpdateBanner() {
             'radial-gradient(ellipse 900px 500px at 50% 8%, rgba(231, 185, 78, 0.07), transparent 70%)',
         }}
       >
-        <LogoMark width={92} height={61} animated />
+        <LogoMark width={92} height={61} animation="revelation" />
         <p className="font-serif text-titre text-champagne">Mise à jour en cours…</p>
       </div>
     );

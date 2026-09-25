@@ -44,3 +44,23 @@ export function initiale(pseudo: string): string {
   const premier = Array.from(pseudo.trim())[0] ?? '';
   return premier.toLocaleUpperCase('fr-FR');
 }
+
+/**
+ * Les trois morceaux du salut d'accueil, le pseudonyme isolé parce qu'il
+ * est le seul à être cliquable.
+ *
+ * Le cas sans pseudonyme n'est pas un état dégradé à rattraper dans le
+ * balisage : la phrase doit alors valoir exactement « Bon retour. ». C'est
+ * pour cela que `avant` porte déjà son propre point dans ce cas, plutôt que
+ * de laisser l'appelant recoller une ponctuation — ce qui produirait soit
+ * une phrase sans point, soit une espace orpheline devant lui.
+ */
+export function salutation(utilisateur: UtilisateurLike | null | undefined): {
+  avant: string;
+  pseudo: string | null;
+  apres: string;
+} {
+  const pseudo = pseudonyme(utilisateur);
+  if (!pseudo) return { avant: 'Bon retour.', pseudo: null, apres: '' };
+  return { avant: 'Bon retour ', pseudo, apres: '.' };
+}

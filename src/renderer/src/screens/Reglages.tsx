@@ -9,12 +9,13 @@ import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import { downloadTextFile, exportFileName, fetchExportBundle, toCsv, toJson } from '../lib/exportData';
+import { pseudonyme } from '../lib/identite';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export default function Reglages() {
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
   const { settings, loading, error, updateSettings } = useSettings();
   const { templates, addTemplate, removeTemplate } = useNoteTemplates();
   const [newTemplateText, setNewTemplateText] = useState('');
@@ -159,6 +160,12 @@ export default function Reglages() {
     return <EmptyState role="alert">{error ?? 'Réglages indisponibles pour le moment.'}</EmptyState>;
   }
 
+  // Aucune requête : tout vient de la session, donc cette section reste
+  // correcte même base injoignable — c'est précisément le moment où savoir
+  // sur quel compte on est compte le plus.
+  const pseudo = pseudonyme(session?.user);
+  const email = session?.user?.email ?? null;
+
   return (
     <div className="flex max-w-[640px] flex-col gap-8">
       <motion.h1
@@ -169,6 +176,24 @@ export default function Reglages() {
       >
         Réglages
       </motion.h1>
+
+      {/* En tête de l'écran, et sans ancre dans l'URL : c'est ce qui permet
+          aux liens du rail et du héros d'Accueil de viser simplement
+          « /reglages » et d'y atterrir au bon endroit. L'application est en
+          HashRouter — le fragment porte déjà la route, un second « # » n'y
+          aurait aucun sens. */}
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Compte</h2>
+        <div className="flex items-center justify-between border-b border-ink-700 py-4">
+          <div>
+            <p className="text-corps text-champagne">{pseudo ?? 'Compte'}</p>
+            {email && <p className="mt-1 text-secondaire text-muted">{email}</p>}
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => signOut()}>
+            Se déconnecter
+          </Button>
+        </div>
+      </section>
 
       <section className="flex flex-col gap-0">
         <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Rappels</h2>
@@ -426,10 +451,6 @@ export default function Reglages() {
           Ouvrir
         </Link>
       </div>
-
-      <Button variant="secondary" size="sm" className="w-fit" onClick={() => signOut()}>
-        Se déconnecter
-      </Button>
     </div>
   );
 }

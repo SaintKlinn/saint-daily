@@ -16,6 +16,8 @@ import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
 import { colors } from '../theme/colors';
 import { shouldShowEveningPrompt, shouldShowMorningGreeting, shouldShowWeeklyReview, toLocalDateKey } from '../lib/rituels';
 import { startOfDay, endOfDay } from '../lib/calendarLayout';
+import { useAuth } from '../lib/auth';
+import { salutation } from '../lib/identite';
 
 const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
@@ -29,6 +31,8 @@ const FOCUS_RING =
 const notifiedSkillIds = new Set<string>();
 
 export default function Accueil() {
+  const { session } = useAuth();
+  const salut = salutation(session?.user);
   const { engagements, error: skillsError, setArchived } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { settings, updateSettings } = useSettings();
@@ -302,7 +306,21 @@ export default function Accueil() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
         className="flex flex-wrap items-center justify-between gap-6"
       >
-        <h1 className="font-serif text-heros text-champagne">Bon retour.</h1>
+        <h1 className="font-serif text-heros text-champagne">
+          {salut.avant}
+          {salut.pseudo && (
+            // Pas de couleur d'accent : à 40 px, le pseudonyme deviendrait
+            // l'élément le plus criard de l'écran au détriment du contenu.
+            // Le soulignement décalé ne se montre qu'au survol et au focus.
+            <Link
+              to="/reglages"
+              className={`underline-offset-4 hover:underline focus-visible:underline ${FOCUS_RING}`}
+            >
+              {salut.pseudo}
+            </Link>
+          )}
+          {salut.apres}
+        </h1>
         <div className="flex items-center gap-3">
           {resumeSkill && (
             <Link
