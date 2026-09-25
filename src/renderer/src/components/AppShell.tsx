@@ -2,7 +2,6 @@ import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
-import LigneCompte from './LigneCompte';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import {
@@ -250,7 +249,11 @@ export default function AppShell() {
             </Fragment>
           ))}
         </div>
-        <LigneCompte deplie={epingle} />
+        {/* Pas de pastille de compte ici : l'identité vit dans le héros
+            d'Accueil (« Bon retour <Pseudo> », cliquable) et dans la section
+            Compte en tête de Réglages. Une troisième porte d'entrée en bas du
+            rail ferait doublon avec les deux, et le bas du rail appartient à
+            la commande de dépliage. */}
         <button
           type="button"
           onClick={basculerEpinglage}
