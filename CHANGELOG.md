@@ -12,7 +12,6 @@
 * leave the rail's bottom to the expand control alone ([2976d88](https://github.com/SaintKlinn/saint-daily/commit/2976d886fa1dc7101ef3cfb027aad62cc4228f59))
 * make the nav rail pinnable with a labelled expanded state ([3a2e948](https://github.com/SaintKlinn/saint-daily/commit/3a2e948dd948eafefbb6623ad501e8dc7f89d79b))
 * persist the nav rail pin preference ([1829924](https://github.com/SaintKlinn/saint-daily/commit/1829924a4e54522ec774607bcd3ebfac38dc2c23))
-* turn the rail account badge into a link to account settings ([5db431e](https://github.com/SaintKlinn/saint-daily/commit/5db431ecdcf0fafde7ce1e6b10eed917664f17ba))
 
 
 ### Corrections
