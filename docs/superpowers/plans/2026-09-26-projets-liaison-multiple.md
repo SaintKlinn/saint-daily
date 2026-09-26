@@ -635,7 +635,7 @@ Dans `DetailProjet.tsx`, récupérer `lier`, `delier`, `synchroniserColonne` et 
       setActionError(lierError);
       return;
     }
-    const { error: syncError } = await synchroniserColonne(engagementId, fraiches ?? [], updateEngagement);
+    const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
 
@@ -647,12 +647,12 @@ Dans `DetailProjet.tsx`, récupérer `lier`, `delier`, `synchroniserColonne` et 
       setActionError(delierError);
       return;
     }
-    const { error: syncError } = await synchroniserColonne(engagementId, fraiches ?? [], updateEngagement);
+    const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
 ```
 
-Le `?? []` n'est pas de la superstition : `lier` et `delier` ne renvoient des liaisons `null` que sur le chemin d'erreur, déjà traité au-dessus — mais le type l'autorise, et `projetPrincipal` n'accepte pas `null` par conception, puisqu'on ne l'appelle qu'en écrivant.
+Pas de `?? []` ici : `fraiches` peut valoir `null` (le chemin d'erreur, déjà traité au-dessus, en renvoie), et c'est exactement la valeur que `synchroniserColonne` attend pour ne PAS toucher à la colonne — remplacer ce `null` par `[]` la ferait recopier comme « aucun projet », effaçant le repli sur `project_id` que ce `null` est censé préserver.
 
 - [ ] **Step 4: Ajouter le sélecteur et le bouton de détachement**
 
@@ -735,7 +735,7 @@ Dans `Calendrier.tsx`, ajouter les imports — `import { useLiaisonsProjet } fro
       }
       fraiches = apres;
     }
-    const { error: syncError } = await synchroniserColonne(taskId, fraiches ?? [], updateEngagement);
+    const { error: syncError } = await synchroniserColonne(taskId, fraiches, updateEngagement);
     if (syncError) {
       setActionError(syncError);
       return;

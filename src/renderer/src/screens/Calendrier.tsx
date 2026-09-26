@@ -6,7 +6,7 @@ import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
-import { projetPrincipal } from '../lib/projets';
+import { projetAffiche } from '../lib/projets';
 import {
   RECURRENCE_WINDOW_DAYS,
   detectConflicts,
@@ -20,7 +20,7 @@ import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
-import type { Engagement, LiaisonProjet, Priority } from '../lib/types';
+import type { Engagement, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -62,7 +62,7 @@ export default function Calendrier() {
     error: entriesError,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
-  const { liaisons, refresh, lier, delier, synchroniserColonne } = useLiaisonsProjet();
+  const { liaisons, remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
   // Threadé jusqu'à `BoutonSuppression` dans le popover, comme `completing`
@@ -229,44 +229,20 @@ export default function Calendrier() {
   }
 
   async function handleChangeProject(taskId: string, projectId: string | null) {
-    // Choix unique sur un modèle multiple : on retire les liaisons
-    // existantes de cette tâche avant d'en poser une. Le modèle en
-    // accepterait plusieurs ; c'est l'interface qui n'en propose qu'une.
-    const actuelles = (liaisons ?? []).filter((l) => l.engagementId === taskId);
-    // `fraiches` ne prend JAMAIS la valeur de `liaisons` après une mutation :
-    // cette variable est capturée par la clôture et n'est pas rafraîchie en
-    // cours d'exécution, donc elle contient encore ce qu'on vient de
-    // supprimer. La recopier dans `project_id` y remettrait le projet tout
-    // juste détaché — et l'application installée, qui lit cette colonne,
-    // continuerait de l'afficher.
-    let fraiches: LiaisonProjet[] | null = null;
-    for (const l of actuelles) {
-      const { error, liaisons: apres } = await delier(taskId, l.projectId);
-      if (error) {
-        // La table a peut-être déjà changé avant l'échec. On la relit pour
-        // savoir où elle en est réellement, puis on remet la colonne d'accord
-        // avec elle : une colonne qui contredit la table est pire qu'une
-        // opération à moitié faite, parce que rien ne viendrait la rattraper.
-        await synchroniserColonne(taskId, await refresh(), updateEngagement);
-        setActionError(error);
-        return;
-      }
-      fraiches = apres;
+    // `remplacerProjet` porte la boucle détacher-puis-rattacher (choix unique
+    // sur un modèle multiple) et le refus d'écrire quand la liaison est
+    // indisponible — partagée avec `DetailSkill`, voir son commentaire dans
+    // `useLiaisonsProjet.ts`.
+    const { error, liaisons: fraiches } = await remplacerProjet(taskId, projectId);
+    // `fraiches ?? null` : `remplacerProjet` ne renvoie aucune clé `liaisons`
+    // quand elle refuse d'écrire (liaison indisponible) — rien à synchroniser
+    // dans ce cas, et `synchroniserColonne` traite déjà `null` comme
+    // « ne rien toucher ».
+    const { error: syncError } = await synchroniserColonne(taskId, fraiches ?? null, updateEngagement);
+    if (error) {
+      setActionError(error);
+      return;
     }
-    if (projectId) {
-      const { error, liaisons: apres } = await lier(taskId, projectId);
-      if (error) {
-        await synchroniserColonne(taskId, await refresh(), updateEngagement);
-        setActionError(error);
-        return;
-      }
-      fraiches = apres;
-    }
-    // `fraiches` est nul quand il n'y avait rien à détacher et rien à
-    // rattacher — l'utilisateur a rechoisi « Aucun » sur une tâche qui n'avait
-    // déjà aucun projet. Rien n'a bougé, donc rien à synchroniser, et
-    // `synchroniserColonne` s'en charge en ne touchant à rien.
-    const { error: syncError } = await synchroniserColonne(taskId, fraiches, updateEngagement);
     if (syncError) {
       setActionError(syncError);
       return;
@@ -625,7 +601,7 @@ export default function Calendrier() {
           onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
           recurrenceBusy={recurrenceBusy}
           projects={projects}
-          projetSelectionne={popoverTask ? projetPrincipal(liaisons ?? [], popoverTask.id) : null}
+          projetSelectionne={popoverTask ? projetAffiche(engagements, liaisons, popoverTask.id) : null}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
           onToggleSkip={() => handleToggleSkip(popoverTask)}
           skipping={skipping}

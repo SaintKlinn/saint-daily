@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { membresDuProjet, projetPrincipal, projetsDeLEngagement } from './projets';
+import { membresDuProjet, projetAffiche, projetPrincipal, projetsDeLEngagement } from './projets';
 import type { Engagement, LiaisonProjet } from './types';
 
 // Fabriques locales : `Engagement` a vingt-trois champs dont un seul ou deux
@@ -158,5 +158,31 @@ describe('projetPrincipal', () => {
     ];
     projetPrincipal(liaisons, 'menuiserie');
     expect(liaisons.map((l) => l.projectId)).toEqual(['atelier', 'maison']);
+  });
+});
+
+describe('projetAffiche', () => {
+  it('rend le projet principal quand la liaison est disponible et peuplée', () => {
+    const liaisons = [
+      uneLiaison({ engagementId: 'menuiserie', projectId: 'atelier', position: 1 }),
+      uneLiaison({ engagementId: 'menuiserie', projectId: 'maison', position: 0 }),
+    ];
+    expect(projetAffiche(engagements, liaisons, 'menuiserie')).toBe('maison');
+  });
+
+  it('rend null quand la liaison est disponible mais vide pour cet engagement', () => {
+    // Distinct du repli sur `project_id` : la table a répondu « personne »,
+    // ce qui doit rester « Aucun » à l'affichage même si `project_id` traîne
+    // encore une ancienne valeur.
+    const perime = [maison, unEngagement({ id: 'menuiserie', projectId: 'maison' })];
+    expect(projetAffiche(perime, [], 'menuiserie')).toBeNull();
+  });
+
+  it('retombe sur `project_id` quand la liaison est indisponible', () => {
+    // Le cas que Fix 2 corrige : `liaisons ?? []` ferait disparaître un
+    // `project_id` pourtant posé, et le sélecteur afficherait « Aucun » à
+    // tort.
+    const avecColonne = unEngagement({ id: 'menuiserie', projectId: 'maison' });
+    expect(projetAffiche([maison, avecColonne], null, 'menuiserie')).toBe('maison');
   });
 });

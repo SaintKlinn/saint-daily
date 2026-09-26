@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
+import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
@@ -47,6 +48,7 @@ export default function DetailSkill() {
   const { engagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
+  const { remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
   const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 
@@ -146,8 +148,16 @@ export default function DetailSkill() {
   async function handleProjectChange(e: ChangeEvent<HTMLSelectElement>) {
     if (!skill) return;
     setActionError(null);
-    const { error } = await updateEngagement(skill.id, { projectId: e.target.value || null });
-    if (error) setActionError(error);
+    // `remplacerProjet` porte la boucle détacher-puis-rattacher, partagée
+    // avec `Calendrier.handleChangeProject` — voir son commentaire dans
+    // `useLiaisonsProjet.ts`.
+    const { error, liaisons: fraiches } = await remplacerProjet(skill.id, e.target.value || null);
+    const { error: syncError } = await synchroniserColonne(skill.id, fraiches ?? null, updateEngagement);
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    if (syncError) setActionError(syncError);
   }
 
   async function handleGoalChange(patch: {

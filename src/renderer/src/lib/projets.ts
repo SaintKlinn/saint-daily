@@ -4,7 +4,7 @@
 //
 // Le paramètre `liaisons` porte trois états, et les distinguer EST le
 // chantier :
-//   `null`   la table n'existe pas encore (migration 0016 non appliquée)
+//   `null`   la liaison est indisponible — table absente, ou lecture en échec
 //   `[]`     la table existe et ne contient rien
 //   peuplé   la table existe et fait autorité
 //
@@ -79,9 +79,28 @@ export function projetsDeLEngagement(
 export function projetPrincipal(liaisons: LiaisonProjet[], engagementId: string): string | null {
   const siennes = liaisons.filter((l) => l.engagementId === engagementId);
   if (siennes.length === 0) return null;
-  // Copie avant tri : `sort` mute, et le tableau reçu appartient à l'appelant.
+  // Copie défensive : `sort` mute en place.
   const triees = [...siennes].sort(
     (a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt)
   );
   return triees[0].projectId;
+}
+
+/**
+ * Le projet à AFFICHER comme sélectionné pour un engagement.
+ *
+ * Distinct de `projetPrincipal`, qui sert à écrire et exige donc une liaison
+ * disponible. Ici on lit : quand la liaison est indisponible, on retombe sur
+ * `project_id` comme partout ailleurs en lecture, au lieu de prétendre qu'il
+ * n'y a aucun projet.
+ */
+export function projetAffiche(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  engagementId: string
+): string | null {
+  if (liaisons === null) {
+    return engagements.find((e) => e.id === engagementId)?.projectId ?? null;
+  }
+  return projetPrincipal(liaisons, engagementId);
 }

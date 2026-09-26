@@ -116,7 +116,7 @@ export default function DetailProjet() {
       <div className="flex items-center gap-3">
         <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
         <p className="text-secondaire text-muted">
-          Supprimer un projet envoie aussi ses engagements liés à la corbeille.
+          Supprimer un projet envoie aussi à la corbeille les engagements dont il est le projet principal.
         </p>
       </div>
       {actionError && (

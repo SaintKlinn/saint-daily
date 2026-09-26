@@ -4,6 +4,24 @@ import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
 import type { Engagement, GenericLevel, GoalMetric, GoalPeriod, Priority, RecurrenceType } from '../lib/types';
 
+/**
+ * Pose une liaison projet pour chaque ligne fraîchement créée qui porte un
+ * `project_id`. Un échec est renvoyé et non avalé : une appartenance à moitié
+ * écrite — colonne posée, liaison manquante — est précisément ce qui rendait
+ * un membre invisible dans la composition de son projet.
+ */
+async function insererLiaisons(
+  userId: string,
+  creees: Array<{ id: string; project_id: string | null }>
+): Promise<{ error: string | null }> {
+  const liaisons = creees
+    .filter((r) => r.project_id)
+    .map((r) => ({ user_id: userId, engagement_id: r.id, project_id: r.project_id, position: 0 }));
+  if (liaisons.length === 0) return { error: null };
+  const { error } = await getSupabaseClient().from('engagement_project').insert(liaisons);
+  return { error: error ? toFrenchError(error.message) : null };
+}
+
 interface EngagementRow {
   id: string;
   user_id: string;
@@ -124,7 +142,7 @@ export function useEngagements() {
     projectId?: string | null;
   }) {
     if (!session) return { error: 'Non connecté' };
-    const { error: insertError } = await getSupabaseClient()
+    const { data: creees, error: insertError } = await getSupabaseClient()
       .from('engagement')
       .insert({
         user_id: session.user.id,
@@ -141,8 +159,15 @@ export function useEngagements() {
         ...(input.recurrenceWeekdays !== undefined ? { recurrence_weekdays: input.recurrenceWeekdays } : {}),
         ...(input.isProject !== undefined ? { is_project: input.isProject } : {}),
         ...(input.projectId !== undefined ? { project_id: input.projectId } : {}),
-      });
+      })
+      .select('id, project_id');
     if (insertError) return { error: toFrenchError(insertError.message) };
+    // La liaison est dérivée de ce que la base a RÉELLEMENT écrit, pas de
+    // l'entrée : les deux sources ne peuvent donc pas diverger, et aucun
+    // futur chemin de création ne pourra oublier la liaison en se contentant
+    // de poser `project_id`. C'est le défaut que cette vague corrige.
+    const { error: liaisonError } = await insererLiaisons(session.user.id, creees ?? []);
+    if (liaisonError) return { error: liaisonError };
     await refresh();
     return { error: null };
   }
@@ -182,8 +207,15 @@ export function useEngagements() {
       ...(input.isProject !== undefined ? { is_project: input.isProject } : {}),
       ...(input.projectId !== undefined ? { project_id: input.projectId } : {}),
     }));
-    const { error: insertError } = await getSupabaseClient().from('engagement').insert(rows);
+    const { data: creees, error: insertError } = await getSupabaseClient()
+      .from('engagement')
+      .insert(rows)
+      .select('id, project_id');
     if (insertError) return { error: toFrenchError(insertError.message) };
+    // Voir le commentaire équivalent dans `createEngagement` : la liaison
+    // vient de ce que la base a écrit, jamais de `inputs`.
+    const { error: liaisonError } = await insererLiaisons(session.user.id, creees ?? []);
+    if (liaisonError) return { error: liaisonError };
     await refresh();
     return { error: null };
   }
