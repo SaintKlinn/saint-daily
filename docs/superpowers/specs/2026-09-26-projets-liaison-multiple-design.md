@@ -37,6 +37,7 @@ Le chantier A ne se voit presque pas, et c'est son danger : sans interface pour 
 - **Les chantiers B, C et D** ci-dessus. En particulier le Pomodoro **en groupe**, qui est une mécanique neuve : l'écran actuel prend un `?skillId=` unique et ne connaît qu'un skill à la fois.
 - **La modification d'un projet** — renommer, tags, notes, archivage. C'est le manque le plus criant de la section, et il appartient au chantier B pour que celui-ci reste centré sur le modèle.
 - **Le réordonnancement des membres d'un projet.** La colonne `position` est posée par la migration parce qu'une table de liaison est précisément ce qui peut la porter, mais **aucune interface ne l'expose** dans ce chantier.
+- **L'échéance, les objectifs, les jalons, le temps cumulé, la dormance et les sous-projets.** Tous retenus pour la suite, tous du chantier B — sauf la colonne `due_at`, posée par cette migration et expliquée au §1. Les objectifs ne demanderont aucune migration : `goalPeriod`, `goalMetric` et `goalTarget` existent déjà sur tout engagement et ne sont simplement jamais exposés côté projet. Le temps cumulé non plus : `PracticeEntry` porte `durationMinutes` et `engagementId`, et `useAllPracticeEntries` charge déjà tout.
 - **La suppression de la colonne `project_id`.** Voir les contraintes globales : c'est un chantier d'après-release.
 - **La multi-sélection de projets pour une tâche.** Le modèle la permettra ; le popover du calendrier gardera son choix unique.
 - **Le socle de test de composants.** Le dépôt n'a ni jsdom ni `@testing-library/react`, seulement vitest. L'installer est un chantier à part entière, et la conception ci-dessous en tient compte plutôt que de le contourner.
@@ -62,15 +63,23 @@ create table saint_daily.engagement_project (
   project_id uuid not null references saint_daily.engagement(id) on delete cascade,
   position int not null default 0,
   created_at timestamptz not null default now(),
-  unique (engagement_id, project_id)
+  unique (engagement_id, project_id),
+  check (engagement_id <> project_id)
 );
+
+alter table saint_daily.engagement
+  add column due_at timestamptz;
 ```
 
-Trois points qui ne sont pas du remplissage :
+Cinq points qui ne sont pas du remplissage :
 
 **Les deux clés étrangères prennent `on delete cascade`**, que `project_id` n'a jamais eu. La nouvelle table n'hérite donc pas du défaut qui bloque « vider la corbeille ».
 
 **`user_id` est porté par la table** plutôt que dérivé de l'engagement par sous-requête. C'est le motif de la maison, et il rend la politique RLS triviale : `auth.uid() = user_id`, comme les cinq autres tables du schéma. Une politique par sous-requête serait plus « juste » et nettement plus lente.
+
+**`due_at` est posée maintenant et exposée plus tard.** L'échéance d'un chantier appartient au chantier B, mais une colonne coûte une ligne dans une migration qu'on écrit de toute façon, contre une migration 0017 entière à appliquer à la main si on attend. La tentation était de réutiliser le `scheduledAt` qui existe déjà sur tout engagement : elle est écartée. Le calendrier affiche `scheduledAt && scheduledEndsAt` et **ne filtre pas `isProject`** — un projet n'y surgirait pas tant que `scheduledEndsAt` reste nul, mais le couplage est fortuit, et surtout `scheduledAt` veut dire « quand c'est planifié », pas « quand c'est dû ». Aucune requête automatique ne nommera `due_at` avant que la migration ne passe.
+
+**`check (engagement_id <> project_id)` interdit qu'un engagement s'appartienne.** Un projet étant un engagement, la liaison autorise déjà un projet dans un projet — les sous-projets sortent gratuitement de ce modèle, et c'est voulu. Mais elle autorise aussi, sans cette contrainte, un cycle : la maison dans la toiture dans la maison. La contrainte bloque le cas trivial ; les cycles plus longs restent possibles et devront être traités par le chantier qui exposera les sous-projets, en gardant toute traversée récursive protégée par un ensemble de visités. C'est noté ici parce que c'est le modèle qui l'ouvre, pas l'interface.
 
 **Reprise des données existantes**, dans la même transaction :
 
