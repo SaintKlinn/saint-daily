@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.9.0](https://github.com/SaintKlinn/saint-daily/compare/v1.8.0...v1.9.0) (2026-09-25)
+
+
+### Nouveautés
+
+* add an account section at the top of settings ([95877c1](https://github.com/SaintKlinn/saint-daily/commit/95877c1c595f78095844c603f79d8d558df63662))
+* enlarge the rail logo and give it the looping ray animation ([bde0a24](https://github.com/SaintKlinn/saint-daily/commit/bde0a241e2afbfaf91f8931aac2a6a89e53e91e4))
+* extract nav entries into testable data, add a skill icon ([27435ce](https://github.com/SaintKlinn/saint-daily/commit/27435ce000b3f9160f6b4a9044fda3e69a5545fc))
+* greet the user by name on the home screen ([b999834](https://github.com/SaintKlinn/saint-daily/commit/b9998346d611ce09c2a279c4c31fdbf4f22d35f1))
+* leave the rail's bottom to the expand control alone ([2976d88](https://github.com/SaintKlinn/saint-daily/commit/2976d886fa1dc7101ef3cfb027aad62cc4228f59))
+* make the nav rail pinnable with a labelled expanded state ([3a2e948](https://github.com/SaintKlinn/saint-daily/commit/3a2e948dd948eafefbb6623ad501e8dc7f89d79b))
+* persist the nav rail pin preference ([1829924](https://github.com/SaintKlinn/saint-daily/commit/1829924a4e54522ec774607bcd3ebfac38dc2c23))
+
+
+### Corrections
+
+* address final whole-branch review findings on nav rail ([9f562c8](https://github.com/SaintKlinn/saint-daily/commit/9f562c88a627c4daa13d7111772f91925e31860d))
+* animate both colour and opacity on the account row label ([0e43fcf](https://github.com/SaintKlinn/saint-daily/commit/0e43fcfc188ee6975f6502dfcea31400b31de0ef))
+* keep the rail logo from being the first thing squeezed ([db74475](https://github.com/SaintKlinn/saint-daily/commit/db74475bd6cbb8dd445edafffedfea7db60c14db))
+* reorder and group the nav rail, recenter the active bar ([70be39c](https://github.com/SaintKlinn/saint-daily/commit/70be39c91f14a67743061da5ba67228bae66dc16))
+* restore test names to brief's verbatim text with U+2019 apostrophe ([1a7936e](https://github.com/SaintKlinn/saint-daily/commit/1a7936ecb4e1753a3fdcd6b67f37acadcd02c1d4))
+
+
+### Améliorations internes
+
+* drop the two helpers the rail rework left dead ([3c574d3](https://github.com/SaintKlinn/saint-daily/commit/3c574d337fc12dcfb88e60f22974ea000526cc96))
+
+
+### Documentation
+
+* add design spec for the nav rail, account and logo ([8fd0190](https://github.com/SaintKlinn/saint-daily/commit/8fd0190c6dd3788029aa9b9c46ce9d1244c81eb3))
+* add implementation plan for the nav rail, account and logo ([d479edd](https://github.com/SaintKlinn/saint-daily/commit/d479edd6ff82582f4ff23de4f38fa14ce8068f65))
+
 ## [1.8.0](https://github.com/SaintKlinn/saint-daily/compare/v1.7.0...v1.8.0) (2026-09-19)
 
 
