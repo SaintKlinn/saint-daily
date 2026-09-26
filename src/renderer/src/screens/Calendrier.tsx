@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
+import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
+import { projetAffiche } from '../lib/projets';
 import {
   RECURRENCE_WINDOW_DAYS,
   detectConflicts,
@@ -60,6 +62,7 @@ export default function Calendrier() {
     error: entriesError,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const { liaisons, remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
   // Threadé jusqu'à `BoutonSuppression` dans le popover, comme `completing`
@@ -226,9 +229,22 @@ export default function Calendrier() {
   }
 
   async function handleChangeProject(taskId: string, projectId: string | null) {
-    const { error } = await updateEngagement(taskId, { projectId });
+    // `remplacerProjet` porte la boucle détacher-puis-rattacher (choix unique
+    // sur un modèle multiple) et le refus d'écrire quand la liaison est
+    // indisponible — partagée avec `DetailSkill`, voir son commentaire dans
+    // `useLiaisonsProjet.ts`.
+    const { error, liaisons: fraiches } = await remplacerProjet(taskId, projectId);
+    // `fraiches ?? null` : `remplacerProjet` ne renvoie aucune clé `liaisons`
+    // quand elle refuse d'écrire (liaison indisponible) — rien à synchroniser
+    // dans ce cas, et `synchroniserColonne` traite déjà `null` comme
+    // « ne rien toucher ».
+    const { error: syncError } = await synchroniserColonne(taskId, fraiches ?? null, updateEngagement);
     if (error) {
       setActionError(error);
+      return;
+    }
+    if (syncError) {
+      setActionError(syncError);
       return;
     }
     setActionError(null);
@@ -585,6 +601,7 @@ export default function Calendrier() {
           onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
           recurrenceBusy={recurrenceBusy}
           projects={projects}
+          projetSelectionne={popoverTask ? projetAffiche(engagements, liaisons, popoverTask.id) : null}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
           onToggleSkip={() => handleToggleSkip(popoverTask)}
           skipping={skipping}
