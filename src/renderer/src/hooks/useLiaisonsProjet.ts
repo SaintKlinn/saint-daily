@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
+import { useAuth } from '../lib/auth';
+import { projetPrincipal } from '../lib/projets';
 import type { LiaisonProjet } from '../lib/types';
 
 interface LiaisonRow {
@@ -34,6 +36,7 @@ function fromRow(row: LiaisonRow): LiaisonProjet {
  * disparaître tous les rattachements de l'utilisateur.
  */
 export function useLiaisonsProjet() {
+  const { session } = useAuth();
   const [liaisons, setLiaisons] = useState<LiaisonProjet[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,5 +63,53 @@ export function useLiaisonsProjet() {
     refresh();
   }, [refresh]);
 
-  return { liaisons, loading, refresh };
+  // Contrairement à la lecture, un échec d'écriture DOIT se voir : ici
+  // l'utilisateur vient d'agir, et le message doit dire quoi faire plutôt
+  // que ce qui a cassé.
+  const MESSAGE_TABLE_ABSENTE =
+    'Le rattachement multiple n’est pas encore disponible : applique la migration 0016.';
+
+  async function lier(engagementId: string, projectId: string) {
+    if (!session) return { error: 'Non connecté', liaisons: null };
+    const { error: insertError } = await getSupabaseClient()
+      .from('engagement_project')
+      .insert({
+        user_id: session.user.id,
+        engagement_id: engagementId,
+        project_id: projectId,
+        position: liaisons?.filter((l) => l.engagementId === engagementId).length ?? 0,
+      });
+    if (insertError) return { error: MESSAGE_TABLE_ABSENTE, liaisons: null };
+    return { error: null, liaisons: await refresh() };
+  }
+
+  async function delier(engagementId: string, projectId: string) {
+    const { error: deleteError } = await getSupabaseClient()
+      .from('engagement_project')
+      .delete()
+      .eq('engagement_id', engagementId)
+      .eq('project_id', projectId);
+    if (deleteError) return { error: MESSAGE_TABLE_ABSENTE, liaisons: null };
+    return { error: null, liaisons: await refresh() };
+  }
+
+  /**
+   * Écriture de COMPATIBILITÉ, à retirer le jour où `project_id` disparaît.
+   *
+   * L'application installée lit encore cette colonne. Cesser de l'écrire
+   * figerait ses rattachements à leur dernière valeur, sans le dire. On la
+   * remet donc au projet principal après chaque modification — et à `null`
+   * quand l'engagement n'est plus lié à rien.
+   */
+  async function synchroniserColonne(
+    engagementId: string,
+    liaisonsFraiches: LiaisonProjet[],
+    updateEngagement: (id: string, patch: { projectId: string | null }) => Promise<{ error: string | null }>
+  ) {
+    return updateEngagement(engagementId, {
+      projectId: projetPrincipal(liaisonsFraiches, engagementId),
+    });
+  }
+
+  return { liaisons, loading, refresh, lier, delier, synchroniserColonne };
 }

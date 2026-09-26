@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
+import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useSettings } from '../hooks/useSettings';
 import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
+import { projetPrincipal } from '../lib/projets';
 import {
   RECURRENCE_WINDOW_DAYS,
   detectConflicts,
@@ -18,7 +20,7 @@ import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
-import type { Engagement, Priority } from '../lib/types';
+import type { Engagement, LiaisonProjet, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -60,6 +62,7 @@ export default function Calendrier() {
     error: entriesError,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const { liaisons, lier, delier, synchroniserColonne } = useLiaisonsProjet();
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
   // Threadé jusqu'à `BoutonSuppression` dans le popover, comme `completing`
@@ -226,9 +229,29 @@ export default function Calendrier() {
   }
 
   async function handleChangeProject(taskId: string, projectId: string | null) {
-    const { error } = await updateEngagement(taskId, { projectId });
-    if (error) {
-      setActionError(error);
+    // Choix unique sur un modèle multiple : on retire les liaisons
+    // existantes de cette tâche avant d'en poser une. Le modèle en
+    // accepterait plusieurs ; c'est l'interface qui n'en propose qu'une.
+    const actuelles = (liaisons ?? []).filter((l) => l.engagementId === taskId);
+    for (const l of actuelles) {
+      const { error } = await delier(taskId, l.projectId);
+      if (error) {
+        setActionError(error);
+        return;
+      }
+    }
+    let fraiches: LiaisonProjet[] | null = liaisons;
+    if (projectId) {
+      const { error, liaisons: apres } = await lier(taskId, projectId);
+      if (error) {
+        setActionError(error);
+        return;
+      }
+      fraiches = apres;
+    }
+    const { error: syncError } = await synchroniserColonne(taskId, fraiches ?? [], updateEngagement);
+    if (syncError) {
+      setActionError(syncError);
       return;
     }
     setActionError(null);
@@ -585,6 +608,7 @@ export default function Calendrier() {
           onRecurrenceChange={(rule) => handleChangeRecurrence(popoverTask.id, rule)}
           recurrenceBusy={recurrenceBusy}
           projects={projects}
+          projetSelectionne={popoverTask ? projetPrincipal(liaisons ?? [], popoverTask.id) : null}
           onProjectChange={(projectId) => handleChangeProject(popoverTask.id, projectId)}
           onToggleSkip={() => handleToggleSkip(popoverTask)}
           skipping={skipping}

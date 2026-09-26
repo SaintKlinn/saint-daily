@@ -31,6 +31,7 @@ export default function TaskPopover({
   onRecurrenceChange,
   recurrenceBusy,
   projects,
+  projetSelectionne,
   onProjectChange,
   onToggleSkip,
   skipping,
@@ -48,6 +49,7 @@ export default function TaskPopover({
   onRecurrenceChange: (rule: RecurrenceRule) => void;
   recurrenceBusy: boolean;
   projects: Engagement[];
+  projetSelectionne: string | null;
   onProjectChange: (projectId: string | null) => void;
   onToggleSkip: () => void;
   skipping?: boolean;
@@ -117,7 +119,7 @@ export default function TaskPopover({
         <div className="relative flex flex-col gap-2">
           <p className="text-libelle uppercase tracking-[0.04em] text-muted">Projet</p>
           <select
-            value={task.projectId ?? ''}
+            value={projetSelectionne ?? ''}
             onChange={(e) => onProjectChange(e.target.value || null)}
             className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
           >
