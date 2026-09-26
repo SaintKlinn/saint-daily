@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
+import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
+import { membresDuProjet } from '../lib/projets';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
@@ -13,7 +15,14 @@ export default function DetailProjet() {
   const { engagements, loading, error, softDelete } = useEngagements();
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const project = projects.find((p) => p.id === id);
-  const children = useMemo(() => engagements.filter((e) => e.projectId === id), [engagements, id]);
+  const { liaisons } = useLiaisonsProjet();
+  // `membresDuProjet` porte la règle de résolution : la liaison fait
+  // autorité dès qu'elle est disponible, et `project_id` ne sert que de
+  // repli tant que la migration 0016 n'est pas appliquée.
+  const children = useMemo(
+    () => (id ? membresDuProjet(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
   const [actionError, setActionError] = useState<string | null>(null);
   // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
   // cet état, le bouton reste armable pendant toute l'attente réseau.
@@ -81,7 +90,7 @@ export default function DetailProjet() {
       )}
 
       <section>
-        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Engagements liés</h2>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Composition</h2>
         {children.length === 0 ? (
           <EmptyState>Aucun engagement rattaché à ce projet.</EmptyState>
         ) : (
