@@ -388,12 +388,12 @@ export function projetPrincipal(liaisons: LiaisonProjet[], engagementId: string)
 - [ ] **Step 6: Lancer les tests pour les voir passer**
 
 Run: `npx vitest run src/renderer/src/lib/projets.test.ts`
-Expected: PASS — 12 tests.
+Expected: PASS — 11 tests.
 
 - [ ] **Step 7: Vérifier la suite entière et le typage**
 
 Run: `npm test`
-Expected: PASS — 216 + 12 = **228 tests**, 17 fichiers.
+Expected: PASS — 216 + 11 = **227 tests**, 17 fichiers.
 
 Run: `npm run typecheck`
 Expected: propre.
@@ -525,7 +525,7 @@ Puis renommer le titre de la section, de `Engagements liés` à `Composition`.
 - [ ] **Step 3: Vérifier tests et typage**
 
 Run: `npm test`
-Expected: PASS — 228 tests (cette tâche n'en ajoute aucun : le hook parle à Supabase, que le dépôt ne simule nulle part).
+Expected: PASS — 227 tests (cette tâche n'en ajoute aucun : le hook parle à Supabase, que le dépôt ne simule nulle part).
 
 Run: `npm run typecheck`
 Expected: propre.
@@ -754,7 +754,7 @@ et passer la prop au popover :
 - [ ] **Step 6: Vérifier tests et typage**
 
 Run: `npm test`
-Expected: PASS — 228 tests.
+Expected: PASS — 227 tests.
 
 Run: `npm run typecheck`
 Expected: propre. Un `TaskPopover` appelé sans sa nouvelle prop **doit** faire échouer cette commande — c'est le filet qui garantit qu'aucun site d'appel n'a été oublié.
@@ -785,7 +785,7 @@ Vérifier que l'ensemble obtenu est **inclus** dans les six rôles et les sept c
 - [ ] **Step 2: Suite complète et typage**
 
 Run: `npm test`
-Expected: **228 tests, 17 fichiers.** Un total doublé signifie qu'un worktree traîne.
+Expected: **227 tests, 17 fichiers.** Un total doublé signifie qu'un worktree traîne.
 
 Run: `npm run typecheck`
 Expected: propre.
