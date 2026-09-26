@@ -39,6 +39,15 @@ export interface EngagementMilestone {
   createdAt: string;
 }
 
+export interface LiaisonProjet {
+  id: string;
+  userId: string;
+  engagementId: string;
+  projectId: string;
+  position: number;
+  createdAt: string;
+}
+
 export interface PracticeEntry {
   id: string;
   engagementId: string;
