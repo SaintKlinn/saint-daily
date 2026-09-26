@@ -62,7 +62,7 @@ export default function Calendrier() {
     error: entriesError,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
-  const { liaisons, lier, delier, synchroniserColonne } = useLiaisonsProjet();
+  const { liaisons, refresh, lier, delier, synchroniserColonne } = useLiaisonsProjet();
   const [popoverTask, setPopoverTask] = useState<Engagement | null>(null);
   const [completing, setCompleting] = useState(false);
   // Threadé jusqu'à `BoutonSuppression` dans le popover, comme `completing`
@@ -233,23 +233,40 @@ export default function Calendrier() {
     // existantes de cette tâche avant d'en poser une. Le modèle en
     // accepterait plusieurs ; c'est l'interface qui n'en propose qu'une.
     const actuelles = (liaisons ?? []).filter((l) => l.engagementId === taskId);
+    // `fraiches` ne prend JAMAIS la valeur de `liaisons` après une mutation :
+    // cette variable est capturée par la clôture et n'est pas rafraîchie en
+    // cours d'exécution, donc elle contient encore ce qu'on vient de
+    // supprimer. La recopier dans `project_id` y remettrait le projet tout
+    // juste détaché — et l'application installée, qui lit cette colonne,
+    // continuerait de l'afficher.
+    let fraiches: LiaisonProjet[] | null = null;
     for (const l of actuelles) {
-      const { error } = await delier(taskId, l.projectId);
+      const { error, liaisons: apres } = await delier(taskId, l.projectId);
       if (error) {
-        setActionError(error);
-        return;
-      }
-    }
-    let fraiches: LiaisonProjet[] | null = liaisons;
-    if (projectId) {
-      const { error, liaisons: apres } = await lier(taskId, projectId);
-      if (error) {
+        // La table a peut-être déjà changé avant l'échec. On la relit pour
+        // savoir où elle en est réellement, puis on remet la colonne d'accord
+        // avec elle : une colonne qui contredit la table est pire qu'une
+        // opération à moitié faite, parce que rien ne viendrait la rattraper.
+        await synchroniserColonne(taskId, await refresh(), updateEngagement);
         setActionError(error);
         return;
       }
       fraiches = apres;
     }
-    const { error: syncError } = await synchroniserColonne(taskId, fraiches ?? [], updateEngagement);
+    if (projectId) {
+      const { error, liaisons: apres } = await lier(taskId, projectId);
+      if (error) {
+        await synchroniserColonne(taskId, await refresh(), updateEngagement);
+        setActionError(error);
+        return;
+      }
+      fraiches = apres;
+    }
+    // `fraiches` est nul quand il n'y avait rien à détacher et rien à
+    // rattacher — l'utilisateur a rechoisi « Aucun » sur une tâche qui n'avait
+    // déjà aucun projet. Rien n'a bougé, donc rien à synchroniser, et
+    // `synchroniserColonne` s'en charge en ne touchant à rien.
+    const { error: syncError } = await synchroniserColonne(taskId, fraiches, updateEngagement);
     if (syncError) {
       setActionError(syncError);
       return;

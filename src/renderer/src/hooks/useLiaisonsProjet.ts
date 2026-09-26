@@ -103,9 +103,15 @@ export function useLiaisonsProjet() {
    */
   async function synchroniserColonne(
     engagementId: string,
-    liaisonsFraiches: LiaisonProjet[],
+    liaisonsFraiches: LiaisonProjet[] | null,
     updateEngagement: (id: string, patch: { projectId: string | null }) => Promise<{ error: string | null }>
   ) {
+    // `null` veut dire « on n'a pas pu lire la table ». On ne touche alors
+    // PAS à la colonne : la recopier depuis une liste qu'on n'a pas pu
+    // obtenir l'écraserait avec `null`, effaçant précisément le rattachement
+    // hérité qui sert de repli quand la table est injoignable. Une colonne
+    // périmée se rattrape au prochain succès ; une colonne effacée, non.
+    if (liaisonsFraiches === null) return { error: null };
     return updateEngagement(engagementId, {
       projectId: projetPrincipal(liaisonsFraiches, engagementId),
     });

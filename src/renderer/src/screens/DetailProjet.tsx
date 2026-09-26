@@ -61,7 +61,7 @@ export default function DetailProjet() {
       setActionError(lierError);
       return;
     }
-    const { error: syncError } = await synchroniserColonne(engagementId, fraiches ?? [], updateEngagement);
+    const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
 
@@ -73,7 +73,7 @@ export default function DetailProjet() {
       setActionError(delierError);
       return;
     }
-    const { error: syncError } = await synchroniserColonne(engagementId, fraiches ?? [], updateEngagement);
+    const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
 
