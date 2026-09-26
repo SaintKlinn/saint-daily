@@ -24,9 +24,15 @@ Les tags existent déjà sur les engagements et s'affichent déjà dans les list
 | | Chantier | Dépend de |
 |---|---|---|
 | **A** | **Liaison multiple et composition** — le modèle plusieurs-à-plusieurs, et le roster qui l'exerce. *Cette spec.* | — |
-| **B** | **La maîtrise d'œuvre** — avancement, temps cumulé, jalons, modification et archivage du projet | A |
+| **B** | **La maîtrise d'œuvre** — avancement par jalons, temps cumulé, dormance, échéance, objectif de rythme, modification et archivage du projet, et la liste de projets enfin triable. Assez gros pour être redécoupé en ouvrant son propre brainstorming. | A |
+| **B′** | **Le chantier courant sur l'Accueil** — un projet épinglé, **un seul**, avec son objectif de rythme | B |
 | **C** | **La tranche calendrier** — voir les dates du projet là où elles tombent | A |
-| **D** | **Travailler depuis le projet** — Pomodoro sur un skill, puis en groupe sur plusieurs | A |
+| **D** | **La session de chantier** — lancer un Pomodoro sur le projet lui-même, le temps s'y enregistrant | A |
+| **E** | **Les sous-projets** — un projet dans un projet, avec sa règle de remontée et sa protection contre les cycles | B |
+
+**Écarté en explorant, à ne pas reproposer sans lire pourquoi.** Deux autres formes de « travailler les skills en groupe » ont été examinées et retenues contre la session de chantier. La **file d'attente** — les cycles enchaînent plusieurs skills — demanderait que `PomodoroSession.skillId` devienne une liste avec un index, touchant `startSession`, `nextPhase`, `completePhase`, `advancePhase` et leurs 19 tests : c'est la pièce la plus délicate de l'application, et elle mérite son propre chantier plutôt qu'un morceau de celui-là. La **session partagée** — répartir le temps entre plusieurs skills après coup — est moins chère mais moins fidèle au besoin exprimé. La session de chantier gagne parce qu'elle est presque gratuite : le sélecteur du Pomodoro exclut les projets par `!e.isProject`, et lever cette exclusion suffit, un projet étant un engagement qui peut déjà porter des entrées de pratique.
+
+**Aucun de ces chantiers ne demande de migration au-delà de la 0016.** Vérifié en explorant : les jalons ont leur table, le temps cumulé et la dormance se dérivent de `PracticeEntry`, les objectifs réutilisent des champs existants, les sous-projets sortent de la table de liaison, l'ordre des membres a sa colonne `position`, et la session Pomodoro vit en mémoire — il n'existe aucune table pomodoro dans le schéma. C'est la raison d'être des deux colonnes que la 0016 pose sans les exposer : **une seule application manuelle de SQL pour toute la série.**
 
 Le chantier A ne se voit presque pas, et c'est son danger : sans interface pour rattacher un skill à plusieurs projets, la table resterait vide et rien ne prouverait qu'elle fonctionne. Le roster est donc inclus ici, comme le minimum qui exerce le modèle et se juge à l'œil.
 
