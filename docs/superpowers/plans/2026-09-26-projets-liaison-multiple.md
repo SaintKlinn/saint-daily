@@ -772,7 +772,9 @@ git commit -m "feat: attach and detach project members through the link table"
 
 **Files:** aucun, sauf correctifs issus des constats.
 
-C'est le seul chantier de la série où **l'état pré-migration est une fonctionnalité**. Il se vérifie donc deux fois, et l'ordre naturel donne le premier état gratuitement : il suffit de ne pas encore coller le SQL.
+**La migration 0016 a été appliquée le 26 septembre 2026, avant l'écriture du code.** Le plan prévoyait initialement deux passes — une sans la table, une avec — parce que l'état pré-migration est un mode de fonctionnement conçu et non un accident. Ce n'est plus possible : la table existe, et le repli sur `project_id` est désormais inatteignable dans cet environnement.
+
+**Conséquence à énoncer plutôt qu'à taire : le chemin dégradé est implémenté et testé unitairement, mais il ne sera pas vérifié en live.** Les quatre cas de `lib/projets.ts` le couvrent en pur — y compris le repli et la précédence totale — et c'est la seule preuve qu'il aura. Quiconque lira ce plan plus tard doit savoir que « vérifié en live » ne s'applique ici qu'à l'état post-migration.
 
 - [ ] **Step 1: Énumérer les classes introduites**
 
@@ -792,27 +794,17 @@ Expected: propre.
 
 `preview_start` lit le `launch.json` du dépôt racine et sert toujours `master`, jamais le worktree, silencieusement. La vérification live n'a donc de sens qu'après le merge local.
 
-- [ ] **Step 4: Vérification live AVANT la migration**
+- [ ] **Step 4: Vérification live**
 
-La table n'existe pas encore. Contrôler :
+La table existe. Contrôler, dans cet ordre :
 
-1. La page d'un projet affiche bien ses membres **hérités de `project_id`** — rien n'a disparu.
-2. Tenter de rattacher un skill affiche le message qui dit d'appliquer la migration 0016, et non une erreur technique.
-3. La console ne montre aucune erreur non gérée au chargement de la page projet.
-4. Le calendrier fonctionne, et son popover affiche le projet hérité.
-
-- [ ] **Step 5: Appliquer la migration**
-
-Coller `supabase/migrations/0016_project_links.sql` dans l'éditeur SQL Supabase. Vérifier que la reprise a bien créé une liaison par rattachement existant.
-
-- [ ] **Step 6: Vérification live APRÈS la migration**
-
-1. Les membres affichés sont les mêmes qu'avant — la reprise n'a rien perdu.
+1. **La reprise n'a rien perdu.** La page d'un projet affiche les mêmes membres qu'avant le chantier — ceux que la migration a copiés depuis `project_id`.
 2. Rattacher un skill fonctionne, détacher aussi.
-3. **Le cas qui motive tout le chantier** : rattacher un même skill à deux projets différents, et vérifier qu'il apparaît dans la composition des deux.
-4. Après avoir rattaché un skill à deux projets puis détaché le premier, `project_id` suit bien — la colonne vaut le projet restant.
-5. Le popover du calendrier change bien le projet d'une tâche, et l'ancien rattachement est remplacé et non cumulé.
+3. **Le cas qui motive tout le chantier** : rattacher un même skill à **deux** projets différents, et vérifier qu'il apparaît dans la composition des deux. C'est précisément ce que le `project_id` unique ne pouvait pas exprimer.
+4. **L'écriture de compatibilité suit.** Après avoir rattaché un skill à deux projets puis détaché le premier, `project_id` vaut le projet restant. Après avoir détaché le dernier, il vaut `null`. Ça se lit dans Supabase, pas dans l'interface — l'application installée est le seul consommateur de cette colonne.
+5. Le popover du calendrier change bien le projet d'une tâche, et l'ancien rattachement est **remplacé et non cumulé** : la table ne doit contenir qu'une liaison pour cette tâche.
+6. La console ne montre aucune erreur non gérée sur la page projet ni sur le calendrier.
 
-- [ ] **Step 7: Push, seulement si tout est passé**
+- [ ] **Step 5: Push, seulement si tout est passé**
 
 Ne pas enchaîner en proposant une release.
