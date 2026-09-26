@@ -83,6 +83,15 @@ describe('membresDuProjet', () => {
     const liaisons = [uneLiaison({ engagementId: 'plomberie', projectId: 'atelier' })];
     expect(membresDuProjet(perime, liaisons, 'maison')).toEqual([]);
   });
+
+  it('rend une liste vide sur une liaison vide, sans retomber sur `project_id`', () => {
+    // Le cas que les autres tests laissaient passer : `[]` veut dire « la
+    // table a répondu, et sa réponse est personne ». Une implémentation qui
+    // traiterait `[]` comme `null` retomberait sur la colonne et
+    // ressusciterait un rattachement que l'utilisateur vient de retirer.
+    const perime = [maison, unEngagement({ id: 'plomberie', projectId: 'maison' })];
+    expect(membresDuProjet(perime, [], 'maison')).toEqual([]);
+  });
 });
 
 describe('projetsDeLEngagement', () => {
@@ -107,6 +116,12 @@ describe('projetsDeLEngagement', () => {
   it('retombe sur `project_id` quand la liaison est indisponible', () => {
     const avecColonne = [maison, atelier, unEngagement({ id: 'menuiserie', projectId: 'atelier' })];
     expect(projetsDeLEngagement(avecColonne, null, 'menuiserie').map((e) => e.id)).toEqual(['atelier']);
+  });
+
+  it('rend une liste vide sur une liaison vide, sans retomber sur `project_id`', () => {
+    // Même garde que pour membresDuProjet, dans l'autre sens de lecture.
+    const perime = [maison, unEngagement({ id: 'menuiserie', projectId: 'maison' })];
+    expect(projetsDeLEngagement(perime, [], 'menuiserie')).toEqual([]);
   });
 });
 
