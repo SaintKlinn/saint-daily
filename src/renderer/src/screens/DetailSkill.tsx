@@ -7,6 +7,7 @@ import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
+import { projetAffiche } from '../lib/projets';
 import type { GenericLevel, GoalMetric, GoalPeriod, Mood } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
@@ -48,7 +49,17 @@ export default function DetailSkill() {
   const { engagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
-  const { remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
+  const { liaisons, remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
+  // `projetAffiche` et non `skill.projectId` : la colonne n'est plus qu'une
+  // copie de compatibilité, et elle peut contredire la liaison — après une
+  // écriture de synchronisation en échec, ou dès qu'une version installée de
+  // l'application, qui ne connaît que la colonne, a modifié cet engagement.
+  // C'est d'autant plus vrai ici que c'est l'écran depuis lequel on change ce
+  // projet : il doit montrer la même chose que la page du projet et que le
+  // popover du calendrier, qui lisent tous deux la liaison.
+  // `id` et non `skill.id` : `skill` n'est résolu que plus bas, et les deux
+  // valent la même chose ici.
+  const projetDuSkill = projetAffiche(engagements, liaisons, id ?? '');
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
   const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
 
@@ -263,10 +274,10 @@ export default function DetailSkill() {
             </select>
           </label>
           <label className="relative flex items-center gap-2 border border-ink-700 px-4 py-2 font-data text-libelle uppercase tracking-[0.08em] text-muted">
-            {skill.projectId ? (projects.find((p) => p.id === skill.projectId)?.name ?? 'Projet') : 'Aucun projet'}
+            {projetDuSkill ? (projects.find((p) => p.id === projetDuSkill)?.name ?? 'Projet') : 'Aucun projet'}
             <ChevronDownIcon />
             <select
-              value={skill.projectId ?? ''}
+              value={projetDuSkill ?? ''}
               onChange={handleProjectChange}
               aria-label="Projet"
               className="absolute inset-0 cursor-pointer opacity-0"
