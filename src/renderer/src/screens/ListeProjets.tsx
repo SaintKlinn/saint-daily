@@ -6,6 +6,7 @@ import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useAllMilestones } from '../hooks/useMilestones';
 import EmptyState from '../components/EmptyState';
 import { buttonClassName } from '../components/Button';
+import Toggle from '../components/Toggle';
 import {
   avancementProjet,
   entreesDuProjet,
@@ -23,7 +24,16 @@ const FOCUS_RING =
 
 export default function ListeProjets() {
   const { engagements, error } = useEngagements();
-  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
+  const [voirArchives, setVoirArchives] = useState(false);
+  // Le filtre est EN AMONT du tri, sur les projets et non sur les lignes
+  // dérivées : un projet archivé ne doit pas seulement disparaître de
+  // l'affichage, il ne doit pas non plus peser sur l'ensemble
+  // d'identifiants envoyé aux deux requêtes groupées — celle des entrées de
+  // pratique et celle des jalons.
+  const projects = useMemo(
+    () => engagements.filter((e) => e.isProject && (voirArchives || !e.archivedAt)),
+    [engagements, voirArchives]
+  );
 
   const { liaisons } = useLiaisonsProjet();
   const membresParProjet = useMemo(
@@ -81,12 +91,32 @@ export default function ListeProjets() {
     }
     return parProjet;
   }, [projects, milestonesByEngagement]);
+  // `projects` suffit : quand la bascule est fermée il ne contient aucun
+  // projet en pause, et quand elle est ouverte il les contient tous — pas
+  // besoin de repartir d'`engagements` pour les retrouver.
+  const projetsArchives = useMemo(
+    () => new Set(projects.filter((p) => p.archivedAt).map((p) => p.id)),
+    [projects]
+  );
+  // Distinguer « rien à montrer parce que tout est en pause » de « rien à
+  // montrer parce qu'il n'y a rien » : le premier se corrige avec la
+  // bascule, le second en créant un projet.
+  const projetsArchivesExistent = useMemo(
+    () => engagements.some((e) => e.isProject && e.archivedAt),
+    [engagements]
+  );
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-titre-ecran text-champagne">Projets</h1>
         <div className="flex items-center gap-3">
+          <Toggle
+            bordered={false}
+            checked={voirArchives}
+            onChange={setVoirArchives}
+            label="Voir les projets en pause"
+          />
           {/* Le défaut est « le plus dormant en haut » : savoir qu'un
               chantier n'a pas bougé depuis trois semaines est l'information
               qui donne une raison d'ouvrir cet écran, et un tri par défaut
@@ -130,24 +160,39 @@ export default function ListeProjets() {
       )}
 
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-        {lignesTriees.map((ligne) => (
-          <Link
-            key={ligne.id}
-            to={`/projets/${ligne.id}`}
-            className="flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700"
-          >
-            <div className="flex-1">
-              <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
-              {/* Le point médian sépare des informations de même rang. Un
-                  projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
-              <p className="mt-1 text-secondaire text-muted">
-                {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
-                {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
-              </p>
-            </div>
-          </Link>
-        ))}
-        {lignesTriees.length === 0 && <EmptyState>Aucun projet pour l'instant.</EmptyState>}
+        {lignesTriees.map((ligne) => {
+          const archive = projetsArchives.has(ligne.id);
+          return (
+            <Link
+              key={ligne.id}
+              to={`/projets/${ligne.id}`}
+              className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
+                  {archive && (
+                    <span className="font-data text-libelle uppercase tracking-[0.08em] px-2 py-1 border border-muted text-muted">
+                      En pause
+                    </span>
+                  )}
+                </div>
+                {/* Le point médian sépare des informations de même rang. Un
+                    projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
+                <p className="mt-1 text-secondaire text-muted">
+                  {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
+                  {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
+        {lignesTriees.length === 0 &&
+          (projetsArchivesExistent ? (
+            <EmptyState>Tous les projets sont en pause.</EmptyState>
+          ) : (
+            <EmptyState>Aucun projet pour l'instant.</EmptyState>
+          ))}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
+import { analyserTags } from '../lib/tags';
 import type { GenericLevel } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
@@ -27,10 +28,7 @@ export default function NouveauSkill() {
     }
     setSubmitting(true);
     setError(null);
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = analyserTags(tagsInput);
     const { error: createError } = await createEngagement({
       name: name.trim(),
       tags,

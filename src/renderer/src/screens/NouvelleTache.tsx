@@ -4,6 +4,7 @@ import { useEngagements } from '../hooks/useEngagements';
 import { PRIORITY_LEVELS, PRIORITY_LABELS } from '../lib/priority';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, detectConflicts, generateOccurrences, nextAnchorDate, type RecurrenceRule } from '../lib/recurrence';
+import { analyserTags } from '../lib/tags';
 import type { Priority, RecurrenceType } from '../lib/types';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
@@ -74,10 +75,7 @@ export default function NouvelleTache() {
     setSubmitting(true);
     setError(null);
     setConflictMessage(null);
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = analyserTags(tagsInput);
     const startDate = new Date(scheduledAt);
     const durationMs = durationMinutes * 60_000;
     const scheduledEndsAt = new Date(startDate.getTime() + durationMs).toISOString();

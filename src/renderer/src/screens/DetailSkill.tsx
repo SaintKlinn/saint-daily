@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
@@ -17,10 +17,8 @@ import BoutonSuppression from '../components/BoutonSuppression';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
+import ChampSauvegarde from '../components/ChampSauvegarde';
 import { ChevronLeftIcon, ChevronDownIcon } from '../components/icons';
-
-const FOCUS_RING =
-  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -401,77 +399,18 @@ export default function DetailSkill() {
             {/* Partie « second cerveau » de la spec : les réflexions libres
                 sur un skill étaient saisies à la création et cherchables,
                 mais jamais réaffichées ni modifiables ensuite. */}
-            <NotesSection key={skill.id} notes={skill.notes} onSave={(notes) => updateEngagement(skill.id, { notes })} />
+            <ChampSauvegarde
+              key={skill.id}
+              valeur={skill.notes ?? ''}
+              onSave={(notes) => updateEngagement(skill.id, { notes })}
+              lignes={4}
+              ariaLabel="Notes sur ce skill"
+              placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
+              confirmation="Notes enregistrées."
+            />
           </section>
         </div>
       </div>
-    </div>
-  );
-}
-
-function NotesSection({
-  notes,
-  onSave,
-}: {
-  notes: string | null;
-  onSave: (notes: string | null) => Promise<{ error: string | null }>;
-}) {
-  // Monté avec key={skill.id} côté parent : l'état local est réinitialisé
-  // quand on passe d'un skill à un autre.
-  const [value, setValue] = useState(notes ?? '');
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  // Refs et pas la prop `notes` : cliquer sur « Enregistrer » déclenche
-  // d'abord le blur du textarea, donc deux appels rapprochés avant que la
-  // prop rafraîchie ne revienne. Ces deux refs rendent le second appel
-  // no-op au lieu d'écrire deux fois la même valeur.
-  const persistedRef = useRef(notes ?? '');
-  const inFlightRef = useRef(false);
-
-  async function handleSave() {
-    const next = value.trim() ? value : null;
-    const nextValue = next ?? '';
-    if (inFlightRef.current || persistedRef.current === nextValue) return;
-    inFlightRef.current = true;
-    setStatus('saving');
-    setError(null);
-    const { error: saveError } = await onSave(next);
-    inFlightRef.current = false;
-    if (saveError) {
-      setStatus('idle');
-      // La saisie reste dans le textarea — pas de perte, retry manuel.
-      setError(saveError);
-      return;
-    }
-    persistedRef.current = nextValue;
-    setStatus('saved');
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <textarea
-        value={value}
-        onChange={(e) => {
-          setValue(e.target.value);
-          setStatus('idle');
-        }}
-        onBlur={handleSave}
-        rows={4}
-        aria-label="Notes sur ce skill"
-        placeholder="Aucune note. Écris ici tes réflexions sur ce skill…"
-        className={`border border-ink-700 bg-ink-900 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
-      />
-      <div className="flex items-center gap-3">
-        <Button type="button" variant="secondary" size="sm" onClick={handleSave} disabled={status === 'saving'}>
-          {status === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
-        </Button>
-        {status === 'saved' && <span className="text-corps text-muted">Notes enregistrées.</span>}
-      </div>
-      {error && (
-        <p role="alert" className="text-corps text-danger">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

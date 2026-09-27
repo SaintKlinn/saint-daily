@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useNoteTemplates } from '../hooks/useNoteTemplates';
+import { analyserTags } from '../lib/tags';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { FormField, SelectField, TextAreaField } from '../components/FormField';
@@ -46,10 +47,7 @@ export default function NouvelleEntree() {
     }
     setSubmitting(true);
     setError(null);
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = analyserTags(tagsInput);
     const { error: logError } = await logEntry({
       engagementId: skillId,
       durationMinutes,
