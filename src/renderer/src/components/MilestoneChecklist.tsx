@@ -8,8 +8,15 @@ const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 // La géométrie de la case est une exception assumée aux sept crans
-// d'espacement, au même titre que le `gap-10` du rail : ce n'est pas un
-// rythme, c'est une dérivation. La marge négative vaut −(rembourrage du
+// d'espacement, au même titre que l'écart de dix crans du rail de
+// navigation : ce n'est pas un rythme, c'est une dérivation.
+//
+// Écrit en toutes lettres, sans la syntaxe de classe : le `grep` qui traque
+// les valeurs arbitraires d'espacement capturerait ce commentaire et ferait
+// croire à une infraction. C'était déjà la règle de la liste inline que ce
+// composant remplace.
+//
+// La marge négative vaut −(rembourrage du
 // `<ul>` + moitié de la case) et centre la case sur le trait vertical ;
 // les quatre valeurs d'un préréglage bougent donc ENSEMBLE. Le dépôt s'est
 // déjà trompé en changeant le rembourrage sans la marge, et la case s'est
