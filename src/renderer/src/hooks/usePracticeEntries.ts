@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toFrenchError } from '../lib/errors';
@@ -67,8 +67,16 @@ export function usePracticeEntries(engagementId: string | null) {
   const [entries, setEntries] = useState<PracticeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Même verrou de génération que useAllPracticeEntries ci-dessous :
+  // `engagementId` change par exemple sur DetailSkill quand on navigue
+  // d'une fiche à une autre sans démonter le composant (route /skill/:id),
+  // et une requête encore en vol pour l'ancien id ne doit pas pouvoir, en
+  // se résolvant après coup, écraser le résultat déjà affiché pour le
+  // nouveau.
+  const generationRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const generation = ++generationRef.current;
     if (!engagementId) {
       setEntries([]);
       setLoading(false);
@@ -81,6 +89,10 @@ export function usePracticeEntries(engagementId: string | null) {
       .select('*')
       .eq('engagement_id', engagementId)
       .order('practiced_at', { ascending: false });
+    // Appel périmé : une génération plus récente a démarré pendant l'attente
+    // ci-dessus (nouvel `engagementId`), son résultat est déjà affiché ou en
+    // cours — ne pas toucher l'état avec cette réponse arrivée en retard.
+    if (generation !== generationRef.current) return;
     if (fetchError) {
       setError(toFrenchError(fetchError.message));
     } else {
@@ -137,8 +149,19 @@ export function useAllPracticeEntries(engagementIds: string[]) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const key = engagementIds.join(',');
+  // Verrou de génération : incrémenté à chaque appel de `refresh`, avant
+  // même la requête. Sans lui, une requête encore en vol quand la liste
+  // d'ids change (ex. DetailProjet, qui interroge d'abord le seul id du
+  // projet puis, une fois ses membres arrivés, l'ensemble complet) peut se
+  // résoudre APRÈS la requête la plus récente et écraser un résultat
+  // complet avec un résultat obsolète — sans qu'aucun re-rendu ultérieur
+  // ne vienne jamais corriger l'affichage. Incrémenté aussi dans la branche
+  // de sortie anticipée : vider la map doit, elle aussi, périmer toute
+  // requête déjà en vol.
+  const generationRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const generation = ++generationRef.current;
     if (engagementIds.length === 0) {
       setEntriesBySkill({});
       setError(null);
@@ -164,6 +187,10 @@ export function useAllPracticeEntries(engagementIds: string[]) {
         .order('id')
         .range(from, to)
     );
+    // Appel périmé : une génération plus récente a démarré pendant l'attente
+    // ci-dessus (nouvelle liste d'ids), son résultat est déjà affiché ou en
+    // cours — ne pas toucher l'état avec cette réponse arrivée en retard.
+    if (generation !== generationRef.current) return;
     setError(fetchError);
     const bySkill: Record<string, PracticeEntry[]> = {};
     for (const row of rows) {
@@ -197,14 +224,26 @@ export function useAllPracticeEntriesForUser() {
   const [entries, setEntries] = useState<PracticeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Même verrou de génération que useAllPracticeEntries : `session` change
+  // de référence à chaque rafraîchissement automatique de jeton (et bien
+  // sûr à la connexion/déconnexion), ce qui recrée `refresh` et relance
+  // l'effet ci-dessous. Une requête encore en vol pour l'ancienne session
+  // ne doit pas pouvoir, en se résolvant après coup, écraser le résultat
+  // d'une requête plus récente.
+  const generationRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const generation = ++generationRef.current;
     if (!session) return;
     setLoading(true);
     setError(null);
     const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
       getSupabaseClient().from('practice_entry').select('*').order('practiced_at', { ascending: false }).range(from, to)
     );
+    // Appel périmé : une génération plus récente a démarré pendant l'attente
+    // ci-dessus (nouvelle session), son résultat est déjà affiché ou en
+    // cours — ne pas toucher l'état avec cette réponse arrivée en retard.
+    if (generation !== generationRef.current) return;
     if (fetchError) {
       setError(fetchError);
       setLoading(false);
