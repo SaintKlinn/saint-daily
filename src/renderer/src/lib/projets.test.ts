@@ -212,13 +212,13 @@ describe('entreesDuProjet', () => {
 
   it('rend une liste vide pour un projet sans membre ni entrée propre', () => {
     // Surtout pas les entrées de tout le monde : le `Record` contient celles
-    // d\'engagements qui ne le concernent pas.
+    // d'engagements qui ne le concernent pas.
     const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
     expect(entreesDuProjet(parEngagement, [], 'maison')).toEqual([]);
   });
 
   it('tolère un membre absent du Record', () => {
-    // Le hook n\'indexe que les engagements qui ONT des entrées : l\'absence
+    // Le hook n'indexe que les engagements qui ONT des entrées : l'absence
     // est la normale, pas une anomalie.
     const membres = [unEngagement({ id: 'menuiserie' }), unEngagement({ id: 'plomberie' })];
     const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
@@ -227,7 +227,7 @@ describe('entreesDuProjet', () => {
 
   it('ne compte pas deux fois si le projet figure parmi ses propres membres', () => {
     // La contrainte `check (engagement_id <> project_id)` de la migration
-    // 0016 l\'interdit en base, mais la fonction ne doit pas dépendre d\'une
+    // 0016 l'interdit en base, mais la fonction ne doit pas dépendre d'une
     // garantie posée ailleurs pour rester juste.
     const parEngagement = { maison: [{ durationMinutes: 90 }] };
     const membres = [unEngagement({ id: 'maison', isProject: true })];
@@ -236,7 +236,7 @@ describe('entreesDuProjet', () => {
 
   it('compte le temps d\'un skill partagé dans chacun de ses deux projets', () => {
     // Le cas qui justifie tout le modèle du chantier A : « menuiserie » sert
-    // la maison ET l\'atelier, et ses 30 minutes comptent des deux côtés.
+    // la maison ET l'atelier, et ses 30 minutes comptent des deux côtés.
     const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
     const membres = [unEngagement({ id: 'menuiserie' })];
     expect(entreesDuProjet(parEngagement, membres, 'maison')).toEqual([{ durationMinutes: 30 }]);
@@ -258,7 +258,7 @@ describe('formatDormance', () => {
   it('distingue « aucune activité » de « aujourd\'hui »', () => {
     // `daysSinceLastPractice` rend `null` quand il n'y a aucune entrée, et
     // `0` quand la dernière est du jour. Les confondre dirait d'un chantier
-    // jamais commencé qu'on y a touché aujourd\'hui.
+    // jamais commencé qu'on y a touché aujourd'hui.
     expect(formatDormance(null)).toBe('Aucune activité');
     expect(formatDormance(0)).toBe("Aujourd'hui");
   });
@@ -281,7 +281,7 @@ describe('formatDormance', () => {
     // Le piège que ce test garde : avec `Math.floor(jours / 30)`, 56 jours
     // donnerait « 1 mois » juste après « 7 semaines » — une valeur qui se
     // lit comme PLUS PETITE que la précédente alors que le temps a avancé.
-    // L\'arrondi évite cette marche arrière apparente.
+    // L'arrondi évite cette marche arrière apparente.
     expect(formatDormance(56)).toBe('Il y a 2 mois');
     expect(formatDormance(200)).toBe('Il y a 7 mois');
   });
