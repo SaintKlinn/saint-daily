@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { membresDuProjet, projetAffiche, projetPrincipal, projetsDeLEngagement } from './projets';
+import {
+  entreesDuProjet,
+  formatDormance,
+  membresDuProjet,
+  projetAffiche,
+  projetPrincipal,
+  projetsDeLEngagement,
+  tempsCumuleMinutes,
+} from './projets';
 import type { Engagement, LiaisonProjet } from './types';
 
 // Fabriques locales : `Engagement` a vingt-trois champs dont un seul ou deux
@@ -184,5 +192,97 @@ describe('projetAffiche', () => {
     // tort.
     const avecColonne = unEngagement({ id: 'menuiserie', projectId: 'maison' });
     expect(projetAffiche([maison, avecColonne], null, 'menuiserie')).toBe('maison');
+  });
+});
+
+describe('entreesDuProjet', () => {
+  it('réunit les entrées des membres et celles du projet lui-même', () => {
+    // La règle qui compte : un projet EST un engagement et peut porter des
+    // entrées directement — ce que fera la « session de chantier ». Ne
+    // compter que les membres rendrait ce temps-là invisible dans le total
+    // de son propre projet.
+    const parEngagement = {
+      menuiserie: [{ durationMinutes: 30 }],
+      maison: [{ durationMinutes: 90 }],
+    };
+    const membres = [unEngagement({ id: 'menuiserie' })];
+    const resultat = entreesDuProjet(parEngagement, membres, 'maison');
+    expect(resultat.map((e) => e.durationMinutes).sort((a, b) => a - b)).toEqual([30, 90]);
+  });
+
+  it('rend une liste vide pour un projet sans membre ni entrée propre', () => {
+    // Surtout pas les entrées de tout le monde : le `Record` contient celles
+    // d'engagements qui ne le concernent pas.
+    const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
+    expect(entreesDuProjet(parEngagement, [], 'maison')).toEqual([]);
+  });
+
+  it('tolère un membre absent du Record', () => {
+    // Le hook n'indexe que les engagements qui ONT des entrées : l'absence
+    // est la normale, pas une anomalie.
+    const membres = [unEngagement({ id: 'menuiserie' }), unEngagement({ id: 'plomberie' })];
+    const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
+    expect(entreesDuProjet(parEngagement, membres, 'maison')).toEqual([{ durationMinutes: 30 }]);
+  });
+
+  it('ne compte pas deux fois si le projet figure parmi ses propres membres', () => {
+    // La contrainte `check (engagement_id <> project_id)` de la migration
+    // 0016 l'interdit en base, mais la fonction ne doit pas dépendre d'une
+    // garantie posée ailleurs pour rester juste.
+    const parEngagement = { maison: [{ durationMinutes: 90 }] };
+    const membres = [unEngagement({ id: 'maison', isProject: true })];
+    expect(entreesDuProjet(parEngagement, membres, 'maison')).toEqual([{ durationMinutes: 90 }]);
+  });
+
+  it('compte le temps d\'un skill partagé dans chacun de ses deux projets', () => {
+    // Le cas qui justifie tout le modèle du chantier A : « menuiserie » sert
+    // la maison ET l'atelier, et ses 30 minutes comptent des deux côtés.
+    const parEngagement = { menuiserie: [{ durationMinutes: 30 }] };
+    const membres = [unEngagement({ id: 'menuiserie' })];
+    expect(entreesDuProjet(parEngagement, membres, 'maison')).toEqual([{ durationMinutes: 30 }]);
+    expect(entreesDuProjet(parEngagement, membres, 'atelier')).toEqual([{ durationMinutes: 30 }]);
+  });
+});
+
+describe('tempsCumuleMinutes', () => {
+  it('somme les durées', () => {
+    expect(tempsCumuleMinutes([{ durationMinutes: 30 }, { durationMinutes: 90 }])).toBe(120);
+  });
+
+  it('rend zéro sur une liste vide', () => {
+    expect(tempsCumuleMinutes([])).toBe(0);
+  });
+});
+
+describe('formatDormance', () => {
+  it('distingue « aucune activité » de « aujourd\'hui »', () => {
+    // `daysSinceLastPractice` rend `null` quand il n'y a aucune entrée, et
+    // `0` quand la dernière est du jour. Les confondre dirait d'un chantier
+    // jamais commencé qu'on y a touché aujourd'hui.
+    expect(formatDormance(null)).toBe('Aucune activité');
+    expect(formatDormance(0)).toBe("Aujourd'hui");
+  });
+
+  it('dit « hier » au singulier', () => {
+    expect(formatDormance(1)).toBe('Hier');
+  });
+
+  it('compte en jours jusqu\'à 13', () => {
+    expect(formatDormance(2)).toBe('Il y a 2 jours');
+    expect(formatDormance(13)).toBe('Il y a 13 jours');
+  });
+
+  it('bascule en semaines à 14 jours', () => {
+    expect(formatDormance(14)).toBe('Il y a 2 semaines');
+    expect(formatDormance(55)).toBe('Il y a 7 semaines');
+  });
+
+  it('bascule en mois à 56 jours, sans jamais paraître reculer', () => {
+    // Le piège que ce test garde : avec `Math.floor(jours / 30)`, 56 jours
+    // donnerait « 1 mois » juste après « 7 semaines » — une valeur qui se
+    // lit comme PLUS PETITE que la précédente alors que le temps a avancé.
+    // L'arrondi évite cette marche arrière apparente.
+    expect(formatDormance(56)).toBe('Il y a 2 mois');
+    expect(formatDormance(200)).toBe('Il y a 7 mois');
   });
 });

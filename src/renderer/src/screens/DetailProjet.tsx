@@ -2,11 +2,19 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
-import { membresDuProjet } from '../lib/projets';
+import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
+import { entreesDuProjet, formatDormance, membresDuProjet, tempsCumuleMinutes } from '../lib/projets';
+import { formatMinutes } from '../lib/retrospective';
+import { daysSinceLastPractice } from '../lib/streaks';
+import { computeGoalProgress } from '../lib/motivation';
+import type { GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
+import GoalProgress from '../components/GoalProgress';
+import GoalSetter from '../components/GoalSetter';
 import { ChevronLeftIcon } from '../components/icons';
 
 const FOCUS_RING =
@@ -39,6 +47,40 @@ export default function DetailProjet() {
   // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
   // cet état, le bouton reste armable pendant toute l'attente réseau.
   const [deleting, setDeleting] = useState(false);
+
+  // Les identifiants sont TRIÉS : `useAllPracticeEntries` mémorise sur
+  // `engagementIds.join(',')`, donc deux tableaux de même contenu dans un
+  // ordre différent produisent deux clés différentes et relancent la requête
+  // à chaque rendu où l'ordre change.
+  const idsConcernes = useMemo(
+    () => (id ? [...new Set([...children.map((c) => c.id), id])].sort() : []),
+    [children, id]
+  );
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(idsConcernes);
+  const entrees = useMemo(
+    () => (id ? entreesDuProjet(entriesBySkill, children, id) : []),
+    [entriesBySkill, children, id]
+  );
+  const minutes = useMemo(() => tempsCumuleMinutes(entrees), [entrees]);
+  const dormance = useMemo(() => formatDormance(daysSinceLastPractice(entrees)), [entrees]);
+  const objectif = useMemo(
+    () =>
+      project?.goalPeriod && project.goalMetric && project.goalTarget
+        ? computeGoalProgress(entrees, project.goalPeriod, project.goalMetric, project.goalTarget)
+        : null,
+    [entrees, project]
+  );
+
+  async function handleGoalChange(patch: {
+    goalPeriod: GoalPeriod | null;
+    goalMetric: GoalMetric | null;
+    goalTarget: number | null;
+  }) {
+    if (!project) return;
+    setActionError(null);
+    const { error: goalError } = await updateEngagement(project.id, patch);
+    if (goalError) setActionError(goalError);
+  }
 
   async function handleDelete() {
     if (!project) return;
@@ -113,6 +155,37 @@ export default function DetailProjet() {
         {project.notes && <p className="relative mt-3 text-corps text-champagne">{project.notes}</p>}
       </div>
 
+      <div className="flex flex-wrap gap-8">
+        <div>
+          <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Temps cumulé</p>
+          <p className="mt-1 text-corps text-champagne">{formatMinutes(minutes)}</p>
+        </div>
+        <div>
+          <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Dernière activité</p>
+          <p className="mt-1 text-corps text-champagne">{dormance}</p>
+        </div>
+      </div>
+
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
+        {objectif ? (
+          <div className="flex flex-col gap-3">
+            <GoalProgress progress={objectif} />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="self-start"
+              onClick={() => handleGoalChange({ goalPeriod: null, goalMetric: null, goalTarget: null })}
+            >
+              Retirer l'objectif
+            </Button>
+          </div>
+        ) : (
+          <GoalSetter onSubmit={handleGoalChange} />
+        )}
+      </section>
+
       <div className="flex items-center gap-3">
         <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
         <p className="text-secondaire text-muted">
@@ -122,6 +195,11 @@ export default function DetailProjet() {
       {actionError && (
         <p role="alert" className="text-corps text-danger">
           {actionError}
+        </p>
+      )}
+      {entriesError && (
+        <p role="alert" className="text-corps text-danger">
+          {entriesError}
         </p>
       )}
 

@@ -151,7 +151,18 @@ export function useAllPracticeEntries(engagementIds: string[]) {
     // affichait silencieusement tous les skills avec streak 0 et aucun
     // rappel « dû », sans le moindre indice que quelque chose a raté.
     const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
-      getSupabaseClient().from('practice_entry').select('*').in('engagement_id', engagementIds).range(from, to)
+      getSupabaseClient()
+        .from('practice_entry')
+        .select('*')
+        .in('engagement_id', engagementIds)
+        // Une lecture paginée qui est ensuite sommée a besoin d'un ordre
+        // total : sans lui, Postgres ne garantit aucun ordre stable entre
+        // deux pages, et `practiced_at` seul n'est pas unique. `id` sert
+        // de départage pour que chaque ligne apparaisse exactement une
+        // fois, quel que soit le plan d'exécution.
+        .order('practiced_at', { ascending: false })
+        .order('id')
+        .range(from, to)
     );
     setError(fetchError);
     const bySkill: Record<string, PracticeEntry[]> = {};
