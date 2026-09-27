@@ -31,7 +31,7 @@ export default function ListeProjets() {
     }
     return [...ids].sort();
   }, [projects, membresParProjet]);
-  const { entriesBySkill } = useAllPracticeEntries(idsConcernes);
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(idsConcernes);
 
   const resumeParProjet = useMemo(() => {
     const resume = new Map<string, string>();
@@ -57,6 +57,11 @@ export default function ListeProjets() {
       {error && (
         <p role="alert" className="text-corps text-danger">
           {error}
+        </p>
+      )}
+      {entriesError && (
+        <p role="alert" className="text-corps text-danger">
+          {entriesError}
         </p>
       )}
 

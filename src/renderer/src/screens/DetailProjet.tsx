@@ -56,7 +56,7 @@ export default function DetailProjet() {
     () => (id ? [...new Set([...children.map((c) => c.id), id])].sort() : []),
     [children, id]
   );
-  const { entriesBySkill } = useAllPracticeEntries(idsConcernes);
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(idsConcernes);
   const entrees = useMemo(
     () => (id ? entreesDuProjet(entriesBySkill, children, id) : []),
     [entriesBySkill, children, id]
@@ -195,6 +195,11 @@ export default function DetailProjet() {
       {actionError && (
         <p role="alert" className="text-corps text-danger">
           {actionError}
+        </p>
+      )}
+      {entriesError && (
+        <p role="alert" className="text-corps text-danger">
+          {entriesError}
         </p>
       )}
 
