@@ -110,12 +110,15 @@ export default function TaskPopover({
             </button>
           </div>
         </div>
-        <MilestoneChecklist
-          milestones={milestones}
-          onToggle={toggleMilestone}
-          onAdd={addMilestone}
-          error={milestonesError}
-        />
+        <div className="relative flex flex-col gap-2">
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
+          <MilestoneChecklist
+            milestones={milestones}
+            onToggle={toggleMilestone}
+            onAdd={addMilestone}
+            error={milestonesError}
+          />
+        </div>
         <div className="relative flex flex-col gap-2">
           <p className="text-libelle uppercase tracking-[0.04em] text-muted">Projet</p>
           <select

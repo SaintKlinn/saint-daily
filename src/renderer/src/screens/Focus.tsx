@@ -92,6 +92,7 @@ export default function Focus() {
     setActionError(null);
     const { error: toggleError } = await toggleMilestone(id, completed);
     if (toggleError) setActionError(toggleError);
+    return { error: toggleError };
   }
 
   return (
@@ -138,7 +139,8 @@ export default function Focus() {
           )}
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
           <MilestoneChecklist
             milestones={milestones}
             onToggle={handleToggleMilestone}
