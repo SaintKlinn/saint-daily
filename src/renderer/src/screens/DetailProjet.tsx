@@ -25,6 +25,8 @@ import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
 import BarreProgression from '../components/BarreProgression';
 import { ChevronLeftIcon } from '../components/icons';
+import ChampSauvegarde from '../components/ChampSauvegarde';
+import { analyserTags } from '../lib/tags';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -32,7 +34,7 @@ const FOCUS_RING =
 export default function DetailProjet() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { engagements, loading, error, softDelete, updateEngagement } = useEngagements();
+  const { engagements, loading, error, softDelete, updateEngagement, setArchived } = useEngagements();
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const project = projects.find((p) => p.id === id);
   const { liaisons, lier, delier, synchroniserColonne } = useLiaisonsProjet();
@@ -56,6 +58,7 @@ export default function DetailProjet() {
   // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
   // cet état, le bouton reste armable pendant toute l'attente réseau.
   const [deleting, setDeleting] = useState(false);
+  const [enEditionNom, setEnEditionNom] = useState(false);
 
   // Les identifiants sont TRIÉS : `useAllPracticeEntries` mémorise sur
   // `engagementIds.join(',')`, donc deux tableaux de même contenu dans un
@@ -117,6 +120,34 @@ export default function DetailProjet() {
     navigate('/projets');
   }
 
+  async function handleRenommer(nom: string | null) {
+    if (!project) return { error: 'Projet introuvable' };
+    // Un nom vide n'est pas enregistré : `name` est obligatoire à la
+    // création, et le rendre effaçable après coup produirait un projet sans
+    // nom dans toutes les listes. Le champ garde sa saisie, l'écran garde
+    // l'ancien nom.
+    if (nom === null) return { error: 'Le nom ne peut pas être vide' };
+    setActionError(null);
+    const { error: renameError } = await updateEngagement(project.id, { name: nom });
+    if (renameError) setActionError(renameError);
+    return { error: renameError };
+  }
+
+  async function handleTags(saisie: string | null) {
+    if (!project) return { error: 'Projet introuvable' };
+    setActionError(null);
+    const { error: tagsError } = await updateEngagement(project.id, { tags: analyserTags(saisie ?? '') });
+    if (tagsError) setActionError(tagsError);
+    return { error: tagsError };
+  }
+
+  async function handleArchiver() {
+    if (!project) return;
+    setActionError(null);
+    const { error: archiveError } = await setArchived(project.id, !project.archivedAt);
+    if (archiveError) setActionError(archiveError);
+  }
+
   async function handleLier(engagementId: string) {
     if (!id) return;
     setActionError(null);
@@ -170,11 +201,35 @@ export default function DetailProjet() {
 
       <div className="relative overflow-hidden border border-ink-700 bg-ink-900 p-6">
         <RayCorner variant={0} />
-        <h1 className="relative font-serif text-titre-ecran text-champagne">{project.name}</h1>
-        {project.tags.length > 0 && (
-          <p className="relative mt-2 text-secondaire text-muted">{project.tags.map((t) => `#${t}`).join(' ')}</p>
+        {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
+            champ en permanence remplacerait un serif 28 px par une boîte
+            bordée sur un écran qu'on regarde bien plus qu'on ne le modifie.
+            Le mode vit ici et non dans `ChampSauvegarde`, qui ne saurait
+            plus s'il est un champ ou un titre.
+
+            Le `onBlur` du div suffit à en sortir : celui de React est un
+            `focusout`, donc il remonte depuis le champ. */}
+        {enEditionNom ? (
+          <div className="relative" onBlur={() => setEnEditionNom(false)}>
+            <ChampSauvegarde
+              key={project.id}
+              valeur={project.name}
+              onSave={handleRenommer}
+              ariaLabel="Nom du projet"
+              confirmation="Nom enregistré."
+              autoFocus
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEnEditionNom(true)}
+            aria-label="Renommer le projet"
+            className={`relative block text-left font-serif text-titre-ecran text-champagne ${FOCUS_RING}`}
+          >
+            {project.name}
+          </button>
         )}
-        {project.notes && <p className="relative mt-3 text-corps text-champagne">{project.notes}</p>}
       </div>
 
       <div className="flex flex-wrap gap-8">
@@ -242,7 +297,35 @@ export default function DetailProjet() {
         )}
       </section>
 
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Tags</h2>
+        <ChampSauvegarde
+          key={project.id}
+          valeur={project.tags.join(', ')}
+          onSave={handleTags}
+          ariaLabel="Tags du projet"
+          placeholder="Maison, Perso"
+          confirmation="Tags enregistrés."
+        />
+      </section>
+
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Notes</h2>
+        <ChampSauvegarde
+          key={project.id}
+          valeur={project.notes ?? ''}
+          onSave={(notes) => updateEngagement(project.id, { notes })}
+          lignes={4}
+          ariaLabel="Notes sur ce projet"
+          placeholder="Aucune note. Écris ici ce que ce chantier demande…"
+          confirmation="Notes enregistrées."
+        />
+      </section>
+
       <div className="flex items-center gap-3">
+        <Button variant="secondary" size="sm" onClick={handleArchiver}>
+          {project.archivedAt ? 'Désarchiver' : 'Archiver'}
+        </Button>
         <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
         <p className="text-secondaire text-muted">
           Supprimer un projet envoie aussi à la corbeille les engagements dont il est le projet principal.
