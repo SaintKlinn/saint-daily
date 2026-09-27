@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabase';
 import { toFrenchError } from '../lib/errors';
 import type { EngagementMilestone } from '../lib/types';
@@ -28,7 +28,17 @@ export function useMilestones(engagementId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Verrou de génération : incrémenté à chaque appel de `refresh`, avant
+  // même la requête. Sans lui, une requête encore en vol quand
+  // `engagementId` change — navigation d'une fiche de skill à une autre,
+  // même route `skills/:id`, sans démontage — peut se résoudre APRÈS la
+  // plus récente et écraser la bonne liste par l'ancienne, sans qu'aucun
+  // rendu ultérieur ne vienne corriger. Incrémenté aussi avant la sortie
+  // anticipée : vider la liste doit, elle aussi, périmer ce qui est en vol.
+  const generationRef = useRef(0);
+
   const refresh = useCallback(async () => {
+    const generation = ++generationRef.current;
     if (!engagementId) {
       setMilestones([]);
       setLoading(false);
@@ -41,6 +51,10 @@ export function useMilestones(engagementId: string | null) {
       .select('*')
       .eq('engagement_id', engagementId)
       .order('position', { ascending: true });
+    // Appel périmé : une génération plus récente a démarré pendant
+    // l'attente ci-dessus, son résultat est déjà affiché ou en cours — ne
+    // pas toucher l'état avec cette réponse arrivée en retard.
+    if (generation !== generationRef.current) return;
     if (fetchError) {
       setError(toFrenchError(fetchError.message));
     } else {

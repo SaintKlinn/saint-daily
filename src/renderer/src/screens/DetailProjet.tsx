@@ -3,7 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
-import { entreesDuProjet, formatDormance, membresDuProjet, tempsCumuleMinutes } from '../lib/projets';
+import { useMilestones } from '../hooks/useMilestones';
+import {
+  avancementProjet,
+  entreesDuProjet,
+  formatDormance,
+  membresDuProjet,
+  tempsCumuleMinutes,
+} from '../lib/projets';
 import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
 import { computeGoalProgress } from '../lib/motivation';
@@ -15,6 +22,8 @@ import Button from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
+import MilestoneChecklist from '../components/MilestoneChecklist';
+import BarreProgression from '../components/BarreProgression';
 import { ChevronLeftIcon } from '../components/icons';
 
 const FOCUS_RING =
@@ -70,6 +79,19 @@ export default function DetailProjet() {
         : null,
     [entrees, project]
   );
+
+  // L'avancement ne compte QUE les jalons du projet lui-même, jamais ceux
+  // de ses membres : ce sont des livrables, pas des étapes d'apprentissage.
+  // Voir `avancementProjet`, qui porte la règle et son test.
+  const { milestones, error: jalonsError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
+  const avancement = useMemo(() => avancementProjet(milestones), [milestones]);
+
+  async function handleToggleJalon(jalonId: string, completed: boolean) {
+    setActionError(null);
+    const { error: toggleError } = await toggleMilestone(jalonId, completed);
+    if (toggleError) setActionError(toggleError);
+    return { error: toggleError };
+  }
 
   async function handleGoalChange(patch: {
     goalPeriod: GoalPeriod | null;
@@ -183,6 +205,40 @@ export default function DetailProjet() {
           </div>
         ) : (
           <GoalSetter onSubmit={handleGoalChange} />
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Jalons</h2>
+        <MilestoneChecklist
+          milestones={milestones}
+          onToggle={handleToggleJalon}
+          onAdd={addMilestone}
+          error={jalonsError}
+          taille="normale"
+        />
+        {/* Rien quand le projet n'a aucun jalon : « 0 sur 0 » dirait à tort
+            qu'un chantier sans jalon n'a pas avancé, alors qu'il n'a rien à
+            mesurer. La forme — libellé à gauche, mesure à droite, rail
+            dessous — est celle de `GoalProgress` juste au-dessus, pour que
+            les deux proportions de l'écran se lisent pareil. */}
+        {avancement.total > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Avancement</span>
+              <span className="font-data text-libelle tabular-nums text-champagne">
+                {avancement.franchis} jalon{avancement.franchis > 1 ? 's' : ''} sur {avancement.total}
+              </span>
+            </div>
+            <BarreProgression
+              ratio={avancement.ratio}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={avancement.total}
+              aria-valuenow={avancement.franchis}
+              aria-label="Avancement du projet"
+            />
+          </div>
         )}
       </section>
 
