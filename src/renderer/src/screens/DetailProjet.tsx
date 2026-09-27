@@ -121,12 +121,22 @@ export default function DetailProjet() {
   }
 
   async function handleRenommer(nom: string | null) {
-    if (!project) return { error: 'Projet introuvable' };
+    if (!project) {
+      const message = 'Projet introuvable';
+      setActionError(message);
+      return { error: message };
+    }
     // Un nom vide n'est pas enregistré : `name` est obligatoire à la
     // création, et le rendre effaçable après coup produirait un projet sans
-    // nom dans toutes les listes. Le champ garde sa saisie, l'écran garde
-    // l'ancien nom.
-    if (nom === null) return { error: 'Le nom ne peut pas être vide' };
+    // nom dans toutes les listes. Le champ ne garde pas sa saisie : le
+    // `onBlur` du div englobant l'a déjà démonté, donc le `h1` revient avec
+    // `project.name` inchangé. C'est pour ça que le refus passe par
+    // `actionError` — c'est le seul endroit encore monté pour le dire.
+    if (nom === null) {
+      const message = 'Le nom ne peut pas être vide';
+      setActionError(message);
+      return { error: message };
+    }
     setActionError(null);
     const { error: renameError } = await updateEngagement(project.id, { name: nom });
     if (renameError) setActionError(renameError);
@@ -221,14 +231,11 @@ export default function DetailProjet() {
             />
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setEnEditionNom(true)}
-            aria-label="Renommer le projet"
-            className={`relative block text-left font-serif text-titre-ecran text-champagne ${FOCUS_RING}`}
-          >
-            {project.name}
-          </button>
+          <h1 className="relative font-serif text-titre-ecran text-champagne">
+            <button type="button" onClick={() => setEnEditionNom(true)} className={`block text-left ${FOCUS_RING}`}>
+              {project.name}
+            </button>
+          </h1>
         )}
       </div>
 
