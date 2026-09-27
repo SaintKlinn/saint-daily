@@ -16,7 +16,8 @@ import Button, { buttonClassName } from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
-import { ChevronLeftIcon, ChevronDownIcon, CheckIcon } from '../components/icons';
+import MilestoneChecklist from '../components/MilestoneChecklist';
+import { ChevronLeftIcon, ChevronDownIcon } from '../components/icons';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -74,14 +75,6 @@ export default function DetailSkill() {
   // `softDelete` : sans cet état, le bouton reste armable pendant toute
   // l'attente réseau.
   const [deleting, setDeleting] = useState(false);
-  const [celebratingMilestoneId, setCelebratingMilestoneId] = useState<string | null>(null);
-  // Set dans un event handler, pas un effet : pas de fonction de nettoyage
-  // possible au démontage. On garde donc l'id du timeout en cours ici pour
-  // pouvoir l'annuler — soit si le composant se démonte pendant le pulse,
-  // soit si deux jalons sont cochés coup sur coup (sinon deux timeouts
-  // concurrents pourraient chacun tenter de fermer/rouvrir la pulse).
-  const celebrationTimeoutRef = useRef<number | null>(null);
-
   const streak = useMemo(() => calculateStreak(entries), [entries]);
   const [streakPulse, setStreakPulse] = useState(false);
 
@@ -104,15 +97,6 @@ export default function DetailSkill() {
     }
   }, [streak, entriesLoading, skill]);
 
-  // Nettoie le timeout de célébration de jalon au démontage — sans ça, un
-  // démontage pendant le pulse (navigation immédiate après avoir coché un
-  // jalon) laisserait le timeout appeler setCelebratingMilestoneId sur un
-  // composant déjà démonté.
-  useEffect(() => {
-    return () => {
-      if (celebrationTimeoutRef.current !== null) clearTimeout(celebrationTimeoutRef.current);
-    };
-  }, []);
 
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
   const totalHours = useMemo(
@@ -186,18 +170,8 @@ export default function DetailSkill() {
   async function handleToggleMilestone(milestoneId: string, completed: boolean) {
     setActionError(null);
     const { error } = await toggleMilestone(milestoneId, completed);
-    if (error) {
-      setActionError(error);
-      return;
-    }
-    if (completed) {
-      if (celebrationTimeoutRef.current !== null) clearTimeout(celebrationTimeoutRef.current);
-      setCelebratingMilestoneId(milestoneId);
-      celebrationTimeoutRef.current = window.setTimeout(() => {
-        setCelebratingMilestoneId((current) => (current === milestoneId ? null : current));
-        celebrationTimeoutRef.current = null;
-      }, 400);
-    }
+    if (error) setActionError(error);
+    return { error };
   }
 
   // Tant que les skills chargent, on ne peut pas conclure. Une fois le
@@ -384,64 +358,13 @@ export default function DetailSkill() {
 
           <section>
             <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Jalons</h2>
-            {milestonesError && (
-              <p role="alert" className="mb-2 text-corps text-danger">
-                {milestonesError}
-              </p>
-            )}
-            <ul className="flex flex-col gap-0 border-l border-ink-700 pl-4">
-              {milestones.map((m) => (
-                <li key={m.id} className="flex items-center py-2">
-                  <label className="flex cursor-pointer items-center gap-3">
-                    {/* Marge négative sur la case seulement (pas la ligne) :
-                        elle chevauche le trait vertical du <ul>, le texte
-                        suivant garde une position quasi normale grâce au
-                        gap (technique reprise de la maquette Detail).
-
-                        Exception assumée à l'échelle d'espacement, au même
-                        titre que le `gap-10` du rail : cette valeur n'est
-                        pas un rythme, c'est une géométrie dérivée. Elle
-                        vaut −(rembourrage du <ul> + moitié de la case),
-                        soit −(16 + 9) = −25, ce qui centre la case sur le
-                        trait. Elle doit donc être recalculée dès que l'un
-                        des deux change : ramener le rembourrage du <ul> de
-                        18 à 16 px sans toucher à cette marge avait décalé
-                        la case de 2 px vers la gauche.
-
-                        Écrit en toutes lettres, sans la syntaxe entre
-                        crochets : le `grep` qui traque les valeurs
-                        arbitraires d'espacement capturerait ce
-                        commentaire et ferait croire à une infraction. */}
-                    <span className="relative -ml-[25px] flex h-[18px] w-[18px] shrink-0 items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={!!m.completedAt}
-                        onChange={(e) => handleToggleMilestone(m.id, e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <span
-                        className={`absolute inset-0 flex items-center justify-center peer-focus-visible:ring-2 peer-focus-visible:ring-accent-bright peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-ink-900 ${m.completedAt ? 'bg-accent-bright text-ink-900' : 'border-[1.5px] border-muted'}`}
-                      >
-                        {m.completedAt && <CheckIcon size={11} />}
-                      </span>
-                      {celebratingMilestoneId === m.id && (
-                        <motion.span
-                          aria-hidden="true"
-                          className="absolute inset-0 rounded-full bg-accent-bright"
-                          initial={{ opacity: 0.6, scale: 1 }}
-                          animate={{ opacity: 0, scale: 2.2 }}
-                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                        />
-                      )}
-                    </span>
-                    <span className={`text-corps ${m.completedAt ? 'text-muted line-through' : 'text-champagne'}`}>
-                      {m.label}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-            <NewMilestoneForm onAdd={addMilestone} />
+            <MilestoneChecklist
+              milestones={milestones}
+              onToggle={handleToggleMilestone}
+              onAdd={addMilestone}
+              error={milestonesError}
+              taille="normale"
+            />
           </section>
 
           <section className="flex min-h-0 flex-1 flex-col">
@@ -550,50 +473,6 @@ function NotesSection({
         </p>
       )}
     </div>
-  );
-}
-
-function NewMilestoneForm({ onAdd }: { onAdd: (label: string) => Promise<{ error: string | null }> }) {
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const input = e.currentTarget.elements.namedItem('label') as HTMLInputElement;
-        const label = input.value.trim();
-        if (!label) return;
-        setSubmitting(true);
-        setError(null);
-        const { error: addError } = await onAdd(label);
-        setSubmitting(false);
-        if (addError) {
-          setError(addError);
-          return;
-        }
-        input.value = '';
-      }}
-      className="mt-3 flex flex-col gap-2"
-    >
-      <div className="flex gap-2">
-        <input
-          name="label"
-          aria-label="Nouveau jalon"
-          placeholder="Nouveau jalon"
-          disabled={submitting}
-          className={`flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
-        />
-        <Button type="submit" variant="secondary" size="sm" disabled={submitting}>
-          Ajouter
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="text-corps text-danger">
-          {error}
-        </p>
-      )}
-    </form>
   );
 }
 

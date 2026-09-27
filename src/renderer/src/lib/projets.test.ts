@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  avancementProjet,
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
@@ -7,7 +8,9 @@ import {
   projetPrincipal,
   projetsDeLEngagement,
   tempsCumuleMinutes,
+  trierProjets,
 } from './projets';
+import type { LigneProjet } from './projets';
 import type { Engagement, LiaisonProjet } from './types';
 
 // Fabriques locales : `Engagement` a vingt-trois champs dont un seul ou deux
@@ -284,5 +287,125 @@ describe('formatDormance', () => {
     // L'arrondi évite cette marche arrière apparente.
     expect(formatDormance(56)).toBe('Il y a 2 mois');
     expect(formatDormance(200)).toBe('Il y a 7 mois');
+  });
+});
+
+describe('avancementProjet', () => {
+  it('rend un total nul sur une liste vide, sans diviser par zéro', () => {
+    // `total: 0` est le signal que l'écran lit pour ne rien afficher du
+    // tout : « 0 sur 0 » dirait faussement qu'un chantier sans jalon n'a
+    // pas avancé, alors qu'il n'a rien à mesurer.
+    expect(avancementProjet([])).toEqual({ franchis: 0, total: 0, ratio: 0 });
+  });
+
+  it('compte zéro franchi sur trois', () => {
+    const jalons = [{ completedAt: null }, { completedAt: null }, { completedAt: null }];
+    expect(avancementProjet(jalons)).toEqual({ franchis: 0, total: 3, ratio: 0 });
+  });
+
+  it('compte trois franchis sur trois', () => {
+    const jalons = [
+      { completedAt: '2026-09-01T10:00:00Z' },
+      { completedAt: '2026-09-02T10:00:00Z' },
+      { completedAt: '2026-09-03T10:00:00Z' },
+    ];
+    expect(avancementProjet(jalons)).toEqual({ franchis: 3, total: 3, ratio: 1 });
+  });
+
+  it('rend la fraction brute, sans arrondir', () => {
+    // L'arrondi appartient à l'affichage. La fonction qui rend 0.333… ne
+    // doit pas décider à la place de la barre ni du libellé.
+    const jalons = [{ completedAt: '2026-09-01T10:00:00Z' }, { completedAt: null }, { completedAt: null }];
+    const { ratio } = avancementProjet(jalons);
+    expect(ratio).toBeCloseTo(1 / 3, 10);
+  });
+});
+
+describe('trierProjets', () => {
+  function uneLigne(partiel: Partial<LigneProjet> & { id: string }): LigneProjet {
+    return { nom: partiel.id, minutes: 0, jours: null, avancement: null, ...partiel };
+  }
+
+  it('met le plus dormant en haut', () => {
+    const lignes = [
+      uneLigne({ id: 'recent', jours: 2 }),
+      uneLigne({ id: 'oublie', jours: 40 }),
+      uneLigne({ id: 'moyen', jours: 10 }),
+    ];
+    expect(trierProjets(lignes, 'dormance').map((l) => l.id)).toEqual(['oublie', 'moyen', 'recent']);
+  });
+
+  it('met le plus investi en haut', () => {
+    const lignes = [
+      uneLigne({ id: 'petit', minutes: 30 }),
+      uneLigne({ id: 'gros', minutes: 600 }),
+      uneLigne({ id: 'moyen', minutes: 120 }),
+    ];
+    expect(trierProjets(lignes, 'temps').map((l) => l.id)).toEqual(['gros', 'moyen', 'petit']);
+  });
+
+  it('met le moins avancé en haut', () => {
+    const lignes = [
+      uneLigne({ id: 'presque', avancement: 0.9 }),
+      uneLigne({ id: 'debut', avancement: 0.1 }),
+      uneLigne({ id: 'moitie', avancement: 0.5 }),
+    ];
+    expect(trierProjets(lignes, 'avancement').map((l) => l.id)).toEqual(['debut', 'moitie', 'presque']);
+  });
+
+  it('trie par nom en tenant compte des accents', () => {
+    // `localeCompare` en français, sinon « Élagage » passerait après
+    // « Zinguerie » parce que son point de code est plus haut.
+    const lignes = [
+      uneLigne({ id: 'z', nom: 'Zinguerie' }),
+      uneLigne({ id: 'e', nom: 'Élagage' }),
+      uneLigne({ id: 'a', nom: 'Atelier' }),
+    ];
+    expect(trierProjets(lignes, 'nom').map((l) => l.id)).toEqual(['a', 'e', 'z']);
+  });
+
+  it('range les projets sans aucune activité en bas, pas en tête', () => {
+    // LA règle de cette tranche. Un chantier jamais commencé n'est pas le
+    // plus négligé — il n'a pas commencé — et le mettre en tête
+    // enterrerait sous lui le chantier réellement abandonné, c'est-à-dire
+    // le signal que tout ce tri existe pour montrer.
+    const lignes = [
+      uneLigne({ id: 'jamais', jours: null }),
+      uneLigne({ id: 'oublie', jours: 40 }),
+      uneLigne({ id: 'recent', jours: 2 }),
+    ];
+    expect(trierProjets(lignes, 'dormance').map((l) => l.id)).toEqual(['oublie', 'recent', 'jamais']);
+  });
+
+  it('range les projets sans aucun jalon en bas', () => {
+    const lignes = [
+      uneLigne({ id: 'sansJalon', avancement: null }),
+      uneLigne({ id: 'presque', avancement: 0.9 }),
+      uneLigne({ id: 'debut', avancement: 0.1 }),
+    ];
+    expect(trierProjets(lignes, 'avancement').map((l) => l.id)).toEqual(['debut', 'presque', 'sansJalon']);
+  });
+
+  it("garde l'ordre d'origine entre deux valeurs égales", () => {
+    // Sans stabilité, deux rendus successifs échangeraient deux lignes
+    // sans qu'aucune donnée n'ait bougé.
+    const lignes = [
+      uneLigne({ id: 'premier', jours: 5 }),
+      uneLigne({ id: 'second', jours: 5 }),
+      uneLigne({ id: 'troisieme', jours: 5 }),
+    ];
+    expect(trierProjets(lignes, 'dormance').map((l) => l.id)).toEqual(['premier', 'second', 'troisieme']);
+  });
+
+  it("ne modifie pas le tableau qu'on lui passe", () => {
+    // L'appelant passe le résultat d'un `useMemo` dont React réutilise
+    // l'identité : le muter ferait diverger l'affichage de l'état.
+    const lignes = [uneLigne({ id: 'b', jours: 1 }), uneLigne({ id: 'a', jours: 9 })];
+    trierProjets(lignes, 'dormance');
+    expect(lignes.map((l) => l.id)).toEqual(['b', 'a']);
+  });
+
+  it('ne jette pas sur une liste vide', () => {
+    expect(trierProjets([], 'dormance')).toEqual([]);
   });
 });

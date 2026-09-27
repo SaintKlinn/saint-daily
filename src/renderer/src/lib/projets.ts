@@ -169,3 +169,90 @@ export function formatDormance(jours: number | null): string {
   if (jours < 56) return `Il y a ${Math.floor(jours / 7)} semaines`;
   return `Il y a ${Math.round(jours / 30)} mois`;
 }
+
+/**
+ * La part franchie des jalons d'un projet.
+ *
+ * Ce sont les jalons du projet LUI-MÊME, jamais ceux de ses skills
+ * membres. Les deux ne parlent pas de la même chose : les jalons d'un
+ * chantier sont ses livrables (« fondations », « murs »), ceux d'un skill
+ * sont des étapes d'apprentissage (« maîtriser l'assemblage à queue
+ * d'aronde »). Les additionner donnerait un pourcentage vide de sens, où
+ * cocher une étape de menuiserie ferait « avancer la maison ».
+ *
+ * C'est une asymétrie assumée avec `tempsCumuleMinutes`, qui lui agrège
+ * les membres : le temps passé sur la menuiserie EST du temps passé sur la
+ * maison, alors qu'une étape d'apprentissage n'est PAS un livrable. Écrit
+ * ici pour qu'une relecture ne « corrige » pas l'asymétrie en croyant
+ * réparer un oubli.
+ *
+ * `total: 0` est le signal rendu à l'appelant : c'est à lui de n'afficher
+ * ni barre ni libellé plutôt qu'un « 0 sur 0 », qui dirait à tort qu'un
+ * chantier sans jalon n'a pas avancé.
+ */
+export function avancementProjet(jalons: { completedAt: string | null }[]): {
+  franchis: number;
+  total: number;
+  ratio: number;
+} {
+  const total = jalons.length;
+  const franchis = jalons.filter((j) => j.completedAt !== null).length;
+  return { franchis, total, ratio: total === 0 ? 0 : franchis / total };
+}
+
+/** Le critère de tri de la liste des projets. Chacun a un sens unique. */
+export type CritereTri = 'dormance' | 'temps' | 'avancement' | 'nom';
+
+/**
+ * Une ligne de la liste des projets, réduite à ce sur quoi on trie.
+ *
+ * Le tri reçoit des valeurs DÉJÀ dérivées, jamais des engagements : c'est
+ * ce qui le rend vérifiable sans réseau. `avancement` vaut `null` quand le
+ * projet n'a aucun jalon — la traduction depuis `avancementProjet` se fait
+ * chez l'appelant, avec `total === 0 ? null : ratio`.
+ */
+export interface LigneProjet {
+  id: string;
+  nom: string;
+  minutes: number;
+  jours: number | null;
+  avancement: number | null;
+}
+
+export function trierProjets(lignes: LigneProjet[], critere: CritereTri): LigneProjet[] {
+  // Les valeurs absentes descendent, quel que soit le critère. Un chantier
+  // jamais commencé n'est pas le plus négligé, et le mettre en tête
+  // enterrerait sous lui celui qui l'est vraiment — le signal que ce tri
+  // existe pour montrer.
+  const absentEnBas = (
+    a: number | null,
+    b: number | null,
+    comparer: (x: number, y: number) => number
+  ): number => {
+    if (a === null && b === null) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return comparer(a, b);
+  };
+  const decroissant = (x: number, y: number) => y - x;
+  const croissant = (x: number, y: number) => x - y;
+
+  // `sort` mute son receveur : on copie, parce que l'appelant passe le
+  // résultat d'un `useMemo` dont React réutilise l'identité.
+  return [...lignes].sort((a, b) => {
+    switch (critere) {
+      case 'dormance':
+        return absentEnBas(a.jours, b.jours, decroissant);
+      case 'temps':
+        // `minutes` n'est jamais nul : zéro minute est une valeur, pas une
+        // absence, et l'ordre décroissant la range déjà en bas.
+        return decroissant(a.minutes, b.minutes);
+      case 'avancement':
+        return absentEnBas(a.avancement, b.avancement, croissant);
+      case 'nom':
+        // En français : sans la locale, « Élagage » passerait après
+        // « Zinguerie », son point de code étant plus haut.
+        return a.nom.localeCompare(b.nom, 'fr');
+    }
+  });
+}
