@@ -91,6 +91,13 @@ export default function ListeProjets() {
     }
     return parProjet;
   }, [projects, milestonesByEngagement]);
+  // Distinguer « rien à montrer parce que tout est en pause » de « rien à
+  // montrer parce qu'il n'y a rien » : le premier se corrige avec la
+  // bascule, le second en créant un projet.
+  const projetsArchivesExistent = useMemo(
+    () => engagements.some((e) => e.isProject && e.archivedAt),
+    [engagements]
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -163,7 +170,12 @@ export default function ListeProjets() {
             </div>
           </Link>
         ))}
-        {lignesTriees.length === 0 && <EmptyState>Aucun projet pour l'instant.</EmptyState>}
+        {lignesTriees.length === 0 &&
+          (projetsArchivesExistent ? (
+            <EmptyState>Tous les projets sont en pause.</EmptyState>
+          ) : (
+            <EmptyState>Aucun projet pour l'instant.</EmptyState>
+          ))}
       </div>
     </div>
   );
