@@ -138,7 +138,7 @@ export default function DetailProjet() {
       return { error: message };
     }
     setActionError(null);
-    const { error: renameError } = await updateEngagement(project.id, { name: nom });
+    const { error: renameError } = await updateEngagement(project.id, { name: nom.trim() });
     if (renameError) setActionError(renameError);
     return { error: renameError };
   }
@@ -209,6 +209,12 @@ export default function DetailProjet() {
         Retour
       </Link>
 
+      {actionError && (
+        <p role="alert" className="text-corps text-danger">
+          {actionError}
+        </p>
+      )}
+
       <div className="relative overflow-hidden border border-ink-700 bg-ink-900 p-6">
         <RayCorner variant={0} />
         {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
@@ -232,7 +238,14 @@ export default function DetailProjet() {
           </div>
         ) : (
           <h1 className="relative font-serif text-titre-ecran text-champagne">
-            <button type="button" onClick={() => setEnEditionNom(true)} className={`block text-left ${FOCUS_RING}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setActionError(null);
+                setEnEditionNom(true);
+              }}
+              className={`block text-left ${FOCUS_RING}`}
+            >
               {project.name}
             </button>
           </h1>
@@ -338,11 +351,6 @@ export default function DetailProjet() {
           Supprimer un projet envoie aussi à la corbeille les engagements dont il est le projet principal.
         </p>
       </div>
-      {actionError && (
-        <p role="alert" className="text-corps text-danger">
-          {actionError}
-        </p>
-      )}
       {entriesError && (
         <p role="alert" className="text-corps text-danger">
           {entriesError}

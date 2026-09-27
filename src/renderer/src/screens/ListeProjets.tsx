@@ -91,6 +91,13 @@ export default function ListeProjets() {
     }
     return parProjet;
   }, [projects, milestonesByEngagement]);
+  // `projects` suffit : quand la bascule est fermée il ne contient aucun
+  // projet en pause, et quand elle est ouverte il les contient tous — pas
+  // besoin de repartir d'`engagements` pour les retrouver.
+  const projetsArchives = useMemo(
+    () => new Set(projects.filter((p) => p.archivedAt).map((p) => p.id)),
+    [projects]
+  );
   // Distinguer « rien à montrer parce que tout est en pause » de « rien à
   // montrer parce qu'il n'y a rien » : le premier se corrige avec la
   // bascule, le second en créant un projet.
@@ -153,23 +160,33 @@ export default function ListeProjets() {
       )}
 
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-        {lignesTriees.map((ligne) => (
-          <Link
-            key={ligne.id}
-            to={`/projets/${ligne.id}`}
-            className="flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700"
-          >
-            <div className="flex-1">
-              <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
-              {/* Le point médian sépare des informations de même rang. Un
-                  projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
-              <p className="mt-1 text-secondaire text-muted">
-                {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
-                {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
-              </p>
-            </div>
-          </Link>
-        ))}
+        {lignesTriees.map((ligne) => {
+          const archive = projetsArchives.has(ligne.id);
+          return (
+            <Link
+              key={ligne.id}
+              to={`/projets/${ligne.id}`}
+              className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
+                  {archive && (
+                    <span className="font-data text-libelle uppercase tracking-[0.08em] px-2 py-1 border border-muted text-muted">
+                      En pause
+                    </span>
+                  )}
+                </div>
+                {/* Le point médian sépare des informations de même rang. Un
+                    projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
+                <p className="mt-1 text-secondaire text-muted">
+                  {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
+                  {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
         {lignesTriees.length === 0 &&
           (projetsArchivesExistent ? (
             <EmptyState>Tous les projets sont en pause.</EmptyState>
