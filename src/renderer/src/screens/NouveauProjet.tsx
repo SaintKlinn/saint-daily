@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
+import { analyserTags } from '../lib/tags';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import { FormField, TextAreaField } from '../components/FormField';
@@ -22,10 +23,7 @@ export default function NouveauProjet() {
     }
     setSubmitting(true);
     setError(null);
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = analyserTags(tagsInput);
     const { error: createError } = await createEngagement({
       name: name.trim(),
       tags,
