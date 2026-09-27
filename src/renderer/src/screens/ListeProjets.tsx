@@ -6,6 +6,7 @@ import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useAllMilestones } from '../hooks/useMilestones';
 import EmptyState from '../components/EmptyState';
 import { buttonClassName } from '../components/Button';
+import Toggle from '../components/Toggle';
 import {
   avancementProjet,
   entreesDuProjet,
@@ -23,7 +24,16 @@ const FOCUS_RING =
 
 export default function ListeProjets() {
   const { engagements, error } = useEngagements();
-  const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
+  const [voirArchives, setVoirArchives] = useState(false);
+  // Le filtre est EN AMONT du tri, sur les projets et non sur les lignes
+  // dérivées : un projet archivé ne doit pas seulement disparaître de
+  // l'affichage, il ne doit pas non plus peser sur l'ensemble
+  // d'identifiants envoyé aux deux requêtes groupées — celle des entrées de
+  // pratique et celle des jalons.
+  const projects = useMemo(
+    () => engagements.filter((e) => e.isProject && (voirArchives || !e.archivedAt)),
+    [engagements, voirArchives]
+  );
 
   const { liaisons } = useLiaisonsProjet();
   const membresParProjet = useMemo(
@@ -87,6 +97,12 @@ export default function ListeProjets() {
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-titre-ecran text-champagne">Projets</h1>
         <div className="flex items-center gap-3">
+          <Toggle
+            bordered={false}
+            checked={voirArchives}
+            onChange={setVoirArchives}
+            label="Voir les projets en pause"
+          />
           {/* Le défaut est « le plus dormant en haut » : savoir qu'un
               chantier n'a pas bougé depuis trois semaines est l'information
               qui donne une raison d'ouvrir cet écran, et un tri par défaut
