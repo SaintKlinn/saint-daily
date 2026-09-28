@@ -204,11 +204,11 @@ export default function Bilan() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <Section titre="Répartition par tag">
-                <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur les engagements pratiqués." />
+                <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur ce que tu as pratiqué." />
               </Section>
 
-              <Section titre="Répartition par engagement">
-                <BarreRepartition rows={parEngagement} emptyLabel="Aucun engagement pratiqué." />
+              <Section titre="Répartition par skill et tâche">
+                <BarreRepartition rows={parEngagement} emptyLabel="Aucun temps de pratique enregistré." />
               </Section>
             </div>
 

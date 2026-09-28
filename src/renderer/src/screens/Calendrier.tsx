@@ -4,7 +4,7 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useSettings } from '../hooks/useSettings';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
+import { addDays, heureDOuverture, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
 import { projetAffiche } from '../lib/projets';
 import {
@@ -134,7 +134,7 @@ export default function Calendrier() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 7 * HOUR_ROW_PX;
+    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = heureDOuverture() * HOUR_ROW_PX;
   }, []);
 
   function handleEmptySlotClick(day: Date, hour: number) {
@@ -472,7 +472,13 @@ export default function Calendrier() {
         </p>
       )}
 
-      <div ref={scrollContainerRef} className="max-h-[600px] overflow-y-auto border border-ink-700">
+      {/* Hauteur liée à la fenêtre plutôt que fixe à 600 px : sur un grand
+          écran, la grille laissait un vide sous elle tout en obligeant à
+          défiler dedans. 240 px = en-tête de l'écran et marges de <main>. */}
+      <div
+        ref={scrollContainerRef}
+        className="max-h-[max(360px,calc(100vh-240px))] overflow-y-auto border border-ink-700"
+      >
         <div className="grid grid-cols-[50px_repeat(7,1fr)]">
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (

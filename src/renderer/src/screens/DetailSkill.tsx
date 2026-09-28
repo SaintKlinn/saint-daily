@@ -18,7 +18,7 @@ import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
 import ChampSauvegarde from '../components/ChampSauvegarde';
-import { ChevronLeftIcon, ChevronDownIcon } from '../components/icons';
+import { ChevronLeftIcon, ChevronDownIcon, PlusIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -299,7 +299,7 @@ export default function DetailSkill() {
           <p className="relative font-data text-titre-ecran text-champagne">{totalHours}h</p>
           <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">cumulées</p>
           <p className="relative text-center text-corps text-muted">
-            Streak :{' '}
+            Série :{' '}
             <motion.span
               // `inline-block` : un élément inline nu ignore `transform`,
               // donc l'animation `scale` ci-dessous n'aurait aucun effet
@@ -339,7 +339,7 @@ export default function DetailSkill() {
           <section>
             <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Records</h2>
             <p className="mb-3 text-corps text-muted">
-              Meilleur streak : <span className="text-champagne">{bestStreak} j</span> · Streak actuel :{' '}
+              Meilleure série : <span className="text-champagne">{bestStreak} j</span> · Série actuelle :{' '}
               <span className="text-champagne">{streak} j</span>
             </p>
             <ul className="flex flex-wrap gap-2">
@@ -382,8 +382,9 @@ export default function DetailSkill() {
           <section className="flex min-h-0 flex-1 flex-col">
             <div className="mb-1 flex items-center justify-between">
               <h2 className="font-sans text-corps font-semibold text-champagne">Journal</h2>
-              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-corps text-accent-bright underline">
-                + Nouvelle entrée
+              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="inline-flex items-center gap-1 text-corps text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+                <PlusIcon />
+                Nouvelle entrée
               </Link>
             </div>
             <div className="flex flex-col">

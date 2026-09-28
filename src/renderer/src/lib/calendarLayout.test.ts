@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, endOfDay, startOfDay, startOfMonth, startOfWeek } from './calendarLayout';
+import { addDays, heureDOuverture, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, endOfDay, startOfDay, startOfMonth, startOfWeek } from './calendarLayout';
 
 describe('startOfWeek', () => {
   it('returns the same Monday when given a Monday', () => {
@@ -154,5 +154,19 @@ describe('endOfDay', () => {
     const result = endOfDay(new Date(2026, 8, 30, 10, 0));
     expect(result.getMonth()).toBe(9);
     expect(result.getDate()).toBe(1);
+  });
+});
+
+describe('heureDOuverture', () => {
+  const a = (h: number) => heureDOuverture(new Date(2026, 8, 28, h, 30));
+
+  it('opens one hour before the current hour', () => {
+    expect(a(9)).toBe(8);
+    expect(a(17)).toBe(15);
+  });
+
+  it('stays within the day', () => {
+    expect(a(0)).toBe(0);
+    expect(a(23)).toBe(15);
   });
 });

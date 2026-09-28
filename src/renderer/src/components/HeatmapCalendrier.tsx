@@ -73,12 +73,12 @@ export default function HeatmapCalendrier({
   return (
     <div className="flex flex-col gap-3">
       <select
-        aria-label="Engagement affiché dans la heatmap"
+        aria-label="Filtrer la heatmap"
         value={selectedEngagementId}
         onChange={(event) => onSelectEngagement(event.target.value)}
         className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-2 text-secondaire text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
       >
-        <option value="tous">Tous les engagements</option>
+        <option value="tous">Tout ce que tu pratiques</option>
         {engagements.map((engagement) => (
           <option key={engagement.id} value={engagement.id}>
             {engagement.name}

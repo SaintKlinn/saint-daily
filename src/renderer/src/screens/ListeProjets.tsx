@@ -5,6 +5,8 @@ import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useAllMilestones } from '../hooks/useMilestones';
 import EmptyState from '../components/EmptyState';
+import ProgressRing from '../components/ProgressRing';
+import { PlusIcon } from '../components/icons';
 import { buttonClassName } from '../components/Button';
 import Toggle from '../components/Toggle';
 import {
@@ -21,6 +23,10 @@ import { daysSinceLastPractice } from '../lib/streaks';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+
+function enMinuscule(texte: string): string {
+  return texte.charAt(0).toLowerCase() + texte.slice(1);
+}
 
 export default function ListeProjets() {
   const { engagements, loading, error } = useEngagements();
@@ -87,7 +93,9 @@ export default function ListeProjets() {
     const parProjet = new Map<string, string>();
     for (const p of projects) {
       const { franchis, total } = avancementProjet(milestonesByEngagement[p.id] ?? []);
-      if (total > 0) parProjet.set(p.id, `${franchis}/${total}`);
+      // « 2 jalons sur 3 » et non « 2/3 », qui ne disait pas ce qu'il
+      // comptait — même libellé que la fiche du projet.
+      if (total > 0) parProjet.set(p.id, `${franchis} jalon${franchis > 1 ? 's' : ''} sur ${total}`);
     }
     return parProjet;
   }, [projects, milestonesByEngagement]);
@@ -108,9 +116,10 @@ export default function ListeProjets() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
+      {/* Même repli que la liste des skills à la largeur minimale. */}
+      <div className="flex flex-wrap items-center justify-between gap-6">
         <h1 className="font-serif text-titre-ecran text-champagne">Projets</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Toggle
             bordered={false}
             checked={voirArchives}
@@ -138,7 +147,8 @@ export default function ListeProjets() {
             </select>
           </label>
           <Link to="/projets/nouveau" className={buttonClassName('primary')}>
-            + Nouveau projet
+            <PlusIcon />
+            Nouveau projet
           </Link>
         </div>
       </div>
@@ -171,6 +181,18 @@ export default function ListeProjets() {
               to={`/projets/${ligne.id}`}
               className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
             >
+              {/* L'anneau de la liste des skills, rempli ici par les jalons
+                  franchis : chaque projet montre où il en est sans ouvrir sa
+                  fiche. Sans jalon, rien à mesurer — un anneau vide dirait
+                  « 0 % » à tort ; la place reste réservée pour l'alignement. */}
+              {(() => {
+                const { total, ratio } = avancementProjet(milestonesByEngagement[ligne.id] ?? []);
+                return total > 0 ? (
+                  <ProgressRing size={40} radius={17} filled={archive ? 0 : ratio} />
+                ) : (
+                  <span aria-hidden="true" className="h-10 w-10 shrink-0" />
+                );
+              })()}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
@@ -183,7 +205,9 @@ export default function ListeProjets() {
                 {/* Le point médian sépare des informations de même rang. Un
                     projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
                 <p className="mt-1 text-secondaire text-muted">
-                  {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
+                  {/* Minuscule en milieu de ligne : « Il y a 2 jours » est
+                      écrit pour être lu seul (fiche du projet). */}
+                  {formatMinutes(ligne.minutes)} · {enMinuscule(formatDormance(ligne.jours))}
                   {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
                 </p>
               </div>

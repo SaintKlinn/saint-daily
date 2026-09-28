@@ -43,7 +43,7 @@ export default function NouveauProjet() {
       <RayCorner variant={2} />
       <div className="relative">
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouveau projet</p>
-        <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Regrouper des engagements</h1>
+        <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Regrouper skills et tâches</h1>
       </div>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
         <FormField label="Nom" required value={name} onChange={(e) => setName(e.target.value)} />

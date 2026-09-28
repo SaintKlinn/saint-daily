@@ -12,8 +12,8 @@ constat a été recoupé dans le code avant d'être noté ; ceux qui venaient de
 données de test ont été écartés. Aucune erreur JavaScript pendant les 49
 captures.
 
-Les quatre constats de sévérité haute sont corrigés (voir la dernière
-section). Les constats moyens et bas restent à arbitrer.
+**Tous les constats sont corrigés** (voir la dernière section), hors celui
+signalé « hors périmètre », qui dépend de la langue de Windows.
 
 Sévérités :
 - **haute** : casse la mise en page ou mène à une impasse ;
@@ -134,3 +134,22 @@ Sévérités :
   - l'écran introuvable : un message par cas (adresse inconnue, élément
     supprimé définitivement, élément encore dans la corbeille, avec un lien
     vers celle-ci), au tutoiement.
+- **Constats moyens et bas** (commit « fix: resolve the remaining medium and
+  low visual audit findings ») :
+  - en-têtes de Skills et Projets repliés sous le titre à 960 px ;
+  - « série » partout au lieu de « streak » ; « jalons » au lieu de
+    « sous-tâches » ; « engagement » remplacé par « skill », « tâche » ou
+    « élément » dans les textes affichés ;
+  - fiche projet : titre et actions dans l'en-tête, composition avant les tags
+    et les notes ;
+  - actions de l'Accueil à la même taille ; boutons et liens de création avec
+    l'icône « + » ;
+  - calendrier ouvert sur l'heure en cours, grille à la hauteur de la fenêtre ;
+  - place réservée à la pastille de priorité ; « pas de série en cours » au
+    lieu de « série de 0 j » ; objectif affiché au format « 2h 58 sur 3h » ;
+  - liste des projets : anneau d'avancement, « 2 jalons sur 3 », minuscule en
+    milieu de ligne ;
+  - jalons alignés sur la colonne ; champs de l'objectif à la même hauteur ;
+    choix de Nouvelle tâche en grilles ; placeholder du Journal raccourci.
+- **Déjà corrigés avec les états vides :** le double style d'état vide et le
+  message trompeur de Skills vide.

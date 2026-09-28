@@ -349,7 +349,9 @@ export default function Accueil() {
           {resumeSkill && (
             <Link
               to={`/pomodoro?skillId=${resumeSkill.id}`}
-              className={buttonClassName('secondary', 'sm')}
+              // Même taille que ses deux voisines : trois hauteurs de bouton
+              // différentes sur une seule ligne se lisaient comme un défaut.
+              className={buttonClassName('secondary')}
               title={`Reprendre ${resumeSkill.name}`}
             >
               Reprendre {resumeSkill.name}
@@ -470,8 +472,9 @@ export default function Accueil() {
           >
             Tâches à faire
           </motion.h2>
-          <Link to="/taches/nouvelle" className="text-corps text-accent-bright underline">
-            + Nouvelle tâche
+          <Link to="/taches/nouvelle" className="inline-flex items-center gap-1 text-corps text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+            <PlusIcon />
+            Nouvelle tâche
           </Link>
         </div>
         {entriesLoading ? (
@@ -507,13 +510,18 @@ export default function Accueil() {
                 </button>
                 <div className="flex-1">
                   <p className="flex items-center gap-2 font-serif text-titre text-champagne">
-                    {PRIORITY_COLORS[task.priority] && (
+                    {PRIORITY_COLORS[task.priority] ? (
                       <span
                         role="img"
                         aria-label={`Priorité : ${PRIORITY_LABELS[task.priority]}`}
                         className="h-[7px] w-[7px] shrink-0 rounded-full"
                         style={{ background: PRIORITY_COLORS[task.priority] as string }}
                       />
+                    ) : (
+                      // Même place réservée sans priorité : sinon le titre de
+                      // cette tâche commençait 15 px plus à gauche que ses
+                      // voisines.
+                      <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0" />
                     )}
                     {task.name}
                   </p>

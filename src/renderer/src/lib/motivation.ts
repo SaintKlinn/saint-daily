@@ -1,5 +1,6 @@
 import { startOfMonth, startOfWeek } from './calendarLayout';
 import { calculateBestStreak } from './streaks';
+import { formatMinutes } from './retrospective';
 import type { GoalMetric, GoalPeriod } from './types';
 
 export interface MotivationEntryLike {
@@ -73,13 +74,13 @@ export function computeGoalProgress(
     metric === 'heures'
       ? inWindow.reduce((sum, entry) => sum + entry.durationMinutes, 0) / 60
       : inWindow.length;
-  // `toFixed(1)` arrondirait 2.9667 (178 min) à « 3.0 », un chiffre qui dit
-  // l'objectif atteint alors que le test `current >= target` (fait sur la
-  // valeur brute, ailleurs) dirait le contraire — deux vérités qui se
-  // contredisent sur le même écran. Tronquer au lieu d'arrondir garantit
-  // que le nombre affiché ne peut jamais dépasser la progression réelle :
-  // s'il affiche l'objectif atteint, il l'est forcément aussi en vrai.
-  const displayCurrent = Math.floor(current * 10) / 10;
+  // Affiché au format de durée du reste de l'app (« 2h 58 », pas
+  // « 2.9 h ») — l'objectif était le seul endroit à écrire une durée en
+  // heures décimales. Les minutes sont tronquées, jamais arrondies : 178 min
+  // s'affichent « 2h 58 », pas « 3h », qui dirait l'objectif atteint alors
+  // que le test `current >= target` (sur la valeur brute, ailleurs) dirait
+  // le contraire. Le chiffre affiché ne dépasse jamais la progression réelle.
+  const minutesFaites = Math.floor(current * 60);
   return {
     current,
     target,
@@ -88,7 +89,7 @@ export function computeGoalProgress(
     ratio: target > 0 ? Math.min(1, current / target) : 0,
     label:
       metric === 'heures'
-        ? `${displayCurrent.toFixed(1)} h sur ${target} h`
+        ? `${formatMinutes(minutesFaites)} sur ${formatMinutes(Math.round(target * 60))}`
         : `${current} séance${current > 1 ? 's' : ''} sur ${target}`,
   };
 }

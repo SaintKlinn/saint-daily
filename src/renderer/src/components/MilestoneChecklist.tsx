@@ -87,7 +87,10 @@ export default function MilestoneChecklist({
         </p>
       )}
       {milestones.length > 0 && (
-        <ul className="flex flex-col gap-0 border-l border-ink-700 pl-4">
+        // `ml-2` : la case est posée à cheval sur le filet (marge négative,
+        // voir TAILLES) ; sans ce décalage, elle dépassait de 8 px le bord
+        // gauche de la colonne de contenu.
+        <ul className="ml-2 flex flex-col gap-0 border-l border-ink-700 pl-4">
           {milestones.map((m) => (
             <li key={m.id} className="flex items-center py-2">
               <label className={`flex cursor-pointer items-center ${t.ecart}`}>

@@ -70,7 +70,7 @@ export default function Journal() {
     const seances: Row[] = entries.map((entry) => ({
       kind: 'seance',
       id: entry.id,
-      engagementName: namesById[entry.engagementId] ?? 'Engagement inconnu',
+      engagementName: namesById[entry.engagementId] ?? 'Élément supprimé',
       note: entry.note,
       tags: entry.tags,
       practicedAt: entry.practicedAt,
@@ -112,7 +112,7 @@ export default function Journal() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher une note, un tag, un engagement"
+            placeholder="Rechercher une note, un tag, un skill"
             aria-label="Rechercher dans le journal"
             className={`w-72 bg-transparent text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />

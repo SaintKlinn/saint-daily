@@ -41,7 +41,7 @@ export default function GoalSetter({
           value={period}
           onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
           aria-label="Période de l'objectif"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
+          className={`h-10 border border-ink-700 bg-ink-800 px-3 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
         >
           <option value="hebdomadaire">Hebdomadaire</option>
           <option value="mensuel">Mensuel</option>
@@ -53,7 +53,7 @@ export default function GoalSetter({
           value={metric}
           onChange={(e) => setMetric(e.target.value as GoalMetric)}
           aria-label="Métrique de l'objectif"
-          className={`border border-ink-700 bg-ink-800 px-3 py-2 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
+          className={`h-10 border border-ink-700 bg-ink-800 px-3 font-sans normal-case tracking-normal text-corps text-champagne ${FOCUS_RING}`}
         >
           <option value="seances">Séances</option>
           <option value="heures">Heures</option>
@@ -68,10 +68,20 @@ export default function GoalSetter({
           onChange={(e) => setTarget(e.target.value)}
           aria-label="Cible de l'objectif"
           aria-invalid={!targetIsValid}
-          className={`w-20 border border-ink-700 bg-ink-800 px-3 py-2 font-data text-corps text-champagne ${FOCUS_RING}`}
+          className={`h-10 w-20 border border-ink-700 bg-ink-800 px-3 font-data text-corps text-champagne ${FOCUS_RING}`}
         />
       </label>
-      <Button type="button" variant="secondary" size="sm" onClick={handleSubmit} disabled={submitting || !targetIsValid}>
+      {/* Hauteur fixe commune (40 px) aux trois champs et au bouton : la
+          police à chasse fixe du champ Cible lui donnait une autre hauteur que
+          les menus, et son libellé se retrouvait décalé de 4 px. */}
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="h-10"
+        onClick={handleSubmit}
+        disabled={submitting || !targetIsValid}
+      >
         Définir l'objectif
       </Button>
     </div>

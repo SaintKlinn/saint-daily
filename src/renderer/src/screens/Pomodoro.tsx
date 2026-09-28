@@ -439,7 +439,7 @@ export default function Pomodoro() {
         (session.status === 'awaitingAdvance' || session.phase === 'shortBreak' || session.phase === 'longBreak') && (
           <div className="relative mt-4 flex w-full flex-col gap-1 border-t border-ink-700 pt-4">
             <label htmlFor="pomodoro-switch" className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
-              Enchaîner sur un autre engagement
+              Enchaîner sur un autre skill
             </label>
             <select
               id="pomodoro-switch"

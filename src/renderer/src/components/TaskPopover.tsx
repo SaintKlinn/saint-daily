@@ -111,7 +111,7 @@ export default function TaskPopover({
           </div>
         </div>
         <div className="relative flex flex-col gap-2">
-          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Jalons</p>
           <MilestoneChecklist
             milestones={milestones}
             onToggle={toggleMilestone}

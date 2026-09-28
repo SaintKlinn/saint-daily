@@ -62,7 +62,7 @@ export default function SkillPicker({
               <span className="font-data text-right text-secondaire text-muted">
                 dernière · {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
                 <br />
-                série de {streak} j
+                {streak > 0 ? `série de ${streak} j` : 'pas de série en cours'}
               </span>
             </button>
           );

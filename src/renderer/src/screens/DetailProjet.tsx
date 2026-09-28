@@ -16,7 +16,6 @@ import { daysSinceLastPractice } from '../lib/streaks';
 import { computeGoalProgress } from '../lib/motivation';
 import type { GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
-import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
@@ -214,42 +213,63 @@ export default function DetailProjet() {
           {actionError}
         </p>
       )}
+      {entriesError && (
+        <p role="alert" className="text-corps text-danger">
+          {entriesError}
+        </p>
+      )}
 
-      <div className="relative overflow-hidden border border-ink-700 bg-ink-900 p-6">
-        <RayCorner variant={0} />
-        {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
-            champ en permanence remplacerait un serif 28 px par une boîte
-            bordée sur un écran qu'on regarde bien plus qu'on ne le modifie.
-            Le mode vit ici et non dans `ChampSauvegarde`, qui ne saurait
-            plus s'il est un champ ou un titre.
+      {/* En-tête sur le modèle de la fiche d'un skill : le titre à gauche, les
+          actions sur le projet à droite. Le titre vivait seul dans un grand
+          cadre, et Archiver/Supprimer se trouvaient au milieu de la page,
+          avant la composition du projet. */}
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="min-w-0 flex-1">
+            {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
+                champ en permanence remplacerait un serif 28 px par une boîte
+                bordée sur un écran qu'on regarde bien plus qu'on ne le modifie.
+                Le mode vit ici et non dans `ChampSauvegarde`, qui ne saurait
+                plus s'il est un champ ou un titre.
 
-            Le `onBlur` du div suffit à en sortir : celui de React est un
-            `focusout`, donc il remonte depuis le champ. */}
-        {enEditionNom ? (
-          <div className="relative" onBlur={() => setEnEditionNom(false)}>
-            <ChampSauvegarde
-              key={project.id}
-              valeur={project.name}
-              onSave={handleRenommer}
-              ariaLabel="Nom du projet"
-              confirmation="Nom enregistré."
-              autoFocus
-            />
+                Le `onBlur` du div suffit à en sortir : celui de React est un
+                `focusout`, donc il remonte depuis le champ. */}
+            {enEditionNom ? (
+              <div className="relative" onBlur={() => setEnEditionNom(false)}>
+                <ChampSauvegarde
+                  key={project.id}
+                  valeur={project.name}
+                  onSave={handleRenommer}
+                  ariaLabel="Nom du projet"
+                  confirmation="Nom enregistré."
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <h1 className="relative font-serif text-titre-ecran text-champagne">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionError(null);
+                    setEnEditionNom(true);
+                  }}
+                  className={`block text-left ${FOCUS_RING}`}
+                >
+                  {project.name}
+                </button>
+              </h1>
+            )}
+        </div>
+        <div className="flex max-w-xs flex-col items-end gap-2">
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" size="sm" onClick={handleArchiver}>
+              {project.archivedAt ? 'Désarchiver' : 'Archiver'}
+            </Button>
+            <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
           </div>
-        ) : (
-          <h1 className="relative font-serif text-titre-ecran text-champagne">
-            <button
-              type="button"
-              onClick={() => {
-                setActionError(null);
-                setEnEditionNom(true);
-              }}
-              className={`block text-left ${FOCUS_RING}`}
-            >
-              {project.name}
-            </button>
-          </h1>
-        )}
+          <p className="text-right text-secondaire text-muted">
+            Supprimer le projet envoie aussi à la corbeille les skills et tâches dont il est le projet principal.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-8">
@@ -318,49 +338,9 @@ export default function DetailProjet() {
       </section>
 
       <section>
-        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Tags</h2>
-        <ChampSauvegarde
-          key={project.id}
-          valeur={project.tags.join(', ')}
-          onSave={handleTags}
-          ariaLabel="Tags du projet"
-          placeholder="Maison, Perso"
-          confirmation="Tags enregistrés."
-        />
-      </section>
-
-      <section>
-        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Notes</h2>
-        <ChampSauvegarde
-          key={project.id}
-          valeur={project.notes ?? ''}
-          onSave={(notes) => updateEngagement(project.id, { notes })}
-          lignes={4}
-          ariaLabel="Notes sur ce projet"
-          placeholder="Aucune note. Écris ici ce que ce chantier demande…"
-          confirmation="Notes enregistrées."
-        />
-      </section>
-
-      <div className="flex items-center gap-3">
-        <Button variant="secondary" size="sm" onClick={handleArchiver}>
-          {project.archivedAt ? 'Désarchiver' : 'Archiver'}
-        </Button>
-        <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
-        <p className="text-secondaire text-muted">
-          Supprimer un projet envoie aussi à la corbeille les engagements dont il est le projet principal.
-        </p>
-      </div>
-      {entriesError && (
-        <p role="alert" className="text-corps text-danger">
-          {entriesError}
-        </p>
-      )}
-
-      <section>
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Composition</h2>
         {children.length === 0 ? (
-          <EmptyState>Aucun engagement rattaché à ce projet.</EmptyState>
+          <EmptyState>Aucun skill ni aucune tâche rattachés à ce projet.</EmptyState>
         ) : (
           <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
             {children.map((child) => (
@@ -408,6 +388,33 @@ export default function DetailProjet() {
           </select>
         </label>
       </section>
+
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Tags</h2>
+        <ChampSauvegarde
+          key={project.id}
+          valeur={project.tags.join(', ')}
+          onSave={handleTags}
+          ariaLabel="Tags du projet"
+          placeholder="Maison, Perso"
+          confirmation="Tags enregistrés."
+        />
+      </section>
+
+      <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Notes</h2>
+        <ChampSauvegarde
+          key={project.id}
+          valeur={project.notes ?? ''}
+          onSave={(notes) => updateEngagement(project.id, { notes })}
+          lignes={4}
+          ariaLabel="Notes sur ce projet"
+          placeholder="Aucune note. Écris ici ce que ce chantier demande…"
+          confirmation="Notes enregistrées."
+        />
+      </section>
+
+
     </div>
   );
 }

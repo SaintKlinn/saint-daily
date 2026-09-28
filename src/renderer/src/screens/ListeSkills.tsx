@@ -9,7 +9,7 @@ import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing'
 import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
 import { buttonClassName } from '../components/Button';
-import { SearchIcon } from '../components/icons';
+import { PlusIcon, SearchIcon } from '../components/icons';
 import type { GenericLevel } from '../lib/types';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
@@ -49,10 +49,13 @@ export default function ListeSkills() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-between"
+        // `flex-wrap` et `gap-6` : à la largeur minimale (960 px), la grappe
+        // d'actions passe sous le titre au lieu de venir le coller, comme sur
+        // l'Accueil.
+        className="flex flex-wrap items-center justify-between gap-6"
       >
         <h1 className="font-serif text-titre-ecran text-champagne">Skills</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Toggle bordered={false} checked={showArchived} onChange={setShowArchived} label="Voir les skills en pause" />
           <div className="flex items-center gap-2 border border-ink-700 bg-ink-900 px-4 py-2">
             <SearchIcon className="text-muted" />
@@ -65,7 +68,8 @@ export default function ListeSkills() {
             />
           </div>
           <Link to="/skills/nouveau" className={buttonClassName('primary')}>
-            + Nouveau skill
+            <PlusIcon />
+            Nouveau skill
           </Link>
         </div>
       </motion.div>
@@ -142,7 +146,7 @@ export default function ListeSkills() {
                   'archivé'
                 ) : (
                   <>
-                    série de {streak} j
+                    {streak > 0 ? `série de ${streak} j` : 'pas de série en cours'}
                     <br />
                     dernière · {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
                   </>
