@@ -4,6 +4,7 @@ import {
   CLE_JOURS_REPOS,
   ecrireJoursRepos,
   estJourDeRepos,
+  estJourDeReposLocal,
   lireJoursRepos,
   normaliserJoursRepos,
 } from './joursRepos';
@@ -31,6 +32,15 @@ describe('estJourDeRepos', () => {
     expect(estJourDeRepos(new Date('2026-08-30T12:00:00Z'), repos)).toBe(true);
     expect(estJourDeRepos(new Date('2026-08-27T23:59:00Z'), repos)).toBe(true);
     expect(estJourDeRepos(new Date('2026-08-28T00:00:00Z'), repos)).toBe(false);
+  });
+});
+
+describe('estJourDeReposLocal', () => {
+  it('lit le jour local, même à minuit', () => {
+    const repos = { hebdo: [0], dates: ['2026-09-30'] };
+    expect(estJourDeReposLocal(new Date(2026, 8, 27), repos)).toBe(true); // dimanche 27
+    expect(estJourDeReposLocal(new Date(2026, 8, 28), repos)).toBe(false);
+    expect(estJourDeReposLocal(new Date(2026, 8, 30), repos)).toBe(true);
   });
 });
 

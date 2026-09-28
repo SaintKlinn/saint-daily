@@ -21,6 +21,7 @@ import TaskPopover from '../components/TaskPopover';
 import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
 import { jourDansLaSemaine } from '../lib/echeances';
+import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
 import type { Engagement, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -124,6 +125,21 @@ export default function Calendrier() {
     }
     return byDay;
   }, [activeEngagements, entriesBySkill, settings?.showPracticeInCalendar, weekStart]);
+
+  // Aujourd'hui, l'heure actuelle et les jours de repos : rien ne les
+  // distinguait, les sept en-têtes étaient identiques (audit graphique, M6).
+  // L'heure est relue chaque minute pour faire avancer le trait.
+  const repos = useJoursRepos();
+  const [maintenant, setMaintenant] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setMaintenant(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const indexAujourdhui = useMemo(() => {
+    const index = weekDaysList.findIndex((d) => d.toDateString() === maintenant.toDateString());
+    return index === -1 ? null : index;
+  }, [weekDaysList, maintenant]);
+  const hautMaintenant = ((maintenant.getHours() * 60 + maintenant.getMinutes()) / (24 * 60)) * 100;
 
   // Les échéances des projets, posées sur leur jour dans l'en-tête : une
   // échéance n'a pas d'heure, elle n'a donc pas sa place dans la grille.
@@ -496,8 +512,19 @@ export default function Calendrier() {
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
-              <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
-              <p className="font-serif text-titre text-champagne">{day.getDate()}</p>
+              <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
+                {DAY_LABELS[i]}
+                {estJourDeReposLocal(day, repos) && <span className="normal-case tracking-normal"> · repos</span>}
+              </p>
+              <p className="font-serif text-titre text-champagne">
+                {i === indexAujourdhui ? (
+                  <span className="inline-block min-w-9 bg-accent-bright px-2 text-ink-900" aria-label={`Aujourd'hui, ${day.getDate()}`}>
+                    {day.getDate()}
+                  </span>
+                ) : (
+                  day.getDate()
+                )}
+              </p>
               {echeancesParJour[i].map((projet) => (
                 <Link
                   key={projet.id}
@@ -518,7 +545,19 @@ export default function Calendrier() {
             ))}
           </div>
           {weekDaysList.map((day, dayIndex) => (
-            <div key={dayIndex} className="relative border-l border-ink-800">
+            <div
+              key={dayIndex}
+              className={`relative border-l border-ink-800 ${estJourDeReposLocal(day, repos) ? 'bg-ink-950/25' : ''}`}
+            >
+              {dayIndex === indexAujourdhui && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 z-[5] h-0.5 bg-accent-bright"
+                  style={{ top: `${hautMaintenant}%` }}
+                >
+                  <span className="absolute -left-1 -top-[3px] h-2 w-2 rounded-full bg-accent-bright" />
+                </div>
+              )}
               {HOURS.map((h) => (
                 <div
                   key={h}

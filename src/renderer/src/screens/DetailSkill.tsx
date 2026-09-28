@@ -22,7 +22,7 @@ import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
 import ChampSauvegarde from '../components/ChampSauvegarde';
 import EditeurSeance from '../components/EditeurSeance';
-import { ChevronLeftIcon, ChevronDownIcon, PlusIcon } from '../components/icons';
+import { ChevronLeftIcon, ChevronDownIcon, PencilIcon, PlusIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -388,7 +388,7 @@ export default function DetailSkill() {
             </div>
             <div className="flex flex-col">
               {entries.slice(0, nbSeances).map((entry) => (
-                <div key={entry.id} className="flex gap-2 border-t border-ink-700 py-4 last:border-b">
+                <div key={entry.id} className="group flex items-baseline gap-2 border-t border-ink-700 py-4 last:border-b">
                   <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
@@ -407,9 +407,12 @@ export default function DetailSkill() {
                     type="button"
                     onClick={() => setEnEdition(entry.id)}
                     aria-label={`Modifier la séance du ${new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`}
-                    className="self-start font-data text-libelle text-muted underline-offset-4 hover:text-champagne hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                    title="Modifier la séance"
+                    // Même crayon discret que dans le Journal (audit
+                    // graphique, M7).
+                    className="flex h-7 w-7 items-center justify-center self-center text-muted opacity-0 transition-opacity hover:text-champagne group-hover:opacity-100 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
                   >
-                    Modifier
+                    <PencilIcon />
                   </button>
                 </div>
               ))}

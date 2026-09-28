@@ -332,3 +332,23 @@ export function SkipIcon(props: IconProps) {
     </IconeCommande>
   );
 }
+
+// Crayon : modifier une séance (Journal, fiche d'un skill). Remplace le mot
+// « Modifier » répété sur chaque ligne (audit graphique, M7).
+export function PencilIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </IconeCommande>
+  );
+}
+
+// Lune : jour de repos (palette, Réglages).
+export function MoonIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z" />
+    </IconeCommande>
+  );
+}

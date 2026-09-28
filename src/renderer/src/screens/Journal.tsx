@@ -5,7 +5,10 @@ import { useDailyReflections } from '../hooks/useDailyReflections';
 import { filterJournalEntries, grouperParJour, libelleJour, type JournalEntry } from '../lib/journal';
 import { formatMinutes } from '../lib/retrospective';
 import EmptyState from '../components/EmptyState';
-import { SearchIcon } from '../components/icons';
+import { PencilIcon, SearchIcon } from '../components/icons';
+import EtiquetteType, { typeEngagement, type TypeEngagement } from '../components/EtiquetteType';
+import { MOOD_LABELS } from '../lib/seances';
+import type { Mood } from '../lib/types';
 import Button from '../components/Button';
 import EditeurSeance from '../components/EditeurSeance';
 
@@ -26,6 +29,10 @@ interface Row extends JournalEntry {
   // sur `created_at` pour les secondes, ce qui les place naturellement en
   // fin de leur journée — là où un bilan du soir appartient.
   sortAt: string;
+  // Affichés seulement quand ils disent quelque chose : un projet ou une
+  // tâche (pas un skill, le cas courant), et l'humeur quand elle est saisie.
+  type: TypeEngagement | null;
+  mood: Mood | null;
 }
 
 // Une date seule (`AAAA-MM-JJ`) est interprétée en UTC par `new Date`,
@@ -70,6 +77,11 @@ export default function Journal() {
     for (const engagement of [...engagements, ...deletedEngagements]) map[engagement.id] = engagement.name;
     return map;
   }, [engagements, deletedEngagements]);
+  const typesById = useMemo(() => {
+    const map: Record<string, TypeEngagement> = {};
+    for (const engagement of [...engagements, ...deletedEngagements]) map[engagement.id] = typeEngagement(engagement);
+    return map;
+  }, [engagements, deletedEngagements]);
 
   const rows = useMemo<Row[]>(() => {
     const seances: Row[] = entries.map((entry) => ({
@@ -81,6 +93,8 @@ export default function Journal() {
       practicedAt: entry.practicedAt,
       durationMinutes: entry.durationMinutes,
       sortAt: entry.practicedAt,
+      type: typesById[entry.engagementId] ?? null,
+      mood: entry.mood,
     }));
     const bilans: Row[] = reflections.map((reflection) => ({
       kind: 'reflexion',
@@ -93,9 +107,11 @@ export default function Journal() {
       practicedAt: reflection.date,
       durationMinutes: 0,
       sortAt: reflection.createdAt,
+      type: null,
+      mood: null,
     }));
     return [...seances, ...bilans].sort((a, b) => (a.sortAt < b.sortAt ? 1 : a.sortAt > b.sortAt ? -1 : 0));
-  }, [entries, namesById, reflections]);
+  }, [entries, namesById, typesById, reflections]);
 
   const visible = useMemo(() => filterJournalEntries(rows, deferredSearch), [rows, deferredSearch]);
   const [nbAffiches, setNbAffiches] = useState(PAGE);
@@ -159,25 +175,37 @@ export default function Journal() {
                 </h2>
                 <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
                   {journee.lignes.map((row) => (
-                    <article key={row.id} className="flex flex-col gap-2 bg-ink-800 px-4 py-4">
+                    <article key={row.id} className="group flex flex-col gap-2 bg-ink-800 px-4 py-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
                         <span className="flex items-baseline gap-3">
+                          {row.type && row.type !== 'skill' && <EtiquetteType type={row.type} />}
+                          <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
+                        </span>
+                        <span className="flex items-center gap-3">
                           <span className="font-data text-libelle tabular-nums text-muted">
                             {row.kind === 'seance'
-                              ? `${formatHeure(row.practicedAt)} · ${formatMinutes(row.durationMinutes)}`
+                              ? `${formatHeure(row.practicedAt)} · ${formatMinutes(row.durationMinutes)}${row.mood ? ` · ${MOOD_LABELS[row.mood].toLowerCase()}` : ''}`
                               : 'bilan du soir'}
                           </span>
+                          {/* Un crayon qui n'apparaît qu'au survol ou au focus
+                              de la ligne : « Modifier » répété sur chaque
+                              ligne chargeait la colonne la plus lue (audit
+                              graphique, M7). Toujours joignable au clavier. */}
                           {row.kind === 'seance' && (
                             <button
                               type="button"
                               onClick={() => setEnEdition(row.id)}
                               aria-label={`Modifier la séance ${row.engagementName} de ${formatHeure(row.practicedAt)}`}
-                              className={`font-data text-libelle text-muted underline-offset-4 hover:text-champagne hover:underline ${FOCUS_RING}`}
+                              title="Modifier la séance"
+                              className={`flex h-7 w-7 items-center justify-center text-muted opacity-0 transition-opacity hover:text-champagne focus-visible:opacity-100 group-hover:opacity-100 ${FOCUS_RING}`}
                             >
-                              Modifier
+                              <PencilIcon />
                             </button>
                           )}
+                          {/* Même place réservée sur un bilan du soir, pour
+                              que les heures restent alignées d'une ligne à
+                              l'autre. */}
+                          {row.kind !== 'seance' && <span aria-hidden="true" className="w-7" />}
                         </span>
                       </div>
                       {row.note && <p className="whitespace-pre-wrap text-secondaire text-champagne">{row.note}</p>}

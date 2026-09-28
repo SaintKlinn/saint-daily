@@ -116,6 +116,13 @@ export function cleJourLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/** Le même test pour un jour **affiché** (calendrier, heatmap), donné par
+ *  sa date locale : minuit local à Paris tombe la veille en UTC, et
+ *  `estJourDeRepos` y lirait le mauvais jour. */
+export function estJourDeReposLocal(jour: Date, repos: JoursRepos): boolean {
+  return repos.hebdo.includes(jour.getDay()) || repos.dates.includes(cleJourLocal(jour));
+}
+
 /** Ajoute la date si elle n'y est pas, la retire sinon. */
 export function basculerDateRepos(repos: JoursRepos, cle: string): JoursRepos {
   return repos.dates.includes(cle)

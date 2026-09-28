@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filtrerCommandes, normaliser, scoreTerme, type Commande } from './palette';
+import { filtrerCommandes, normaliser, positionsTrouvees, scoreTerme, type Commande } from './palette';
 
 const COMMANDES: Commande[] = [
   { id: 'ecran-accueil', groupe: 'Écrans', libelle: 'Accueil' },
@@ -8,6 +8,7 @@ const COMMANDES: Commande[] = [
   { id: 'skill-piano', groupe: 'Skills', libelle: 'Piano' },
   { id: 'pomodoro-piano', groupe: 'Skills', libelle: 'Piano', detail: 'Démarrer un pomodoro', surRecherche: true },
   { id: 'skill-espagnol', groupe: 'Skills', libelle: 'Espagnol' },
+  { id: 'recent-piano', groupe: 'Récents', libelle: 'Piano', sansRecherche: true },
 ];
 
 const ids = (liste: Commande[]) => liste.map((c) => c.id);
@@ -52,5 +53,25 @@ describe('filtrerCommandes', () => {
 
   it('classe le libellé avant le détail, et garde l’ordre à égalité', () => {
     expect(ids(filtrerCommandes(COMMANDES, 'piano'))).toEqual(['skill-piano', 'pomodoro-piano']);
+  });
+});
+
+describe('commandes sans recherche', () => {
+  it('les récents ne s’affichent qu’à vide', () => {
+    expect(ids(filtrerCommandes(COMMANDES, ''))).toContain('recent-piano');
+    expect(ids(filtrerCommandes(COMMANDES, 'piano'))).not.toContain('recent-piano');
+  });
+});
+
+describe('positionsTrouvees', () => {
+  const liste = (s: Set<number>) => [...s].sort((a, b) => a - b);
+  it('surligne un mot d’un bloc, accents compris', () => {
+    expect(liste(positionsTrouvees('Réglages', 'regl'))).toEqual([0, 1, 2, 3]);
+  });
+  it('sinon les lettres dans l’ordre', () => {
+    expect(liste(positionsTrouvees('Portfolio illustration', 'pia'))).toEqual([0, 7, 17]);
+  });
+  it('rien si une lettre manque', () => {
+    expect(positionsTrouvees('Piano', 'pz').size).toBe(0);
   });
 });

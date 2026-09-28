@@ -6,7 +6,7 @@ import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeE
 import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
-import { useJoursRepos } from '../lib/joursRepos';
+import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
 import { dateEcheance, echeancesProches, libelleEcheance } from '../lib/echeances';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
@@ -411,6 +411,10 @@ export default function Accueil() {
           <StatCard
             label="Séries en cours"
             valeur={stats.filter((s) => s.streak > 0).length}
+            // Un jour de repos, la carte le dit : sans ça, une série qui
+            // n'avance pas aujourd'hui semblait en danger (audit
+            // graphique, B3).
+            detail={estJourDeReposLocal(now, repos) ? 'en pause · jour de repos' : undefined}
             hero
             rayVariant={4}
           />
