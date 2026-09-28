@@ -17,7 +17,7 @@ import { computeGoalProgress } from '../lib/motivation';
 import type { GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import EmptyState from '../components/EmptyState';
-import Button from '../components/Button';
+import Button, { buttonClassName } from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
@@ -259,7 +259,20 @@ export default function DetailProjet() {
               </h1>
             )}
         </div>
-        <div className="flex max-w-xs flex-col items-end gap-2">
+        <div className="flex max-w-sm flex-col items-end gap-2">
+          {/* Session de chantier : travailler le projet pour lui-même. Le
+              temps s'enregistre sur le projet et compte dans son total. Pas
+              sur un projet archivé, que le Pomodoro ne propose pas. */}
+          {!project.archivedAt && (
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <Link to={`/pomodoro?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
+                Session de chantier
+              </Link>
+              <Link to={`/entree/nouvelle?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
+                Nouvelle entrée
+              </Link>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <Button variant="secondary" size="sm" onClick={handleArchiver}>
               {project.archivedAt ? 'Désarchiver' : 'Archiver'}

@@ -20,6 +20,9 @@ export default function NouvelleEntree() {
 
   const { engagements, loading: engagementsLoading } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
+  // Une séance peut aussi porter sur le projet lui-même (session de
+  // chantier) : son temps compte alors dans le total du projet.
+  const projets = engagements.filter((e) => e.isProject && !e.archivedAt);
   const { logEntry } = usePracticeEntries(null);
   // L'erreur du hook n'est délibérément pas affichée ici : elle signifie
   // « pas de modèles disponibles », ce que l'absence de chips dit déjà, et
@@ -39,7 +42,7 @@ export default function NouvelleEntree() {
     e.preventDefault();
     const durationMinutes = Number(duration);
     if (!skillId) {
-      setError('Choisis un skill.');
+      setError(projets.length > 0 ? 'Choisis un skill ou un projet.' : 'Choisis un skill.');
       return;
     }
     if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
@@ -80,13 +83,36 @@ export default function NouvelleEntree() {
         </EmptyState>
       ) : (
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
-        <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
+        <SelectField
+          label={projets.length > 0 ? 'Skill ou projet' : 'Skill'}
+          value={skillId}
+          onChange={(e) => setSkillId(e.target.value)}
+        >
           <option value="">Choisir…</option>
-          {skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
+          {projets.length > 0 ? (
+            <>
+              <optgroup label="Skills">
+                {skills.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Projets">
+                {projets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          ) : (
+            skills.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))
+          )}
         </SelectField>
         <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
           Durée

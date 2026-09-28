@@ -28,7 +28,12 @@ export default function Pomodoro() {
   const { engagements, loading: skillsLoading } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const activeSkills = skills.filter((s) => !s.archivedAt);
-  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(activeSkills.map((s) => s.id));
+  // Session de chantier : un projet se travaille aussi pour lui-même, et
+  // le temps s'enregistre sur le projet (il compte dans son total, voir
+  // `entreesDuProjet`). Proposé après les skills, qui restent l'usage
+  // courant.
+  const praticables = [...activeSkills, ...engagements.filter((e) => e.isProject && !e.archivedAt)];
+  const { entriesBySkill, error: entriesError } = useAllPracticeEntries(praticables.map((s) => s.id));
   const {
     session,
     durations,
@@ -53,12 +58,11 @@ export default function Pomodoro() {
     setPinned,
   } = usePomodoro();
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
-  // Le sélecteur ne liste que des skills, mais une cible arrivée par lien
+  // Le sélecteur liste skills et projets, mais une cible arrivée par lien
   // profond peut être une tâche planifiée (« Démarrer un pomodoro » depuis
   // le calendrier). On la résout donc dans l'ensemble des engagements
-  // praticables, projets exclus — ils n'ont pas d'historique de pratique.
-  const selectedSkill =
-    engagements.find((e) => e.id === skillId && !e.isProject && !e.archivedAt) ?? null;
+  // actifs.
+  const selectedSkill = engagements.find((e) => e.id === skillId && !e.archivedAt) ?? null;
   // null = pas encore touché par l'utilisateur ; résout alors sur la durée
   // des Réglages dès qu'elle est connue (voir effectiveWorkMinutes) — donc
   // rien ne change tant que personne ne choisit explicitement un preset.
@@ -158,7 +162,7 @@ export default function Pomodoro() {
             {error}
           </p>
         )}
-        {selectedSkill && !activeSkills.some((s) => s.id === selectedSkill.id) && (
+        {selectedSkill && !praticables.some((s) => s.id === selectedSkill.id) && (
           // Cible résolue depuis un lien profond (ex. "Démarrer un pomodoro"
           // sur une tâche planifiée du calendrier) mais absente du
           // sélecteur, qui ne liste que des skills sans horaire — sans ce
@@ -172,7 +176,7 @@ export default function Pomodoro() {
             correspond » au-dessus d'un Démarrer grisé : une impasse. On dit
             plutôt ce qu'il manque et on y mène. Pas pendant le chargement,
             ni pour une cible arrivée par lien profond (tâche planifiée). */}
-        {!skillsLoading && activeSkills.length === 0 && !selectedSkill ? (
+        {!skillsLoading && praticables.length === 0 && !selectedSkill ? (
           skills.length === 0 ? (
             <EmptyState titre="Il te faut un skill" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
               Un pomodoro se rattache à un skill : le temps de chaque cycle est enregistré sur lui.
@@ -185,7 +189,7 @@ export default function Pomodoro() {
         ) : (
           <>
           <SkillPicker
-            skills={activeSkills}
+            skills={praticables}
             entriesBySkill={entriesBySkill}
             value={skillId}
             onChange={setSkillId}
@@ -446,13 +450,13 @@ export default function Pomodoro() {
               value=""
               disabled={switching}
               onChange={(e) => {
-                const next = activeSkills.find((s) => s.id === e.target.value);
+                const next = praticables.find((s) => s.id === e.target.value);
                 if (next) void switchEngagement(next.id, next.name);
               }}
               className={`w-full border border-ink-700 bg-ink-800 px-3 py-2 text-secondaire text-champagne disabled:opacity-60 ${FOCUS_RING}`}
             >
               <option value="">Continuer sur {session.skillName}</option>
-              {activeSkills
+              {praticables
                 .filter((s) => s.id !== session.skillId)
                 .map((s) => (
                   <option key={s.id} value={s.id}>

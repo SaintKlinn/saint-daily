@@ -74,7 +74,10 @@ export default function PaletteCommandes({ onFermer }: { onFermer: () => void })
       );
     }
     for (const projet of actifs.filter((e) => e.isProject)) {
-      liste.push({ id: `projet-${projet.id}`, groupe: 'Projets', libelle: projet.name, detail: 'Ouvrir le projet', motsCles: projet.tags, executer: aller(`/projets/${projet.id}`) });
+      liste.push(
+        { id: `projet-${projet.id}`, groupe: 'Projets', libelle: projet.name, detail: 'Ouvrir le projet', motsCles: projet.tags, executer: aller(`/projets/${projet.id}`) },
+        { id: `chantier-${projet.id}`, groupe: 'Projets', libelle: projet.name, detail: 'Session de chantier', motsCles: ['pomodoro'], surRecherche: true, executer: aller(`/pomodoro?skillId=${projet.id}`) }
+      );
     }
     return liste;
   }, [engagements, navigate, pomodoro.session, pomodoro.pause, pomodoro.resume, repos]);

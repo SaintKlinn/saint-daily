@@ -110,7 +110,8 @@ export function projetAffiche(
  * siennes propres.
  *
  * Un projet EST un engagement et peut donc porter des entrées directement —
- * c'est ce que fera la « session de chantier ». Ne compter que les membres
+ * c'est ce que fait la « session de chantier » (Pomodoro ou nouvelle entrée
+ * sur le projet). Ne compter que les membres
  * rendrait ce temps-là invisible dans le total de son propre projet. La règle
  * vit ici et non chez l'appelant, précisément pour qu'un test puisse la
  * contredire.
