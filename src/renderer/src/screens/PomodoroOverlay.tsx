@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 import ProgressRing from '../components/ProgressRing';
+import { PauseIcon, PlayIcon, SkipIcon, StopIcon } from '../components/icons';
+import { phaseTotalMs } from '../lib/pomodoroLogic';
+
+// Boutons carrés à icône : trois libellés texte ne tenaient pas à côté du
+// nom et du temps dans une fenêtre de cette taille.
+const BOUTON_ICONE =
+  'flex h-8 w-8 items-center justify-center border border-ink-700 text-muted hover:text-champagne';
 import type { PomodoroControlAction, PomodoroStateSnapshot } from '../env';
 
 // Exception assumée à l'échelle d'espacement (voir la spec du système
@@ -42,12 +49,9 @@ export default function PomodoroOverlay() {
   }
 
   const { session, durations } = snapshot;
-  const totalMs =
-    (session.phase === 'work'
-      ? durations.workMinutes
-      : session.phase === 'shortBreak'
-        ? durations.shortBreakMinutes
-        : durations.longBreakMinutes) * 60_000;
+  // Prolongations comprises : sans elles, un « +5 min » ferait déborder
+  // l'anneau (voir phaseTotalMs).
+  const totalMs = phaseTotalMs(session, durations);
   const filled = totalMs > 0 ? 1 - remainingMs / totalMs : 0;
   const minutes = Math.floor(remainingMs / 60_000);
   const seconds = Math.floor((remainingMs % 60_000) / 1000);
@@ -61,8 +65,14 @@ export default function PomodoroOverlay() {
       <ProgressRing size={40} radius={17} filled={Math.max(0, Math.min(1, filled))} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-serif text-corps text-champagne">{session.skillName}</p>
-        <p className="font-data text-secondaire text-muted">
-          {phaseLabel} · {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} · cycle{' '}
+        {/* Une seule ligne, jamais repliée : à cette hauteur, un retour à la
+            ligne poussait le temps restant hors de vue. « cycle » est
+            retiré du texte (il reste dans l'infobulle), le « 2/4 » suffit. */}
+        <p
+          className="truncate whitespace-nowrap font-data text-secondaire tabular-nums text-muted"
+          title={`Cycle ${session.cycleIndex + 1} sur ${durations.cyclesBeforeLongBreak}`}
+        >
+          {phaseLabel} · {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} ·{' '}
           {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
         </p>
       </div>
@@ -79,17 +89,30 @@ export default function PomodoroOverlay() {
           <button
             onClick={() => sendControl(session.status === 'paused' ? 'resume' : 'pause')}
             aria-label={session.status === 'paused' ? 'Reprendre' : 'Mettre en pause'}
-            className="border border-ink-700 px-3 py-2 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-champagne"
+            title={session.status === 'paused' ? 'Reprendre' : 'Mettre en pause'}
+            className={BOUTON_ICONE}
           >
-            {session.status === 'paused' ? '▶' : '⏸'}
+            {session.status === 'paused' ? <PlayIcon /> : <PauseIcon />}
+          </button>
+        )}
+        {/* Pendant une pause seulement. */}
+        {session.phase !== 'work' && (
+          <button
+            onClick={() => sendControl('skip')}
+            aria-label="Passer la pause"
+            title="Passer la pause"
+            className={BOUTON_ICONE}
+          >
+            <SkipIcon />
           </button>
         )}
         <button
           onClick={() => sendControl('stop')}
           aria-label="Arrêter le pomodoro"
-          className="border border-ink-700 px-3 py-2 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-danger"
+          title="Arrêter"
+          className="flex h-8 w-8 items-center justify-center border border-ink-700 text-muted hover:text-danger"
         >
-          ■
+          <StopIcon />
         </button>
       </div>
     </div>

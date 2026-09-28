@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // Icônes reprises trait pour trait des maquettes approuvées
 // (design/canvas/*.dc.html) — SVG, jamais d'emoji, cohérent avec le reste
 // de l'app (audit ui-ux-pro-max, passe V2).
@@ -272,5 +274,61 @@ export function ChevronsIcon({
       <path d="m7 6 6 6-6 6" />
       <path d="m14 6 6 6-6 6" />
     </svg>
+  );
+}
+
+// Commandes du minuteur (overlay Pomodoro). Les glyphes ⏸ ▶ ■ qu'elles
+// remplacent dépendaient de la police installée : certains systèmes les
+// rendaient en emoji couleur, d'autres en carré vide.
+function IconeCommande({ size = 14, className, children }: IconProps & { children: ReactNode }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function PauseIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <path d="M9 6v12" />
+      <path d="M15 6v12" />
+    </IconeCommande>
+  );
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </IconeCommande>
+  );
+}
+
+export function StopIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <rect x="6.5" y="6.5" width="11" height="11" rx="1" />
+    </IconeCommande>
+  );
+}
+
+export function SkipIcon(props: IconProps) {
+  return (
+    <IconeCommande {...props}>
+      <path d="M6 6v12l8.5-6z" />
+      <path d="M18 6v12" />
+    </IconeCommande>
   );
 }

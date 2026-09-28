@@ -1,7 +1,10 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { join } from 'node:path';
 
-const OVERLAY_WIDTH = 300;
+// 360 et non 300 : à 300, « Travail · 02:58 · cycle 2/4 » passait déjà à
+// la ligne à côté de deux boutons, et un troisième (« passer la pause »)
+// écrasait le nom de l'engagement à néant.
+const OVERLAY_WIDTH = 360;
 const OVERLAY_HEIGHT = 84;
 
 let overlayWindow: BrowserWindow | null = null;
