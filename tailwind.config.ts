@@ -18,6 +18,7 @@ const config: Config = {
         accent: colors.accent,
         danger: colors.danger,
         heatmap: colors.heatmap,
+        repos: colors.repos,
       },
       fontFamily: {
         serif: ['"IBM Plex Serif"', 'ui-serif', 'serif'],

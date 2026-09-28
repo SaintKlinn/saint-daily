@@ -10,7 +10,7 @@ export interface PomodoroStateSnapshot {
   durations: PomodoroDurations;
 }
 
-export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
+export type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance' | 'skip' | 'extend';
 
 export interface AgendaWidgetItem {
   id: string;

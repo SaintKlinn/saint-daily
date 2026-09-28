@@ -69,6 +69,16 @@ export const colors = {
   //   niveau 1 (accent.deep)   vs niveau 0       : 3.39:1
   //   niveau 2 (accent.mid)    vs niveau 0       : 6.27:1
   //   niveau 3 (accent.bright) vs niveau 0       : 10.39:1
+  // Couleur des PAUSES du Pomodoro (anneau, libellé, halo), pour qu'une
+  // pause se reconnaisse d'un coup d'œil sans lire le libellé. Un vert
+  // d'eau, et non l'or : l'or dit « actif / au travail » partout ailleurs.
+  // Même famille que `priority.basse` (#8FC2BC), éclairci parce que
+  // celui-ci ne donnait que 3.37:1 contre la piste ink-700 de l'anneau.
+  // Contrastes (même formule que ci-dessous) :
+  //   texte sur ink-900 : 5.71:1 (AA pour le libellé de phase)
+  //   texte sur ink-800 : 4.49:1
+  //   arc vs piste ink-700 de l'anneau : 3.92:1 (l'or y fait 3.64:1)
+  repos: '#9ED0CA',
   heatmap: {
     0: '#02130E',
     1: accent.deep,

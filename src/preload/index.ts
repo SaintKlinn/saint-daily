@@ -23,6 +23,8 @@ interface PomodoroStateSnapshot {
     phaseEndsAt: number;
     remainingMsAtPause: number | null;
     loggedEntryIds: string[];
+    extensionMs: number;
+    completedCycles: number;
   };
   durations: {
     workMinutes: number;
@@ -32,7 +34,7 @@ interface PomodoroStateSnapshot {
   };
 }
 
-type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance';
+type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance' | 'skip' | 'extend';
 
 interface AgendaWidgetItem {
   id: string;

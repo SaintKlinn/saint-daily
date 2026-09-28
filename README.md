@@ -40,6 +40,8 @@ Prérequis : Node 20+, un projet Supabase (la table `profile` est partagée avec
 
 Les versions sont automatisées : un commit `fix:`/`feat:` poussé sur `master` fait apparaître une Release PR (changelog généré depuis les commits via [release-please](https://github.com/googleapis/release-please)) ; la fusionner crée le tag et la GitHub Release, ce qui déclenche un build Windows qui attache le `.exe` à la release. Historique complet dans [CHANGELOG.md](CHANGELOG.md).
 
+Chaque PR et chaque push sur `master` passent par [`ci.yml`](.github/workflows/ci.yml) : typecheck, tests et build. Une PR rouge ne doit pas être fusionnée, puisque la fusion de la Release PR publie directement.
+
 Convention de commit, à partir de la mise en place de ce pipeline : `type: sujet` — `feat:`, `fix:`, `perf:`, `refactor:`, `chore:`, `docs:`, `ci:`, `build:`. Détail de l'architecture du pipeline dans [docs/superpowers/specs/2026-09-02-release-pipeline-design.md](docs/superpowers/specs/2026-09-02-release-pipeline-design.md).
 
 ## Projet personnel

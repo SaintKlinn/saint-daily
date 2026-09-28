@@ -20,7 +20,7 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
 };
 
 export default function ListeSkills() {
-  const { engagements, error } = useEngagements();
+  const { engagements, loading, error } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { settings } = useSettings();
   const [search, setSearch] = useState('');
@@ -98,6 +98,11 @@ export default function ListeSkills() {
         </div>
       )}
 
+      {/* L'état vide vit hors du conteneur de liste : son fond plein
+          (`bg-ink-700`, qui dessine les filets entre lignes) faisait de
+          l'EmptyState un bloc vert clair, au lieu du cadre pointillé qu'il
+          a partout ailleurs. */}
+      {visible.length > 0 && (
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
         {visible.map((skill, i) => {
           const entries = entriesBySkill[skill.id] ?? [];
@@ -146,8 +151,20 @@ export default function ListeSkills() {
             </Link>
           );
         })}
-        {visible.length === 0 && <EmptyState>Aucun skill ne correspond.</EmptyState>}
       </div>
+      )}
+      {!loading &&
+        visible.length === 0 &&
+        (skills.length === 0 ? (
+          <EmptyState titre="Aucun skill pour l'instant" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
+            Un skill, c'est une compétence que tu veux pratiquer régulièrement : piano, espagnol, dessin… Chacun
+            garde son historique, sa série et ses jalons.
+          </EmptyState>
+        ) : !showArchived && !tag && !search.trim() ? (
+          <EmptyState>Tous tes skills sont en pause. Active « Voir les skills en pause » pour les retrouver.</EmptyState>
+        ) : (
+          <EmptyState>Aucun skill ne correspond à cette recherche.</EmptyState>
+        ))}
     </div>
   );
 }

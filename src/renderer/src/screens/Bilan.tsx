@@ -18,6 +18,9 @@ import BarreRepartition from '../components/BarreRepartition';
 import HeatmapCalendrier from '../components/HeatmapCalendrier';
 import MeilleureHeureProductivite from '../components/MeilleureHeureProductivite';
 import TendanceHebdo from '../components/TendanceHebdo';
+import PomodorosSemaine from '../components/PomodorosSemaine';
+import { usePomodoro } from '../lib/pomodoro';
+import { derniersJours } from '../lib/historiquePomodoro';
 import StatCard from '../components/StatCard';
 import EmptyState from '../components/EmptyState';
 import { EASE_SORTIE, itemTransition, itemVariants, listVariants } from '../theme/mouvement';
@@ -100,6 +103,8 @@ export default function Bilan() {
   const parEngagement = useMemo(() => engagementBreakdown(entries, engagementsById), [entries, engagementsById]);
   const creneaux = useMemo(() => timeOfDayBuckets(entries), [entries]);
   const semaines = useMemo(() => weeklyTotals(entries), [entries]);
+  const { historique } = usePomodoro();
+  const joursPomodoro = useMemo(() => derniersJours(historique), [historique]);
   // Toutes les entrées, tâches cochées comprises : c'est la même base que
   // la heatmap juste en dessous, donc une journée allumée sur la heatmap
   // compte aussi pour la série.
@@ -135,7 +140,10 @@ export default function Bilan() {
       {loading ? (
         <EmptyState role="status">Chargement…</EmptyState>
       ) : entries.length === 0 ? (
-        <EmptyState>Pas encore assez d'historique pour dresser un bilan.</EmptyState>
+        <EmptyState titre="Pas encore de bilan" action={{ libelle: 'Logger une séance', vers: '/entree/nouvelle' }}>
+          Le Bilan se construit à partir de tes séances : série, tendance sur douze semaines, activité de l'année. Une
+          première séance suffit pour qu'il prenne forme.
+        </EmptyState>
       ) : (
         <>
           {/* Les chiffres clés d'abord, avec la carte d'Accueil : c'est ce
@@ -204,9 +212,15 @@ export default function Bilan() {
               </Section>
             </div>
 
-            <Section titre="Meilleure période de la journée">
-              <MeilleureHeureProductivite buckets={creneaux} />
-            </Section>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Section titre="Meilleure période de la journée">
+                <MeilleureHeureProductivite buckets={creneaux} />
+              </Section>
+
+              <Section titre="Pomodoros sur sept jours">
+                <PomodorosSemaine jours={joursPomodoro} />
+              </Section>
+            </div>
           </motion.div>
         </>
       )}

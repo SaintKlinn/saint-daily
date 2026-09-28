@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   CLE_RAIL_EPINGLE,
+  CLE_SON_POMODORO,
   ecrireRailEpingle,
+  ecrireSonPomodoro,
   lireRailEpingle,
+  lireSonPomodoro,
   type StockageLike,
 } from './preferencesAffichage';
 
@@ -69,5 +72,25 @@ describe('ecrireRailEpingle', () => {
 
   it('n’explose pas sans stockage du tout', () => {
     expect(() => ecrireRailEpingle(true, null)).not.toThrow();
+  });
+});
+
+describe('son du Pomodoro', () => {
+  it('is on by default, including with a corrupt value or refused storage', () => {
+    expect(lireSonPomodoro(stockageFactice())).toBe(true);
+    expect(lireSonPomodoro(stockageFactice({ [CLE_SON_POMODORO]: 'peut-être' }))).toBe(true);
+    expect(lireSonPomodoro(stockageQuiLeve)).toBe(true);
+  });
+
+  it('reads back an explicit choice', () => {
+    const stockage = stockageFactice();
+    ecrireSonPomodoro(false, stockage);
+    expect(lireSonPomodoro(stockage)).toBe(false);
+    ecrireSonPomodoro(true, stockage);
+    expect(lireSonPomodoro(stockage)).toBe(true);
+  });
+
+  it('never throws when storage is refused', () => {
+    expect(() => ecrireSonPomodoro(false, stockageQuiLeve)).not.toThrow();
   });
 });

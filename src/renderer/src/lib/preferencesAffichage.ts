@@ -51,3 +51,28 @@ export function ecrireRailEpingle(
     // en cours. Rien à remonter à l'utilisateur.
   }
 }
+
+// Sons de l'app (fin de phase du Pomodoro, palier de série) — même statut
+// que l'épinglage du rail : une préférence de la machine (on coupe le son
+// au bureau, pas chez soi), pas du compte, et donc pas une colonne de
+// `settings`. La clé garde son nom d'origine, du temps où seul le Pomodoro
+// avait un son, pour ne pas perdre le choix déjà enregistré.
+export const CLE_SON_POMODORO = 'saint-daily.pomodoro-son';
+
+/** Activé par défaut : seule la valeur explicite `'false'` le coupe, donc
+ *  une clé absente ou corrompue, ou un stockage refusé, laissent le son. */
+export function lireSonPomodoro(stockage: StockageLike | null = stockageParDefaut()): boolean {
+  try {
+    return stockage?.getItem(CLE_SON_POMODORO) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+export function ecrireSonPomodoro(actif: boolean, stockage: StockageLike | null = stockageParDefaut()): void {
+  try {
+    stockage?.setItem(CLE_SON_POMODORO, String(actif));
+  } catch {
+    // Même repli que l'épinglage du rail.
+  }
+}

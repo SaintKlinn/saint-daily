@@ -8,11 +8,14 @@ export default function ProgressRing({
   radius,
   strokeWidth = 3,
   filled,
+  couleur = colors.accent.bright,
 }: {
   size: number;
   radius: number;
   strokeWidth?: number;
   filled: number;
+  // L'or par défaut ; `colors.repos` pour une pause du Pomodoro.
+  couleur?: string;
 }) {
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(1, filled));
@@ -26,7 +29,7 @@ export default function ProgressRing({
         cy={center}
         r={radius}
         fill="none"
-        stroke={colors.accent.bright}
+        stroke={couleur}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeDasharray={circumference}

@@ -29,6 +29,28 @@ export function calculateStreak(entries: PracticeEntryLike[], now: Date = new Da
   return streak;
 }
 
+/**
+ * Premier jour (clé UTC YYYY-MM-DD) de la série en cours, ou null s'il n'y
+ * en a pas. Mêmes règles que `calculateStreak` : une absence aujourd'hui ne
+ * coupe pas la série. Identifie UNE série : deux séries successives de 7
+ * jours ont des débuts différents, ce qui permet de fêter chacune.
+ */
+export function currentStreakStart(entries: PracticeEntryLike[], now: Date = new Date()): string | null {
+  if (entries.length === 0) return null;
+  const practicedDays = new Set(entries.map((e) => toDayKey(new Date(e.practicedAt))));
+  const cursor = startOfUtcDay(now);
+  if (!practicedDays.has(toDayKey(cursor))) cursor.setUTCDate(cursor.getUTCDate() - 1);
+  if (!practicedDays.has(toDayKey(cursor))) return null;
+  // `toDayKey` est une clé interne (mois à partir de 0, sans zéros) : la
+  // valeur publique est une vraie date ISO, stable et lisible en stockage.
+  let start = cursor.toISOString().slice(0, 10);
+  while (practicedDays.has(toDayKey(cursor))) {
+    start = cursor.toISOString().slice(0, 10);
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return start;
+}
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**

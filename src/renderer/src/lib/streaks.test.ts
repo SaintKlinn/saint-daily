@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calculateBestStreak,
   calculateStreak,
+  currentStreakStart,
   daysSinceLastPractice,
   filterByTag,
   filterSkillsForPicker,
@@ -206,5 +207,29 @@ describe('lastPracticedEngagementId', () => {
         a: [{ practicedAt: '2026-09-05T09:00:00Z' }],
       })
     ).toBe('b');
+  });
+});
+
+describe('currentStreakStart', () => {
+  const now = new Date('2026-08-31T18:00:00Z');
+
+  it('returns null without a streak', () => {
+    expect(currentStreakStart([], now)).toBeNull();
+    expect(currentStreakStart([{ practicedAt: '2026-08-20T09:00:00Z' }], now)).toBeNull();
+  });
+
+  it('returns the first day of the run ending today', () => {
+    const entries = [
+      { practicedAt: '2026-08-31T09:00:00Z' },
+      { practicedAt: '2026-08-30T09:00:00Z' },
+      { practicedAt: '2026-08-29T09:00:00Z' },
+      { practicedAt: '2026-08-27T09:00:00Z' },
+    ];
+    expect(currentStreakStart(entries, now)).toBe('2026-08-29');
+  });
+
+  it('keeps a run that ended yesterday, like calculateStreak', () => {
+    const entries = [{ practicedAt: '2026-08-30T09:00:00Z' }, { practicedAt: '2026-08-29T09:00:00Z' }];
+    expect(currentStreakStart(entries, now)).toBe('2026-08-29');
   });
 });
