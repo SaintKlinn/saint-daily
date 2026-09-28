@@ -82,7 +82,16 @@ export default function Dialogue({
       }
     }
     window.addEventListener('keydown', onKeyDown);
+    // Focus initial : un champ `autoFocus` passe en premier ; sinon le
+    // premier élément de la fenêtre, pour qu'un clavier n'y entre pas à
+    // l'aveugle depuis un bouton désormais inerte.
+    const idFocus = requestAnimationFrame(() => {
+      const panneau = panneauRef.current;
+      if (!panneau || panneau.contains(document.activeElement)) return;
+      panneau.querySelector<HTMLElement>(FOCUSABLES)?.focus();
+    });
     return () => {
+      cancelAnimationFrame(idFocus);
       window.removeEventListener('keydown', onKeyDown);
       if (posee) racine.inert = false;
       avant?.focus?.();

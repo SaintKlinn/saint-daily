@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { depuisChampDateHeure, erreurSaisieSeance, versChampDateHeure } from './seances';
+import { depuisChampDateHeure, erreurSaisieSeance, versChampDateHeure, raccourcisQuand } from './seances';
 
 describe('versChampDateHeure / depuisChampDateHeure', () => {
   it('round-trips a local date and time', () => {
@@ -33,5 +33,15 @@ describe('erreurSaisieSeance', () => {
   it('rejects an invalid or future date', () => {
     expect(erreurSaisieSeance({ ...ok, dateHeure: 'demain' }, now)).toMatch(/invalides/);
     expect(erreurSaisieSeance({ ...ok, dateHeure: '2026-09-29T09:00' }, now)).toMatch(/futur/);
+  });
+});
+
+describe('raccourcisQuand', () => {
+  it('ne propose rien dans le futur', () => {
+    const tot = raccourcisQuand(new Date(2026, 8, 28, 8, 0));
+    expect(tot.map((r) => r.libelle)).toEqual(['Hier soir']);
+    expect(tot[0].valeur).toBe('2026-09-27T20:00');
+    const soir = raccourcisQuand(new Date(2026, 8, 28, 18, 30));
+    expect(soir.map((r) => r.libelle)).toEqual(['Ce matin', 'Cet après-midi', 'Hier soir']);
   });
 });

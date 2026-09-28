@@ -3,10 +3,11 @@ import RayCorner from './RayCorner';
 import Dialogue from './Dialogue';
 import Button from './Button';
 import BoutonSuppression from './BoutonSuppression';
-import { FormField, SelectField, TextAreaField } from './FormField';
+import { FormField, TextAreaField } from './FormField';
+import { ChoixDuree, ChoixHumeur } from './ChampsSeance';
 import { modifierSeance, supprimerSeance } from '../hooks/usePracticeEntries';
 import { analyserTags } from '../lib/tags';
-import { depuisChampDateHeure, erreurSaisieSeance, HUMEURS, MOOD_LABELS, versChampDateHeure } from '../lib/seances';
+import { depuisChampDateHeure, erreurSaisieSeance, versChampDateHeure } from '../lib/seances';
 import type { Mood, PracticeEntry } from '../lib/types';
 import { dateCourte } from '../lib/echeances';
 
@@ -94,32 +95,15 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
           <p className="mt-1 font-data text-secondaire text-muted">{dateCourte(seance.practicedAt, true)}</p>
         </div>
         <form onSubmit={enregistrer} className="relative flex flex-col gap-6">
-          <div className="grid grid-cols-[1fr_7rem] gap-3">
-            <FormField
-              label="Date et heure"
-              type="datetime-local"
-              value={dateHeure}
-              onChange={(e) => setDateHeure(e.target.value)}
-              required
-            />
-            <FormField
-              label="Durée (min)"
-              type="number"
-              min={0}
-              value={duree}
-              onChange={(e) => setDuree(e.target.value)}
-              required
-              autoFocus
-            />
-          </div>
-          <SelectField label="Humeur (optionnelle)" value={humeur} onChange={(e) => setHumeur(e.target.value as Mood | '')}>
-            <option value="">Non précisée</option>
-            {HUMEURS.map((h) => (
-              <option key={h} value={h}>
-                {MOOD_LABELS[h]}
-              </option>
-            ))}
-          </SelectField>
+          <FormField
+            label="Date et heure"
+            type="datetime-local"
+            value={dateHeure}
+            onChange={(e) => setDateHeure(e.target.value)}
+            required
+          />
+          <ChoixDuree valeur={duree} onChange={setDuree} />
+          <ChoixHumeur valeur={humeur} onChange={setHumeur} />
           <FormField
             label="Tags de la séance (séparés par des virgules)"
             value={tags}

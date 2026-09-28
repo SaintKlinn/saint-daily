@@ -51,3 +51,28 @@ export function erreurSaisieSeance({ duree, dateHeure }: SaisieSeance, now: Date
   if (new Date(iso).getTime() > now.getTime() + 60_000) return 'Une séance ne peut pas être datée dans le futur.';
   return null;
 }
+
+/**
+ * Raccourcis du champ « Quand » de la saisie d'une séance : on logue
+ * souvent après coup, et le formulaire datait tout de « maintenant » sans
+ * autre choix (audit graphique, M9). Un raccourci dans le futur (« ce
+ * matin » avant 9 h) n'est pas proposé.
+ */
+export function raccourcisQuand(now = new Date()): { libelle: string; valeur: string }[] {
+  const a = (jours: number, heure: number) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() + jours);
+    d.setHours(heure, 0, 0, 0);
+    return d;
+  };
+  return [
+    { libelle: 'Ce matin', date: a(0, 9) },
+    { libelle: 'Cet après-midi', date: a(0, 14) },
+    { libelle: 'Hier soir', date: a(-1, 20) },
+  ]
+    .filter(({ date }) => date.getTime() <= now.getTime())
+    .map(({ libelle, date }) => ({ libelle, valeur: versChampDateHeure(date.toISOString()) }));
+}
+
+/** Durées proposées en puces, dans la saisie comme dans l'éditeur. */
+export const DUREES_RAPIDES = [15, 25, 30, 45, 60];
