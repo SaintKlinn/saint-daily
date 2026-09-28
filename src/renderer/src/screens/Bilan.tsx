@@ -1,28 +1,44 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntriesForUser } from '../hooks/usePracticeEntries';
 import {
   compareWeeks,
   engagementBreakdown,
   engagementIdentity,
+  formatMinutes,
   tagBreakdown,
   timeOfDayBuckets,
+  weekDeltaLabel,
+  weeklyTotals,
   type EngagementLike,
 } from '../lib/retrospective';
+import { calculateBestStreak, calculateStreak } from '../lib/streaks';
 import BarreRepartition from '../components/BarreRepartition';
 import HeatmapCalendrier from '../components/HeatmapCalendrier';
 import MeilleureHeureProductivite from '../components/MeilleureHeureProductivite';
-import SemaineVsSemaine from '../components/SemaineVsSemaine';
+import TendanceHebdo from '../components/TendanceHebdo';
+import StatCard from '../components/StatCard';
 import EmptyState from '../components/EmptyState';
+import { EASE_SORTIE, itemTransition, itemVariants, listVariants } from '../theme/mouvement';
 
+// Enfant de la cascade des sections (voir le `motion.div` de rendu) : chaque
+// carte monte à son tour plutôt que tout l'écran d'un bloc.
 function Section({ titre, children }: { titre: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-2 border border-ink-700 bg-ink-800 p-4">
+    <motion.section
+      variants={itemVariants}
+      transition={itemTransition}
+      className="flex flex-col gap-3 border border-ink-700 bg-ink-800 p-4"
+    >
       <h2 className="font-sans text-corps font-semibold text-champagne">{titre}</h2>
       {children}
-    </section>
+    </motion.section>
   );
 }
+
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+const jours = (n: number) => `${n} j`;
 
 export default function Bilan() {
   const {
@@ -83,10 +99,27 @@ export default function Bilan() {
   const parTag = useMemo(() => tagBreakdown(entries, engagementsById), [entries, engagementsById]);
   const parEngagement = useMemo(() => engagementBreakdown(entries, engagementsById), [entries, engagementsById]);
   const creneaux = useMemo(() => timeOfDayBuckets(entries), [entries]);
+  const semaines = useMemo(() => weeklyTotals(entries), [entries]);
+  // Toutes les entrées, tâches cochées comprises : c'est la même base que
+  // la heatmap juste en dessous, donc une journée allumée sur la heatmap
+  // compte aussi pour la série.
+  const serie = useMemo(() => calculateStreak(entries), [entries]);
+  const record = useMemo(() => calculateBestStreak(entries), [entries]);
+  const total = useMemo(
+    () => ({ minutes: entries.reduce((somme, entry) => somme + entry.durationMinutes, 0), seances: entries.length }),
+    [entries]
+  );
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-serif text-titre-ecran text-champagne">Bilan</h1>
+      <motion.header
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE_SORTIE }}
+      >
+        <h1 className="font-serif text-titre-ecran text-champagne">Bilan</h1>
+        <p className="mt-1 text-secondaire text-muted">Ta pratique en chiffres, semaine après semaine.</p>
+      </motion.header>
 
       {engagementsError && (
         <p role="alert" className="text-corps text-danger">
@@ -105,32 +138,76 @@ export default function Bilan() {
         <EmptyState>Pas encore assez d'historique pour dresser un bilan.</EmptyState>
       ) : (
         <>
-          <Section titre="Activité sur douze mois">
-            <HeatmapCalendrier
-              entries={heatmapEntries}
-              engagements={selectableEngagements}
-              selectedEngagementId={heatmapEngagementId}
-              onSelectEngagement={setHeatmapEngagementId}
+          {/* Les chiffres clés d'abord, avec la carte d'Accueil : c'est ce
+              qu'on vient chercher en ouvrant le Bilan, le détail suit. La
+              semaine en cours est la carte héros — c'est la seule sur
+              laquelle on peut encore agir. */}
+          <motion.section
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.1 }}
+            aria-label="Chiffres clés"
+            className="grid grid-cols-3 gap-6"
+          >
+            <StatCard
+              label="Cette semaine"
+              valeur={comparison.thisWeek.minutes}
+              format={formatMinutes}
+              detail={`${pluriel(comparison.thisWeek.sessions, 'séance')} · ${weekDeltaLabel(comparison)}`}
+              hero
+              rayVariant={4}
             />
-          </Section>
+            <StatCard
+              label="Série en cours"
+              valeur={serie}
+              format={jours}
+              detail={serie > 0 && serie >= record ? 'Ton record, en ce moment même.' : `Record : ${jours(record)}`}
+              rayVariant={1}
+            />
+            <StatCard
+              label="Temps total"
+              valeur={total.minutes}
+              format={formatMinutes}
+              detail={pluriel(total.seances, 'séance')}
+              rayVariant={3}
+            />
+          </motion.section>
 
-          <Section titre="Cette semaine">
-            <SemaineVsSemaine comparison={comparison} />
-          </Section>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Section titre="Répartition par tag">
-              <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur les engagements pratiqués." />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.3 }}
+            className="flex flex-col gap-8"
+          >
+            <Section titre="Douze dernières semaines">
+              <TendanceHebdo semaines={semaines} />
             </Section>
 
-            <Section titre="Répartition par engagement">
-              <BarreRepartition rows={parEngagement} emptyLabel="Aucun engagement pratiqué." />
+            <Section titre="Activité sur douze mois">
+              <HeatmapCalendrier
+                entries={heatmapEntries}
+                engagements={selectableEngagements}
+                selectedEngagementId={heatmapEngagementId}
+                onSelectEngagement={setHeatmapEngagementId}
+              />
             </Section>
-          </div>
 
-          <Section titre="Meilleure période de la journée">
-            <MeilleureHeureProductivite buckets={creneaux} />
-          </Section>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Section titre="Répartition par tag">
+                <BarreRepartition rows={parTag} emptyLabel="Aucun tag sur les engagements pratiqués." />
+              </Section>
+
+              <Section titre="Répartition par engagement">
+                <BarreRepartition rows={parEngagement} emptyLabel="Aucun engagement pratiqué." />
+              </Section>
+            </div>
+
+            <Section titre="Meilleure période de la journée">
+              <MeilleureHeureProductivite buckets={creneaux} />
+            </Section>
+          </motion.div>
         </>
       )}
     </div>

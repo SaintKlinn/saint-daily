@@ -8,19 +8,17 @@ import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
-import RayCorner from '../components/RayCorner';
+import StatCard from '../components/StatCard';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import { CheckIcon, PlusIcon } from '../components/icons';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../lib/priority';
-import { colors } from '../theme/colors';
+import { itemVariants, listVariants } from '../theme/mouvement';
 import { shouldShowEveningPrompt, shouldShowMorningGreeting, shouldShowWeeklyReview, toLocalDateKey } from '../lib/rituels';
 import { startOfDay, endOfDay } from '../lib/calendarLayout';
 import { useAuth } from '../lib/auth';
 import { salutation } from '../lib/identite';
 
-const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
-const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -364,14 +362,14 @@ export default function Accueil() {
         transition={{ delayChildren: 0.25 }}
         className="grid grid-cols-3 gap-6"
       >
-        <StatCard label="Skills actifs" value={String(activeSkills.length)} rayVariant={2} />
+        <StatCard label="Skills actifs" valeur={activeSkills.length} rayVariant={2} />
         <StatCard
           label="Séries en cours"
-          value={String(stats.filter((s) => s.streak > 0).length)}
+          valeur={stats.filter((s) => s.streak > 0).length}
           hero
           rayVariant={4}
         />
-        <StatCard label="Pratiqué ce mois-ci" value={formatMinutes(minutesThisMonth)} rayVariant={0} />
+        <StatCard label="Pratiqué ce mois-ci" valeur={minutesThisMonth} format={formatMinutes} rayVariant={0} />
       </motion.section>
 
       <section className="flex min-h-0 flex-1 flex-col gap-2">
@@ -504,49 +502,5 @@ export default function Accueil() {
         )}
       </section>
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  hero = false,
-  rayVariant,
-}: {
-  label: string;
-  value: string;
-  hero?: boolean;
-  rayVariant: 0 | 1 | 2 | 3 | 4;
-}) {
-  return (
-    <motion.div
-      variants={itemVariants}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative flex flex-col gap-2 overflow-hidden border px-6 py-6 ${hero ? 'border-accent-bright/35' : 'border-ink-700'}`}
-      style={{
-        background: hero
-          ? `linear-gradient(180deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 60%, ${colors.accent.bright}1f 100%)`
-          : `linear-gradient(160deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 68%)`,
-        boxShadow: `inset 0 1px 0 ${colors.accent.bright}14, 0 18px 34px -26px rgba(0, 0, 0, 0.8)`,
-      }}
-    >
-      <RayCorner variant={rayVariant} />
-      <p className="relative flex items-center gap-2 font-data text-libelle uppercase tracking-[0.1em] text-muted">
-        <span
-          className="h-[5px] w-[5px] rounded-full"
-          style={{
-            background: hero ? colors.accent.bright : colors.accent.mid,
-            boxShadow: hero ? `0 0 6px ${colors.accent.bright}` : undefined,
-          }}
-        />
-        {label}
-      </p>
-      <p
-        className={`relative font-serif text-heros [font-variant-numeric:tabular-nums] ${hero ? 'text-accent-bright' : 'text-champagne'}`}
-        style={hero ? { textShadow: `0 0 22px ${colors.accent.bright}4d` } : undefined}
-      >
-        {value}
-      </p>
-    </motion.div>
   );
 }
