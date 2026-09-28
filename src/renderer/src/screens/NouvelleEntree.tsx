@@ -5,6 +5,7 @@ import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useNoteTemplates } from '../hooks/useNoteTemplates';
 import { analyserTags } from '../lib/tags';
 import RayCorner from '../components/RayCorner';
+import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import { FormField, SelectField, TextAreaField } from '../components/FormField';
 import type { Mood } from '../lib/types';
@@ -17,7 +18,7 @@ export default function NouvelleEntree() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
 
-  const { engagements } = useEngagements();
+  const { engagements, loading: engagementsLoading } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const { logEntry } = usePracticeEntries(null);
   // L'erreur du hook n'est délibérément pas affichée ici : elle signifie
@@ -71,6 +72,13 @@ export default function NouvelleEntree() {
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
         <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
       </div>
+      {/* Sans aucun skill, le menu « Choisir… » était vide : on ne pouvait ni
+          remplir ni comprendre le formulaire. */}
+      {!engagementsLoading && skills.length === 0 ? (
+        <EmptyState titre="Aucun skill pour l'instant" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
+          Une séance s'enregistre sur un skill. Crée celui que tu veux pratiquer, puis reviens ici.
+        </EmptyState>
+      ) : (
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
         <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
           <option value="">Choisir…</option>
@@ -141,6 +149,7 @@ export default function NouvelleEntree() {
           </Button>
         </div>
       </form>
+      )}
     </div>
   );
 }

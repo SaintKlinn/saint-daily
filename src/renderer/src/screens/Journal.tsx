@@ -125,7 +125,9 @@ export default function Journal() {
       {loading ? (
         <EmptyState role="status">Chargement…</EmptyState>
       ) : rows.length === 0 ? (
-        <EmptyState>Aucune séance enregistrée pour l'instant.</EmptyState>
+        <EmptyState titre="Ton journal est vide" action={{ libelle: 'Logger une séance', vers: '/entree/nouvelle' }}>
+          Chaque séance que tu enregistres y apparaît, avec sa note et ton humeur, aux côtés de tes bilans du soir.
+        </EmptyState>
       ) : visible.length === 0 ? (
         <EmptyState>Aucun résultat pour « {search.trim()} ».</EmptyState>
       ) : (

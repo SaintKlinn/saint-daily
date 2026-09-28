@@ -140,7 +140,10 @@ export default function Bilan() {
       {loading ? (
         <EmptyState role="status">Chargement…</EmptyState>
       ) : entries.length === 0 ? (
-        <EmptyState>Pas encore assez d'historique pour dresser un bilan.</EmptyState>
+        <EmptyState titre="Pas encore de bilan" action={{ libelle: 'Logger une séance', vers: '/entree/nouvelle' }}>
+          Le Bilan se construit à partir de tes séances : série, tendance sur douze semaines, activité de l'année. Une
+          première séance suffit pour qu'il prenne forme.
+        </EmptyState>
       ) : (
         <>
           {/* Les chiffres clés d'abord, avec la carte d'Accueil : c'est ce

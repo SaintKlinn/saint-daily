@@ -9,6 +9,7 @@ import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import SkillPicker from '../components/SkillPicker';
+import EmptyState from '../components/EmptyState';
 import PointsCycles from '../components/PointsCycles';
 import { colors } from '../theme/colors';
 import { EASE_SORTIE } from '../theme/mouvement';
@@ -167,73 +168,91 @@ export default function Pomodoro() {
             Pomodoro pour <span className="text-champagne">{selectedSkill.name}</span>
           </p>
         )}
-        <SkillPicker
-          skills={activeSkills}
-          entriesBySkill={entriesBySkill}
-          value={skillId}
-          onChange={setSkillId}
-          loading={skillsLoading}
-        />
-        {entriesError && (
-          <p role="alert" className="text-corps text-danger">
-            {entriesError}
-          </p>
-        )}
-        {selectedSkill && (
-          <div className="flex flex-col gap-2">
-            <p className="text-libelle uppercase tracking-[0.04em] text-muted">Durée de travail</p>
-            <div className="flex flex-wrap items-center gap-2">
-              {PRESET_WORK_MINUTES.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => {
-                    setWorkMinutesChoice(preset);
-                    setCustomMinutesInput('');
-                  }}
-                  aria-pressed={effectiveWorkMinutes === preset}
-                  className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
-                >
-                  {preset} min
-                </button>
-              ))}
-              <input
-                type="number"
-                min={1}
-                max={240}
-                value={
-                  customMinutesInput !== ''
-                    ? customMinutesInput
-                    : effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes)
-                      ? String(effectiveWorkMinutes)
-                      : ''
-                }
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setCustomMinutesInput(raw);
-                  if (raw.trim() === '') {
-                    setWorkMinutesChoice(null);
-                    return;
+        {/* Sans skill actif, le sélecteur disait « Aucun skill ne
+            correspond » au-dessus d'un Démarrer grisé : une impasse. On dit
+            plutôt ce qu'il manque et on y mène. Pas pendant le chargement,
+            ni pour une cible arrivée par lien profond (tâche planifiée). */}
+        {!skillsLoading && activeSkills.length === 0 && !selectedSkill ? (
+          skills.length === 0 ? (
+            <EmptyState titre="Il te faut un skill" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
+              Un pomodoro se rattache à un skill : le temps de chaque cycle est enregistré sur lui.
+            </EmptyState>
+          ) : (
+            <EmptyState action={{ libelle: 'Voir mes skills', vers: '/skills' }}>
+              Tous tes skills sont en pause. Réactives-en un pour lancer un pomodoro dessus.
+            </EmptyState>
+          )
+        ) : (
+          <>
+          <SkillPicker
+            skills={activeSkills}
+            entriesBySkill={entriesBySkill}
+            value={skillId}
+            onChange={setSkillId}
+            loading={skillsLoading}
+          />
+          {entriesError && (
+            <p role="alert" className="text-corps text-danger">
+              {entriesError}
+            </p>
+          )}
+          {selectedSkill && (
+            <div className="flex flex-col gap-2">
+              <p className="text-libelle uppercase tracking-[0.04em] text-muted">Durée de travail</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {PRESET_WORK_MINUTES.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => {
+                      setWorkMinutesChoice(preset);
+                      setCustomMinutesInput('');
+                    }}
+                    aria-pressed={effectiveWorkMinutes === preset}
+                    className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${effectiveWorkMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                  >
+                    {preset} min
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={1}
+                  max={240}
+                  value={
+                    customMinutesInput !== ''
+                      ? customMinutesInput
+                      : effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes)
+                        ? String(effectiveWorkMinutes)
+                        : ''
                   }
-                  const parsed = Math.floor(Number(raw));
-                  if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 240) setWorkMinutesChoice(parsed);
-                }}
-                placeholder="Personnalisé"
-                aria-label="Durée de travail personnalisée en minutes"
-                className={`w-28 border bg-ink-800 px-3 py-2 font-data text-secondaire normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
-              />
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setCustomMinutesInput(raw);
+                    if (raw.trim() === '') {
+                      setWorkMinutesChoice(null);
+                      return;
+                    }
+                    const parsed = Math.floor(Number(raw));
+                    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 240) setWorkMinutesChoice(parsed);
+                  }}
+                  placeholder="Personnalisé"
+                  aria-label="Durée de travail personnalisée en minutes"
+                  className={`w-28 border bg-ink-800 px-3 py-2 font-data text-secondaire normal-case tracking-normal text-champagne placeholder:text-muted ${FOCUS_RING} ${effectiveWorkMinutes !== null && !PRESET_WORK_MINUTES.includes(effectiveWorkMinutes) ? 'border-accent-bright' : 'border-ink-700'}`}
+                />
+              </div>
             </div>
-          </div>
+          )}
+          <Button
+            variant="primary"
+            disabled={!selectedSkill || !durations || effectiveWorkMinutes === null}
+            onClick={() => {
+              if (selectedSkill && effectiveWorkMinutes !== null) start(selectedSkill.id, selectedSkill.name, effectiveWorkMinutes);
+            }}
+          >
+            Démarrer
+          </Button>
+          </>
         )}
-        <Button
-          variant="primary"
-          disabled={!selectedSkill || !durations || effectiveWorkMinutes === null}
-          onClick={() => {
-            if (selectedSkill && effectiveWorkMinutes !== null) start(selectedSkill.id, selectedSkill.name, effectiveWorkMinutes);
-          }}
-        >
-          Démarrer
-        </Button>
       </motion.div>
     );
   }

@@ -23,7 +23,7 @@ const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
 export default function ListeProjets() {
-  const { engagements, error } = useEngagements();
+  const { engagements, loading, error } = useEngagements();
   const [voirArchives, setVoirArchives] = useState(false);
   // Le filtre est EN AMONT du tri, sur les projets et non sur les lignes
   // dérivées : un projet archivé ne doit pas seulement disparaître de
@@ -159,6 +159,9 @@ export default function ListeProjets() {
         </p>
       )}
 
+      {/* Hors du conteneur de liste, pour la même raison que dans
+          ListeSkills : son fond plein dénaturait le cadre de l'EmptyState. */}
+      {lignesTriees.length > 0 && (
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
         {lignesTriees.map((ligne) => {
           const archive = projetsArchives.has(ligne.id);
@@ -187,13 +190,17 @@ export default function ListeProjets() {
             </Link>
           );
         })}
-        {lignesTriees.length === 0 &&
-          (projetsArchivesExistent ? (
-            <EmptyState>Tous les projets sont en pause.</EmptyState>
-          ) : (
-            <EmptyState>Aucun projet pour l'instant.</EmptyState>
-          ))}
       </div>
+      )}
+      {!loading &&
+        lignesTriees.length === 0 &&
+        (projetsArchivesExistent ? (
+          <EmptyState>Tous tes projets sont en pause. Active « Voir les projets en pause » pour les retrouver.</EmptyState>
+        ) : (
+          <EmptyState titre="Aucun projet pour l'instant" action={{ libelle: 'Créer un projet', vers: '/projets/nouveau' }}>
+            Un projet regroupe des skills et des tâches autour d'un même but, avec ses jalons et son avancement.
+          </EmptyState>
+        ))}
     </div>
   );
 }

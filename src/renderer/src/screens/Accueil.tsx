@@ -8,6 +8,7 @@ import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
+import PremiersPas from '../components/PremiersPas';
 import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import StatCard from '../components/StatCard';
@@ -33,7 +34,7 @@ const notifiedSkillIds = new Set<string>();
 export default function Accueil() {
   const { session } = useAuth();
   const salut = salutation(session?.user);
-  const { engagements, error: skillsError, setArchived } = useEngagements();
+  const { engagements, loading: engagementsLoading, error: skillsError, setArchived } = useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const { settings, updateSettings } = useSettings();
   const activeEngagements = useMemo(() => engagements.filter((e) => !e.archivedAt), [engagements]);
@@ -380,77 +381,84 @@ export default function Accueil() {
         </p>
       )}
 
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={listVariants}
-        transition={{ delayChildren: 0.25 }}
-        className="grid grid-cols-3 gap-6"
-      >
-        <StatCard label="Skills actifs" valeur={activeSkills.length} rayVariant={2} />
-        <StatCard
-          label="Séries en cours"
-          valeur={stats.filter((s) => s.streak > 0).length}
-          hero
-          rayVariant={4}
-        />
-        <StatCard label="Pratiqué ce mois-ci" valeur={minutesThisMonth} format={formatMinutes} rayVariant={0} />
-      </motion.section>
-
-      <section className="flex min-h-0 flex-1 flex-col gap-2">
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-          className="font-sans text-corps font-semibold text-champagne"
+      {/* Compte neuf (aucun skill, même en pause) : des chiffres à zéro et
+          des rappels forcément vides ne disent rien. PremiersPas dit par où
+          commencer. Attendu après le chargement, pour ne pas le faire
+          clignoter chez quelqu'un qui a déjà des skills. */}
+      {!engagementsLoading && skills.length === 0 ? (
+        <PremiersPas />
+      ) : (
+        <>
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={listVariants}
+          transition={{ delayChildren: 0.25 }}
+          className="grid grid-cols-3 gap-6"
         >
-          Rappels dus
-        </motion.h2>
-        {activeSkills.length === 0 ? (
-          <EmptyState>
-            Aucun skill actif pour l'instant.{' '}
-            <Link to="/skills/nouveau" className="text-accent-bright underline">
-              Crée ton premier skill
-            </Link>
-            .
-          </EmptyState>
-        ) : dueSkills.length === 0 ? (
-          <EmptyState>Rien de dû — tout est à jour.</EmptyState>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={listVariants}
-            transition={{ delayChildren: 0.45 }}
-            className="flex flex-col"
+          <StatCard label="Skills actifs" valeur={activeSkills.length} rayVariant={2} />
+          <StatCard
+            label="Séries en cours"
+            valeur={stats.filter((s) => s.streak > 0).length}
+            hero
+            rayVariant={4}
+          />
+          <StatCard label="Pratiqué ce mois-ci" valeur={minutesThisMonth} format={formatMinutes} rayVariant={0} />
+        </motion.section>
+
+        <section className="flex min-h-0 flex-1 flex-col gap-2">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+            className="font-sans text-corps font-semibold text-champagne"
           >
-            {dueSkills.map(({ skill, daysSince }, i) => (
-              <motion.div
-                key={skill.id}
-                variants={itemVariants}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-center gap-2 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
-              >
-                <ProgressRing
-                  size={36}
-                  radius={15}
-                  filled={settings ? ringFillFromDaysSince(daysSince, settings.reminderThresholdDays) : 0}
-                />
-                <Link to={`/skills/${skill.id}`} className="flex-1 transition-opacity duration-150 hover:opacity-80">
-                  <p className="font-serif text-titre text-champagne">{skill.name}</p>
-                  {skill.tags.length > 0 && (
-                    <p className="mt-1 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
-                  )}
-                </Link>
-                <p className="font-data text-secondaire text-muted">pas pratiqué depuis {daysSince} j</p>
-                <Link to={`/entree/nouvelle?skillId=${skill.id}`} className={buttonClassName('accent-outline', 'sm')}>
-                  Logger
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </section>
+            Rappels dus
+          </motion.h2>
+          {activeSkills.length === 0 ? (
+            // Des skills existent (sinon c'est PremiersPas), mais tous en pause.
+            <EmptyState action={{ libelle: 'Voir mes skills', vers: '/skills' }}>
+              Tous tes skills sont en pause : aucun rappel ne tombe tant qu'ils le restent.
+            </EmptyState>
+          ) : dueSkills.length === 0 ? (
+            <EmptyState>Rien de dû — tout est à jour.</EmptyState>
+          ) : (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={listVariants}
+              transition={{ delayChildren: 0.45 }}
+              className="flex flex-col"
+            >
+              {dueSkills.map(({ skill, daysSince }, i) => (
+                <motion.div
+                  key={skill.id}
+                  variants={itemVariants}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className={`flex items-center gap-2 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
+                >
+                  <ProgressRing
+                    size={36}
+                    radius={15}
+                    filled={settings ? ringFillFromDaysSince(daysSince, settings.reminderThresholdDays) : 0}
+                  />
+                  <Link to={`/skills/${skill.id}`} className="flex-1 transition-opacity duration-150 hover:opacity-80">
+                    <p className="font-serif text-titre text-champagne">{skill.name}</p>
+                    {skill.tags.length > 0 && (
+                      <p className="mt-1 text-secondaire text-muted">{skill.tags.map((t) => `#${t}`).join(' ')}</p>
+                    )}
+                  </Link>
+                  <p className="font-data text-secondaire text-muted">pas pratiqué depuis {daysSince} j</p>
+                  <Link to={`/entree/nouvelle?skillId=${skill.id}`} className={buttonClassName('accent-outline', 'sm')}>
+                    Logger
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </section>
+        </>
+      )}
 
       <section className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
