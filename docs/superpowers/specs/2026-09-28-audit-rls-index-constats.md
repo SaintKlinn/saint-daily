@@ -101,12 +101,12 @@ réelle, jouée sous le rôle concerné.
   - **La correction possible :** ajouter à chaque `with check` une condition
     `exists (…)` sur la propriété de l'engagement référencé, au prix d'une
     sous-requête par écriture.
-- **Colonnes jamais utilisées.** `engagement.due_at` et
-  `app_settings.current_project_id` (0016) ne sont lues ni écrites nulle part
-  dans l'app. La seconde est aussi une clé étrangère sans index, sans
-  conséquence sur une table d'une ligne par compte. Elles ne sont pas
-  supprimées : l'opération est irréversible, et ces colonnes sont peut-être
-  prévues pour une suite.
+- **Colonne jamais utilisée.** `app_settings.current_project_id` (0016)
+  n'est lue ni écrite nulle part dans l'app. C'est aussi une clé étrangère
+  sans index, sans conséquence sur une table d'une ligne par compte. Elle
+  n'est pas supprimée : l'opération est irréversible, et elle est prévue pour
+  le chantier courant sur l'Accueil. (`engagement.due_at`, citée ici à
+  l'origine, est depuis exposée : c'est l'échéance des projets.)
 - **Index devenus redondants.** `practice_entry_user_id_idx` et
   `practice_entry_skill_id_idx` sont couverts par les nouveaux index
   composites, qui commencent par la même colonne. Les garder ne coûte qu'un peu

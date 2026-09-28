@@ -27,6 +27,8 @@ export interface Engagement {
   goalPeriod: GoalPeriod | null;
   goalMetric: GoalMetric | null;
   goalTarget: number | null;
+  // Échéance d'un projet (voir lib/echeances.ts) ; null ailleurs.
+  dueAt: string | null;
   createdAt: string;
 }
 

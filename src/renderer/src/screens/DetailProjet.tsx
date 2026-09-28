@@ -14,6 +14,15 @@ import {
 import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
 import { computeGoalProgress } from '../lib/motivation';
+import {
+  dateEcheance,
+  echeanceDepuisChamp,
+  echeanceVersChamp,
+  HORIZON_ECHEANCE_JOURS,
+  joursAvantEcheance,
+  libelleEcheance,
+  prochainesDates,
+} from '../lib/echeances';
 import type { GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import EmptyState from '../components/EmptyState';
@@ -148,6 +157,22 @@ export default function DetailProjet() {
     const { error: tagsError } = await updateEngagement(project.id, { tags: analyserTags(saisie ?? '') });
     if (tagsError) setActionError(tagsError);
     return { error: tagsError };
+  }
+
+  // Les tâches planifiées parmi les membres : les dates du chantier, qu'on
+  // ne voyait jusqu'ici qu'en parcourant le calendrier semaine par semaine.
+  const dates = useMemo(() => prochainesDates(children), [children]);
+  const joursEcheance = project?.dueAt ? joursAvantEcheance(project.dueAt) : null;
+
+  async function handleEcheance(valeur: string) {
+    if (!project) return;
+    // Le champ date émet aussi pendant la frappe de l'année (« 0002 ») :
+    // on n'enregistre qu'une date plausible, ou l'effacement.
+    const iso = valeur === '' ? null : echeanceDepuisChamp(valeur);
+    if (valeur !== '' && (!iso || new Date(iso).getFullYear() < 2000 || new Date(iso).getFullYear() > 2100)) return;
+    setActionError(null);
+    const { error: echeanceError } = await updateEngagement(project.id, { dueAt: iso });
+    if (echeanceError) setActionError(echeanceError);
   }
 
   async function handleArchiver() {
@@ -294,7 +319,75 @@ export default function DetailProjet() {
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Dernière activité</p>
           <p className="mt-1 text-corps text-champagne">{dormance}</p>
         </div>
+        <div>
+          <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Échéance</p>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            {/* Non contrôlé : contrôlé, le champ reviendrait à l'ancienne
+                date à chaque année intermédiaire ignorée (« 0002 ») et on ne
+                pourrait plus taper l'année au clavier. */}
+            <input
+              key={project.id}
+              type="date"
+              defaultValue={echeanceVersChamp(project.dueAt)}
+              onChange={(e) => void handleEcheance(e.target.value)}
+              aria-label="Échéance du projet"
+              className={`h-8 border border-ink-700 bg-ink-800 px-2 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING}`}
+            />
+            {joursEcheance !== null && (
+              <span
+                className={`text-corps ${joursEcheance < 0 ? 'text-danger' : joursEcheance <= HORIZON_ECHEANCE_JOURS ? 'text-accent-bright' : 'text-champagne'}`}
+              >
+                {libelleEcheance(joursEcheance)}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
+
+      <section>
+        <div className="mb-1 flex items-baseline justify-between">
+          <h2 className="font-sans text-corps font-semibold text-champagne">Prochaines dates</h2>
+          <Link to="/calendrier" className="text-secondaire text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+            Voir le calendrier
+          </Link>
+        </div>
+        {dates.length === 0 && !project.dueAt ? (
+          <p className="text-secondaire text-muted">
+            Aucune date. Planifie une tâche depuis le calendrier et rattache-la à ce projet, ou fixe une échéance.
+          </p>
+        ) : (
+          <ul className="flex flex-col border-b border-ink-700">
+            {dates.map((tache) => (
+              <li
+                key={tache.id}
+                // L'échéance se range à sa date parmi les tâches, par `order`
+                // plutôt qu'en triant deux types différents dans une liste.
+                style={{ order: project.dueAt && tache.scheduledAt! > project.dueAt ? 2 : 0 }}
+                className="flex items-baseline gap-4 border-t border-ink-700 py-2"
+              >
+                <span className="w-44 shrink-0 font-data text-secondaire text-muted">
+                  {new Date(tache.scheduledAt as string).toLocaleString('fr-FR', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <span className="text-corps text-champagne">{tache.name}</span>
+              </li>
+            ))}
+            {project.dueAt && (
+              <li style={{ order: 1 }} className="flex items-baseline gap-4 border-t border-ink-700 py-2">
+                <span className="w-44 shrink-0 font-data text-secondaire text-muted first-letter:uppercase">
+                  {dateEcheance(project.dueAt)}
+                </span>
+                <span className="text-corps text-accent-bright">Échéance du projet</span>
+              </li>
+            )}
+          </ul>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>

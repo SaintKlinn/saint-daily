@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
@@ -20,6 +20,7 @@ import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
+import { jourDansLaSemaine } from '../lib/echeances';
 import type { Engagement, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -123,6 +124,18 @@ export default function Calendrier() {
     }
     return byDay;
   }, [activeEngagements, entriesBySkill, settings?.showPracticeInCalendar, weekStart]);
+
+  // Les échéances des projets, posées sur leur jour dans l'en-tête : une
+  // échéance n'a pas d'heure, elle n'a donc pas sa place dans la grille.
+  const echeancesParJour = useMemo(() => {
+    const parJour: Record<number, Engagement[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    for (const projet of projects) {
+      if (!projet.dueAt || projet.archivedAt) continue;
+      const index = jourDansLaSemaine(projet.dueAt, weekStart);
+      if (index !== null) parJour[index].push(projet);
+    }
+    return parJour;
+  }, [projects, weekStart]);
 
   const weekRangeLabel = useMemo(() => {
     const end = addDays(weekStart, 6);
@@ -485,6 +498,16 @@ export default function Calendrier() {
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
               <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
               <p className="font-serif text-titre text-champagne">{day.getDate()}</p>
+              {echeancesParJour[i].map((projet) => (
+                <Link
+                  key={projet.id}
+                  to={`/projets/${projet.id}`}
+                  title={`Échéance : ${projet.name}`}
+                  className={`mx-1 mt-1 block truncate border border-accent-bright/60 px-1 font-data text-libelle text-accent-bright hover:bg-accent-bright/10 ${FOCUS_RING}`}
+                >
+                  Échéance · {projet.name}
+                </Link>
+              ))}
             </div>
           ))}
           <div>

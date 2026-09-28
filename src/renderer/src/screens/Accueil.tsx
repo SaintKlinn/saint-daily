@@ -7,6 +7,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { useJoursRepos } from '../lib/joursRepos';
+import { dateEcheance, echeancesProches, libelleEcheance } from '../lib/echeances';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
 import PremiersPas from '../components/PremiersPas';
@@ -211,6 +212,10 @@ export default function Accueil() {
       }),
     [activeSkills, entriesBySkill, repos]
   );
+
+  // L'Accueil est organisé par l'urgence : un projet n'y entrait jamais,
+  // puisqu'un chantier n'est jamais « dû ». Son échéance, elle, l'est.
+  const echeances = useMemo(() => echeancesProches(engagements, now), [engagements, now]);
 
   const dueSkills = useMemo(
     () => (settings ? stats.filter((s) => s.daysSince !== null && s.daysSince >= settings.reminderThresholdDays) : []),
@@ -464,6 +469,27 @@ export default function Accueil() {
           )}
         </section>
         </>
+      )}
+
+      {echeances.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-sans text-corps font-semibold text-champagne">Échéances</h2>
+          <div className="flex flex-col">
+            {echeances.map(({ projet, jours }, i) => (
+              <Link
+                key={projet.id}
+                to={`/projets/${projet.id}`}
+                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 transition-colors hover:bg-ink-700 ${i > 0 ? 'border-t-0' : ''} ${FOCUS_RING}`}
+              >
+                <p className="flex-1 font-serif text-titre text-champagne">{projet.name}</p>
+                <p className="font-data text-secondaire text-muted first-letter:uppercase">{dateEcheance(projet.dueAt as string)}</p>
+                <p className={`w-40 text-right font-data text-secondaire ${jours < 0 ? 'text-danger' : 'text-accent-bright'}`}>
+                  {libelleEcheance(jours)}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="flex min-h-0 flex-1 flex-col gap-2">
