@@ -140,7 +140,7 @@ export default function NouvelleEntree() {
           label="Tags de la séance (optionnels, séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="technique, difficile"
+          placeholder="ex. technique, difficile"
         />
         {templates.length > 0 && (
           <div className="flex flex-col gap-2">

@@ -57,7 +57,7 @@ export default function NouveauSkill() {
           label="Tags (séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="Musique, Créatif"
+          placeholder="ex. Musique, Créatif"
         />
         <SelectField label="Niveau de départ" value={genericLevel} onChange={(e) => setGenericLevel(e.target.value as GenericLevel)}>
           <option value="debutant">Débutant</option>

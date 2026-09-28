@@ -253,7 +253,13 @@ export default function Pomodoro() {
               if (selectedSkill && effectiveWorkMinutes !== null) start(selectedSkill.id, selectedSkill.name, effectiveWorkMinutes);
             }}
           >
-            Démarrer
+            {/* Le bouton dit ce qui manque plutôt que d'être grisé sans
+                explication (audit graphique, M11). */}
+            {!selectedSkill
+              ? 'Choisis un skill ou un projet'
+              : effectiveWorkMinutes === null
+                ? 'Choisis une durée'
+                : 'Démarrer'}
           </Button>
           </>
         )}

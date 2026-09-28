@@ -280,7 +280,7 @@ export default function Accueil() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !eveningSaving) void handleSaveEvening();
               }}
-              placeholder="Journée dense mais satisfaisante."
+              placeholder="ex. Journée dense mais satisfaisante."
               aria-label="Bilan de la journée"
               maxLength={280}
               className={`min-w-0 flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}

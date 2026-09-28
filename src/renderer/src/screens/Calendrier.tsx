@@ -492,7 +492,7 @@ export default function Calendrier() {
         ref={scrollContainerRef}
         className="max-h-[max(360px,calc(100vh-240px))] overflow-y-auto border border-ink-700"
       >
-        <div className="grid grid-cols-[50px_repeat(7,1fr)]">
+        <div className="grid grid-cols-[50px_repeat(7,minmax(0,1fr))]">
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">

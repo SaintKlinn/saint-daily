@@ -134,7 +134,7 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
             label="Tags de la séance (séparés par des virgules)"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="technique, difficile"
+            placeholder="Aucun tag"
           />
           <TextAreaField label="Note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
           {erreur && (

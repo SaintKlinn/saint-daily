@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Texte d'exemple des champs : italique et un ton en retrait, pour ne jamais
+   se lire comme une valeur déjà saisie (audit graphique, H3). Le préflight
+   de Tailwind pose `opacity: 1` dans la même couche ; cette règle vient après. */
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    font-style: italic;
+    opacity: 0.75;
+  }
+}
+
 /* Révélation du logo (voir LogoMark.tsx, prop `animation="revelation"`) : chaque trait
    se dessine du centre vers sa longueur réelle puis reste à son opacité
    cible — pas de boucle, c'est un geste d'ouverture ponctuel (écran de

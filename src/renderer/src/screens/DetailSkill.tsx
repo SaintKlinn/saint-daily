@@ -7,6 +7,7 @@ import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
+import { formatMinutes } from '../lib/retrospective';
 import { useJoursRepos } from '../lib/joursRepos';
 import { projetAffiche } from '../lib/projets';
 import { MOOD_LABELS } from '../lib/seances';
@@ -102,10 +103,9 @@ export default function DetailSkill() {
 
 
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
-  const totalHours = useMemo(
-    () => Math.round((entries.reduce((sum, e) => sum + e.durationMinutes, 0) / 60) * 10) / 10,
-    [entries]
-  );
+  // Même format que partout ailleurs (« 38h 48 ») plutôt qu'un décimal
+  // « 38.8h » propre à ce panneau (audit graphique, B4).
+  const totalMinutes = useMemo(() => entries.reduce((sum, e) => sum + e.durationMinutes, 0), [entries]);
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
   const bestStreak = useMemo(() => calculateBestStreak(entries, repos), [entries, repos]);
   const badges = useMemo(() => computeBadges(entries, repos), [entries, repos]);
@@ -293,7 +293,7 @@ export default function DetailSkill() {
           <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
-          <p className="relative font-data text-titre-ecran text-champagne">{totalHours}h</p>
+          <p className="relative font-data text-titre-ecran text-champagne">{formatMinutes(totalMinutes)}</p>
           <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">cumulées</p>
           <p className="relative text-center text-corps text-muted">
             Série :{' '}
@@ -308,7 +308,9 @@ export default function DetailSkill() {
               {streak} j
             </motion.span>{' '}
             · dernière pratique{' '}
-            {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
+            <span className="whitespace-nowrap">
+              {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
+            </span>
           </p>
         </div>
 
@@ -317,7 +319,7 @@ export default function DetailSkill() {
             <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
             {goal ? (
               <div className="flex flex-col gap-3">
-                <GoalProgress progress={goal} />
+                <GoalProgress progress={goal} periode={skill.goalPeriod} />
                 <Button
                   type="button"
                   variant="secondary"

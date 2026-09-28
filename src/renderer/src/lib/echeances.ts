@@ -52,6 +52,15 @@ export function libelleEcheance(jours: number): string {
   return `Dans ${Math.round(jours / 30)} mois`;
 }
 
+/** Format court commun aux listes de dates (« mar. 29 sept. », suivi de
+ *  « · 12:00 » quand l'heure compte) : un seul format par colonne, quelle
+ *  que soit la nature de la ligne. */
+export function dateCourte(iso: string, avecHeure = false): string {
+  const d = new Date(iso);
+  const jour = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  return avecHeure ? `${jour} · ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : jour;
+}
+
 /** La date seule, pour l'afficher à côté du délai. */
 export function dateEcheance(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });

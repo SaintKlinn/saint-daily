@@ -419,7 +419,7 @@ export default function Reglages() {
             value={newTemplateText}
             onChange={(e) => setNewTemplateText(e.target.value)}
             aria-label="Nouveau modèle de note"
-            placeholder="Ex. : Séance courte, peu de progrès aujourd'hui"
+            placeholder="ex. Séance courte, peu de progrès aujourd'hui"
             className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />
           <Button type="submit" variant="secondary" size="sm" disabled={!newTemplateText.trim()}>

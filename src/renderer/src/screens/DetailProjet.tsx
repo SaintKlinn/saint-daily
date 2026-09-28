@@ -18,7 +18,7 @@ import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
 import { computeGoalProgress } from '../lib/motivation';
 import {
-  dateEcheance,
+  dateCourte,
   echeanceDepuisChamp,
   echeanceVersChamp,
   HORIZON_ECHEANCE_JOURS,
@@ -384,7 +384,11 @@ export default function DetailProjet() {
 
       <section>
         <div className="mb-1 flex items-baseline justify-between">
-          <h2 className="font-sans text-corps font-semibold text-champagne">Prochaines dates</h2>
+          {/* « Prochaines » ne vaut que tant qu'aucune ligne n'est passée :
+              une échéance dépassée reste listée, en tête et en rouge. */}
+          <h2 className="font-sans text-corps font-semibold text-champagne">
+            {joursEcheance !== null && joursEcheance < 0 ? 'Dates' : 'Prochaines dates'}
+          </h2>
           <Link to="/calendrier" className="text-secondaire text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
             Voir le calendrier
           </Link>
@@ -404,23 +408,22 @@ export default function DetailProjet() {
                 className="flex items-baseline gap-4 border-t border-ink-700 py-2"
               >
                 <span className="w-44 shrink-0 font-data text-secondaire text-muted">
-                  {new Date(tache.scheduledAt as string).toLocaleString('fr-FR', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {dateCourte(tache.scheduledAt as string, true)}
                 </span>
                 <span className="text-corps text-champagne">{tache.name}</span>
               </li>
             ))}
             {project.dueAt && (
-              <li style={{ order: 1 }} className="flex items-baseline gap-4 border-t border-ink-700 py-2">
-                <span className="w-44 shrink-0 font-data text-secondaire text-muted first-letter:uppercase">
-                  {dateEcheance(project.dueAt)}
-                </span>
-                <span className="text-corps text-accent-bright">Échéance du projet</span>
+              <li
+                style={{ order: joursEcheance !== null && joursEcheance < 0 ? -1 : 1 }}
+                className="flex items-baseline gap-4 border-t border-ink-700 py-2"
+              >
+                <span className="w-44 shrink-0 font-data text-secondaire text-muted">{dateCourte(project.dueAt)}</span>
+                {joursEcheance !== null && joursEcheance < 0 ? (
+                  <span className="text-corps text-danger">Échéance du projet · {libelleEcheance(joursEcheance).toLowerCase()}</span>
+                ) : (
+                  <span className="text-corps text-accent-bright">Échéance du projet</span>
+                )}
               </li>
             )}
           </ul>
@@ -431,7 +434,7 @@ export default function DetailProjet() {
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
         {objectif ? (
           <div className="flex flex-col gap-3">
-            <GoalProgress progress={objectif} />
+            <GoalProgress progress={objectif} periode={project.goalPeriod} />
             <Button
               type="button"
               variant="secondary"
@@ -564,7 +567,7 @@ export default function DetailProjet() {
           valeur={project.tags.join(', ')}
           onSave={handleTags}
           ariaLabel="Tags du projet"
-          placeholder="Maison, Perso"
+          placeholder="ex. Maison, Perso"
           confirmation="Tags enregistrés."
         />
       </section>

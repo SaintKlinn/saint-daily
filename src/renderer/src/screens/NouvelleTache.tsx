@@ -156,7 +156,7 @@ export default function NouvelleTache() {
           label="Tags (optionnels, séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="Perso, Urgent"
+          placeholder="ex. Perso, Urgent"
         />
         <FormField
           label="Planification"

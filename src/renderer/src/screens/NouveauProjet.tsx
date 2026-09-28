@@ -51,7 +51,7 @@ export default function NouveauProjet() {
           label="Tags (séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="Maison, Perso"
+          placeholder="ex. Maison, Perso"
         />
         <TextAreaField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         {error && (
