@@ -9,7 +9,12 @@ import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
 import SkillPicker from '../components/SkillPicker';
+import PointsCycles from '../components/PointsCycles';
 import { colors } from '../theme/colors';
+import { EASE_SORTIE } from '../theme/mouvement';
+import { derniersJours } from '../lib/historiquePomodoro';
+import { resumeRecap } from '../lib/recapPomodoro';
+import { formatMinutes } from '../lib/retrospective';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -38,6 +43,9 @@ export default function Pomodoro() {
     extend,
     skipBreak,
     restored,
+    historique,
+    recap,
+    fermerRecap,
     stop,
     switchEngagement,
     switching,
@@ -96,6 +104,9 @@ export default function Pomodoro() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [session, advance, resume, pause]);
 
+  const aujourdhui = derniersJours(historique, 1)[0];
+  const resumeFin = recap ? resumeRecap(recap) : null;
+
   if (!session) {
     return (
       <motion.div
@@ -104,7 +115,43 @@ export default function Pomodoro() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto flex w-full max-w-md flex-col gap-6"
       >
-        <h1 className="font-serif text-titre-ecran text-champagne">Pomodoro</h1>
+        <div>
+          <h1 className="font-serif text-titre-ecran text-champagne">Pomodoro</h1>
+          {/* Toujours affiché, zéro compris : c'est un repère de la journée,
+              pas une récompense qui n'apparaîtrait qu'une fois méritée. */}
+          <p className="mt-1 text-secondaire text-muted">
+            Aujourd'hui : {aujourdhui.cycles} pomodoro{aujourdhui.cycles > 1 ? 's' : ''}
+            {aujourdhui.minutes > 0 && ` · ${formatMinutes(aujourdhui.minutes)}`}
+          </p>
+        </div>
+        {resumeFin && (
+          // Clôt la session qu'on vient d'arrêter sur ce qu'elle a produit,
+          // plutôt que de retomber sans transition sur l'écran de démarrage.
+          <motion.div
+            role="status"
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.45, ease: EASE_SORTIE }}
+            className="relative flex items-start justify-between gap-4 overflow-hidden border border-accent-bright/35 px-6 py-4"
+            style={{
+              background: `linear-gradient(160deg, ${colors.ink[800]} 0%, ${colors.ink[900]} 70%, ${colors.accent.bright}14 100%)`,
+            }}
+          >
+            <RayCorner variant={2} />
+            <div className="relative">
+              <p className="font-serif text-titre text-accent-bright">{resumeFin.titre}</p>
+              <p className="mt-1 text-secondaire text-muted">{resumeFin.detail}</p>
+            </div>
+            <button
+              type="button"
+              onClick={fermerRecap}
+              aria-label="Fermer le récapitulatif"
+              className={`relative shrink-0 px-2 py-1 font-data text-libelle uppercase tracking-[0.1em] text-muted hover:text-champagne ${FOCUS_RING}`}
+            >
+              OK
+            </button>
+          </motion.div>
+        )}
         {error && (
           <p role="alert" className="text-corps text-danger">
             {error}
@@ -202,6 +249,7 @@ export default function Pomodoro() {
   const minutes = Math.floor(remainingMs / 60_000);
   const seconds = Math.floor((remainingMs % 60_000) / 1000);
   const phaseLabel = session.phase === 'work' ? 'Travail' : session.phase === 'shortBreak' ? 'Pause courte' : 'Pause longue';
+  const enPause = session.phase !== 'work';
 
   return (
     <motion.div
@@ -210,10 +258,29 @@ export default function Pomodoro() {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-hidden border border-ink-700 bg-ink-900 p-8"
     >
+      {/* Deux halos superposés, l'un or pour le travail, l'autre vert d'eau
+          pour les pauses, en fondu enchaîné : la carte change d'ambiance au
+          changement de phase sans qu'un dégradé ait à s'interpoler (ce que
+          CSS ne sait pas faire). */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${enPause ? 'opacity-0' : 'opacity-100'}`}
+        style={{ background: `radial-gradient(ellipse 80% 55% at 50% 0%, ${colors.accent.bright}14, transparent 70%)` }}
+      />
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${enPause ? 'opacity-100' : 'opacity-0'}`}
+        style={{ background: `radial-gradient(ellipse 80% 55% at 50% 0%, ${colors.repos}1f, transparent 70%)` }}
+      />
       <RayCorner variant={0} />
-      <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">
-        {session.skillName} · cycle {session.cycleIndex + 1}/{durations.cyclesBeforeLongBreak}
-      </p>
+      <div className="relative flex flex-col items-center gap-3">
+        <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{session.skillName}</p>
+        <PointsCycles
+          cycleIndex={session.cycleIndex}
+          total={durations.cyclesBeforeLongBreak}
+          phase={session.phase}
+        />
+      </div>
       <div className="relative flex flex-col items-center gap-2">
         <motion.div
           className="flex items-center justify-center rounded-full"
@@ -224,7 +291,13 @@ export default function Pomodoro() {
           }
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <ProgressRing size={160} radius={70} strokeWidth={6} filled={Math.max(0, Math.min(1, filled))} />
+          <ProgressRing
+            size={160}
+            radius={70}
+            strokeWidth={6}
+            filled={Math.max(0, Math.min(1, filled))}
+            couleur={enPause ? colors.repos : colors.accent.bright}
+          />
         </motion.div>
         {/* `text-heros` et non `titre-ecran` : c'est le minuteur, donc le
             point focal de l'écran, et la spec lui attribue nommément ce
@@ -234,7 +307,13 @@ export default function Pomodoro() {
         <p className="font-serif text-heros text-champagne">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
-        <p className="font-data text-libelle uppercase tracking-[0.1em] text-accent-bright">{phaseLabel}</p>
+        <p
+          className={`font-data text-libelle uppercase tracking-[0.1em] transition-colors duration-700 ${
+            enPause ? 'text-repos' : 'text-accent-bright'
+          }`}
+        >
+          {phaseLabel}
+        </p>
         {/* Toujours monté (jamais démonté/remonté) : sinon son apparition
             pousserait la rangée de boutons Pause/Continuer/Arrêter/Épingler
             plus bas dans la colonne flex, un reflow perceptible pile au

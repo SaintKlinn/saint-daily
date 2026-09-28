@@ -27,6 +27,11 @@ export interface PomodoroSession {
   // qu'appliqué aux durées : ces dernières valent pour toute la session,
   // une prolongation ne vaut que pour la phase où on l'a demandée.
   extensionMs: number;
+  // Phases de travail menées à leur terme depuis le Démarrer, tous
+  // engagements confondus (un changement d'engagement ne le remet pas à 0).
+  // Sert au récapitulatif de fin de session ; une phase coupée par l'arrêt
+  // n'en fait pas partie.
+  completedCycles: number;
 }
 
 export function startSession(
@@ -45,6 +50,7 @@ export function startSession(
     remainingMsAtPause: null,
     loggedEntryIds: [],
     extensionMs: 0,
+    completedCycles: 0,
   };
 }
 
@@ -101,6 +107,7 @@ export function completePhase(
 ): PhaseCompletionResult {
   const loggedMinutes = session.phase === 'work' ? Math.round(phaseTotalMs(session, durations) / 60_000) : 0;
   const { phase, cycleIndex } = nextPhase(session, durations);
+  const completedCycles = session.completedCycles + (session.phase === 'work' ? 1 : 0);
   if (autoAdvance) {
     return {
       loggedMinutes,
@@ -112,12 +119,21 @@ export function completePhase(
         phaseEndsAt: now + phaseDurationMinutes(phase, durations) * 60_000,
         remainingMsAtPause: null,
         extensionMs: 0,
+        completedCycles,
       },
     };
   }
   return {
     loggedMinutes,
-    next: { ...session, phase, cycleIndex, status: 'awaitingAdvance', remainingMsAtPause: null, extensionMs: 0 },
+    next: {
+      ...session,
+      phase,
+      cycleIndex,
+      status: 'awaitingAdvance',
+      remainingMsAtPause: null,
+      extensionMs: 0,
+      completedCycles,
+    },
   };
 }
 

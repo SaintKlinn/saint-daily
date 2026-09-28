@@ -42,6 +42,7 @@ const donnees: SessionPersistee = {
     remainingMsAtPause: null,
     loggedEntryIds: ['e1'],
     extensionMs: 0,
+    completedCycles: 1,
   },
   durations: { workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, cyclesBeforeLongBreak: 4 },
   note: 'gammes',

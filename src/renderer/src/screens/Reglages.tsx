@@ -10,6 +10,8 @@ import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import { downloadTextFile, exportFileName, fetchExportBundle, toCsv, toJson } from '../lib/exportData';
 import { pseudonyme } from '../lib/identite';
+import { ecrireSonPomodoro, lireSonPomodoro } from '../lib/preferencesAffichage';
+import { jouerCarillon } from '../lib/carillon';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -29,6 +31,7 @@ export default function Reglages() {
   // (contrairement à NouvelleEntree, qui n'agit pas sur les modèles).
   const [templateActionError, setTemplateActionError] = useState<string | null>(null);
   const [autoLaunch, setAutoLaunch] = useState(false);
+  const [sonPomodoro, setSonPomodoro] = useState(() => lireSonPomodoro());
   const [appVersion, setAppVersion] = useState<string | null>(null);
   // Les trois réglages ci-dessous écrivaient en silence : un échec réseau
   // faisait revenir la case/valeur à son état précédent sans un mot
@@ -330,6 +333,19 @@ export default function Reglages() {
           onChange={(checked) => handlePomodoroSettingChange({ pomodoroAutoAdvance: checked })}
           label="Enchaînement automatique"
           description="Passer seul du travail à la pause (et inversement) plutôt que d'attendre un clic"
+        />
+
+        <Toggle
+          checked={sonPomodoro}
+          onChange={(checked) => {
+            setSonPomodoro(checked);
+            ecrireSonPomodoro(checked);
+            // Un aperçu en l'activant : on entend tout de suite ce qu'on
+            // vient d'accepter, plutôt qu'au bout de 25 minutes.
+            if (checked) jouerCarillon('pause');
+          }}
+          label="Son de fin de phase"
+          description="Un carillon discret quand le travail ou la pause se termine — réglage propre à cet ordinateur"
         />
       </section>
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ProgressRing from '../components/ProgressRing';
 import { PauseIcon, PlayIcon, SkipIcon, StopIcon } from '../components/icons';
 import { phaseTotalMs } from '../lib/pomodoroLogic';
+import { colors } from '../theme/colors';
 
 // Boutons carrés à icône : trois libellés texte ne tenaient pas à côté du
 // nom et du temps dans une fenêtre de cette taille.
@@ -62,7 +63,12 @@ export default function PomodoroOverlay() {
       className="flex h-screen w-screen items-center gap-3 border border-ink-700 bg-ink-900/95 px-4 [-webkit-app-region:drag]"
       style={{ borderRadius: 16 }}
     >
-      <ProgressRing size={40} radius={17} filled={Math.max(0, Math.min(1, filled))} />
+      <ProgressRing
+        size={40}
+        radius={17}
+        filled={Math.max(0, Math.min(1, filled))}
+        couleur={session.phase === 'work' ? colors.accent.bright : colors.repos}
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate font-serif text-corps text-champagne">{session.skillName}</p>
         {/* Une seule ligne, jamais repliée : à cette hauteur, un retour à la

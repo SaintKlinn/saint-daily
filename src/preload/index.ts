@@ -24,6 +24,7 @@ interface PomodoroStateSnapshot {
     remainingMsAtPause: number | null;
     loggedEntryIds: string[];
     extensionMs: number;
+    completedCycles: number;
   };
   durations: {
     workMinutes: number;

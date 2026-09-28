@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { join } from 'node:path';
+import { etatBarreDesTaches, type EtatPomodoroMinimal } from './pomodoroTaskbar';
 
 // 360 et non 300 : à 300, « Travail · 02:58 · cycle 2/4 » passait déjà à
 // la ligne à côté de deux boutons, et un troisième (« passer la pause »)
@@ -93,6 +94,28 @@ function buildOverlayWindow(): BrowserWindow {
  * démarrage, après createWindow() — voir src/main/index.ts.
  */
 export function createPomodoroOverlay(getMainWindow: () => BrowserWindow | null): void {
+  // Barre de progression sur l'icône de la barre des tâches (voir
+  // pomodoroTaskbar.ts). Rafraîchie chaque seconde tant qu'une session
+  // tourne, et seulement alors : pas de minuterie en fond sans session.
+  let dernierEtat: EtatPomodoroMinimal | null = null;
+  let intervalleBarre: ReturnType<typeof setInterval> | null = null;
+  function appliquerBarre(): void {
+    const fenetre = getMainWindow();
+    if (!fenetre || fenetre.isDestroyed()) return;
+    const { ratio, mode } = etatBarreDesTaches(dernierEtat);
+    fenetre.setProgressBar(ratio, { mode });
+  }
+  function suivreBarre(etat: EtatPomodoroMinimal | null): void {
+    dernierEtat = etat;
+    appliquerBarre();
+    const tourne = etat?.session.status === 'running';
+    if (tourne && !intervalleBarre) intervalleBarre = setInterval(appliquerBarre, 1000);
+    if (!tourne && intervalleBarre) {
+      clearInterval(intervalleBarre);
+      intervalleBarre = null;
+    }
+  }
+
   app.on('before-quit', () => {
     isQuitting = true;
   });
@@ -110,6 +133,7 @@ export function createPomodoroOverlay(getMainWindow: () => BrowserWindow | null)
       applyOverlayVisibility();
     }
     overlayWindow?.webContents.send('pomodoro:state', state);
+    suivreBarre(state ?? null);
   });
 
   // Overlay -> fenêtre principale : relaie chaque action de contrôle. La

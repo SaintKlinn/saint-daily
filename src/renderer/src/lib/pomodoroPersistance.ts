@@ -59,7 +59,8 @@ function estSession(v: unknown): v is PomodoroSession {
     (s.remainingMsAtPause === null || estNombre(s.remainingMsAtPause)) &&
     Array.isArray(s.loggedEntryIds) &&
     s.loggedEntryIds.every((id) => typeof id === 'string') &&
-    estNombre(s.extensionMs)
+    estNombre(s.extensionMs) &&
+    estNombre(s.completedCycles)
   );
 }
 

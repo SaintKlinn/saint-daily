@@ -21,6 +21,10 @@ import {
   type PomodoroSession,
 } from './pomodoroLogic';
 import { ecrireSessionPersistee, effacerSessionPersistee, lireSessionPersistee } from './pomodoroPersistance';
+import { ajouterCycle, ecrireHistorique, lireHistorique, type HistoriquePomodoro } from './historiquePomodoro';
+import { ajouterAuRecap, type LigneRecap, type RecapSession } from './recapPomodoro';
+import { jouerCarillon } from './carillon';
+import { lireSonPomodoro } from './preferencesAffichage';
 
 // Cadence à laquelle une session qui tourne note « l'app est encore
 // vivante ». C'est l'imprécision maximale de la reprise après un plantage :
@@ -44,6 +48,12 @@ interface PomodoroContextValue {
   // Vrai tant que la session affichée est celle retrouvée au lancement,
   // après une fermeture de l'app, et que personne n'y a encore touché.
   restored: boolean;
+  // Cycles terminés par jour, sur cette machine (voir historiquePomodoro.ts).
+  historique: HistoriquePomodoro;
+  // Récapitulatif de la dernière session arrêtée, jusqu'à ce qu'on le ferme
+  // ou qu'on en démarre une autre.
+  recap: RecapSession | null;
+  fermerRecap: () => void;
   stop: () => Promise<void>;
   switchEngagement: (skillId: string, skillName: string) => Promise<void>;
   switching: boolean;
@@ -66,6 +76,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [pinned, setPinnedState] = useState(false);
   const [cycleCompletedAt, setCycleCompletedAt] = useState<number | null>(null);
+  const [historique, setHistorique] = useState<HistoriquePomodoro>(() => lireHistorique());
+  const [recap, setRecap] = useState<RecapSession | null>(null);
+  // Temps soldé par engagement depuis le Démarrer. Un ref et non un état :
+  // rien ne l'affiche avant l'arrêt, où il devient `recap`.
+  const recapLignesRef = useRef<LigneRecap[]>([]);
 
   // Toujours la dernière valeur dans le setInterval du tick, sans le
   // remettre en place à chaque changement de session (voir Step 2).
@@ -268,6 +283,17 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }, 2500);
       }
       notifyPhaseChange(next.phase, skillNameForNotification);
+      // Lu à chaque transition plutôt qu'une fois au montage : couper le son
+      // dans les Réglages prend effet dès la phase suivante.
+      if (lireSonPomodoro()) jouerCarillon(next.phase === 'work' ? 'travail' : 'pause');
+      if (current.phase === 'work' && loggedMinutes > 0) {
+        // Relu depuis le stockage plutôt que depuis l'état : une autre
+        // fenêtre ne l'écrit pas aujourd'hui, mais c'est le stockage qui fait
+        // foi, pas une copie en mémoire qui pourrait dater.
+        const suivant = ajouterCycle(lireHistorique(), loggedMinutes);
+        ecrireHistorique(suivant);
+        setHistorique(suivant);
+      }
       if (loggedMinutes > 0) {
         void logCheckpoint(loggedMinutes, cycleIndexBeforeCompletion, currentDurations.cyclesBeforeLongBreak, current.skillId);
       }
@@ -300,6 +326,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     setError(null);
     setNote('');
     setRestored(false);
+    setRecap(null);
+    recapLignesRef.current = [];
     setSession(startSession(skillId, skillName, effective));
   }
 
@@ -349,7 +377,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     current: PomodoroSession,
     currentDurations: PomodoroDurations,
     currentAuthSession: Session
-  ): Promise<void> {
+  ): Promise<number> {
     const partialMinutes =
       current.status !== 'awaitingAdvance' && current.phase === 'work'
         ? partialMinutesElapsed(current, currentDurations)
@@ -408,10 +436,12 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
           } else {
             const { error: deleteError } = await supabase.from('practice_entry').delete().in('id', entryIds);
             if (deleteError) setError(toFrenchError(deleteError.message));
+            return total;
           }
         }
       }
     }
+    return 0;
   }
 
   async function stopInternal() {
@@ -425,7 +455,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     }
     setError(null);
 
-    await flushSession(current, currentDurations, currentAuthSession);
+    const minutes = await flushSession(current, currentDurations, currentAuthSession);
+    const lignes = ajouterAuRecap(recapLignesRef.current, current.skillName, minutes);
+    recapLignesRef.current = [];
+    setRecap({ cycles: current.completedCycles, engagements: lignes });
 
     setSession(null);
     setSessionDurations(null);
@@ -463,7 +496,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     setSwitching(true);
     try {
       setError(null);
-      await flushSession(current, currentDurations, currentAuthSession);
+      const minutes = await flushSession(current, currentDurations, currentAuthSession);
+      recapLignesRef.current = ajouterAuRecap(recapLignesRef.current, current.skillName, minutes);
       setNote('');
       setSession((session) =>
         session ? { ...session, skillId, skillName, loggedEntryIds: [] } : session
@@ -513,6 +547,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         extend,
         skipBreak,
         restored,
+        historique,
+        recap,
+        fermerRecap: () => setRecap(null),
         stop,
         switchEngagement,
         switching,

@@ -36,6 +36,7 @@ function baseSession(overrides: Partial<PomodoroSession> = {}): PomodoroSession 
     remainingMsAtPause: null,
     loggedEntryIds: [],
     extensionMs: 0,
+    completedCycles: 0,
     ...overrides,
   };
 }
@@ -294,5 +295,25 @@ describe('restoreSession', () => {
     const restored = restoreSession(saved, lastSeenAt);
     const muchLater = lastSeenAt + 3 * 60 * 60_000;
     expect(partialMinutesElapsed(restored, durations, muchLater)).toBe(5);
+  });
+});
+
+describe('completedCycles', () => {
+  const now = Date.parse('2026-09-02T10:00:00Z');
+
+  it('counts a work phase that runs to its end, in both advance modes', () => {
+    const session = baseSession({ phase: 'work', completedCycles: 2, phaseEndsAt: now });
+    expect(completePhase(session, durations, true, now).next.completedCycles).toBe(3);
+    expect(completePhase(session, durations, false, now).next.completedCycles).toBe(3);
+  });
+
+  it('does not count the end of a break, nor a skipped one', () => {
+    const pause = baseSession({ phase: 'shortBreak', completedCycles: 2, phaseEndsAt: now });
+    expect(completePhase(pause, durations, true, now).next.completedCycles).toBe(2);
+    expect(skipBreak(pause, durations, now).completedCycles).toBe(2);
+  });
+
+  it('starts at zero', () => {
+    expect(startSession('s', 'Piano', durations, now).completedCycles).toBe(0);
   });
 });
