@@ -5,6 +5,7 @@ import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import FondAmbiant from './FondAmbiant';
+import PaletteCommandes from './PaletteCommandes';
 import {
   HomeIcon,
   SkillIcon,
@@ -103,6 +104,28 @@ export default function AppShell() {
     window.addEventListener('focus', relancerLogo);
     return () => window.removeEventListener('focus', relancerLogo);
   }, []);
+
+  // Palette de commandes : Ctrl+K (Cmd+K sur macOS) l'ouvre et la ferme.
+  // Pas en mode focus, route sœur hors d'AppShell : ce mode veut justement
+  // qu'on ne parte nulle part. À la fermeture, le focus revient là où il
+  // était, pour qu'un clavier ne se retrouve pas en haut de la page.
+  const [paletteOuverte, setPaletteOuverte] = useState(false);
+  const focusAvantPaletteRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k') return;
+      e.preventDefault();
+      setPaletteOuverte((ouverte) => {
+        if (!ouverte) focusAvantPaletteRef.current = document.activeElement as HTMLElement | null;
+        return !ouverte;
+      });
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+  useEffect(() => {
+    if (!paletteOuverte) focusAvantPaletteRef.current?.focus?.();
+  }, [paletteOuverte]);
 
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);
@@ -335,6 +358,7 @@ export default function AppShell() {
       </main>
       </div>
       </div>
+      {paletteOuverte && <PaletteCommandes onFermer={() => setPaletteOuverte(false)} />}
     </div>
   );
 }

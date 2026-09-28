@@ -449,6 +449,17 @@ export default function Reglages() {
           </p>
         </details>
         <details className="border-b border-ink-700 py-4">
+          <summary className="cursor-pointer text-corps text-champagne">Raccourcis clavier</summary>
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-corps text-muted">
+            <dt className="font-data text-champagne">Ctrl+K</dt>
+            <dd>Palette de commandes : aller à un écran, un skill, un projet, ou lancer une action</dd>
+            <dt className="font-data text-champagne">Ctrl+Alt+N</dt>
+            <dd>Nouvelle entrée, depuis n'importe quelle application</dd>
+            <dt className="font-data text-champagne">Espace</dt>
+            <dd>Pause ou reprise, sur l'écran Pomodoro</dd>
+          </dl>
+        </details>
+        <details className="border-b border-ink-700 py-4">
           <summary className="cursor-pointer text-corps text-champagne">FAQ</summary>
           <p className="mt-2 text-corps text-muted">
             <strong className="text-champagne">Pourquoi les rappels ne sonnent pas quand l'app est fermée ?</strong>
