@@ -1,12 +1,14 @@
 # Changelog
 
-## [1.10.0](https://github.com/SaintKlinn/saint-daily/compare/v1.9.0...v1.10.0) (2026-09-27)
+## [1.10.0](https://github.com/SaintKlinn/saint-daily/compare/v1.9.0...v1.10.0) (2026-09-28)
 
 
 ### Nouveautés
 
+* add screen transitions, counting stat numbers and filling progress bars ([ff474f9](https://github.com/SaintKlinn/saint-daily/commit/ff474f9fed8d2cb508000b3afdc294a997be29e3))
 * add the project link table and its resolution rules ([d14f910](https://github.com/SaintKlinn/saint-daily/commit/d14f9102056ce345e43bb7d4a7923325c41c346c))
 * add the project link table migration ([5110ee3](https://github.com/SaintKlinn/saint-daily/commit/5110ee3506674d5b7088dd29172e4aaa3814f792))
+* animations et transitions, Bilan transformé en tableau de bord ([d5799f3](https://github.com/SaintKlinn/saint-daily/commit/d5799f32a385914b0580d9339b7e8d4077032311))
 * attach and detach project members through the link table ([f3833cf](https://github.com/SaintKlinn/saint-daily/commit/f3833cf549e4b5539b97e5575ab08e251f1124ff))
 * derive a project's milestone progress and sort its list ([62114e7](https://github.com/SaintKlinn/saint-daily/commit/62114e74b924c7967a22b9a289e400e1d250183b))
 * derive a project's practice entries, time and dormancy ([cbea1fc](https://github.com/SaintKlinn/saint-daily/commit/cbea1fc3eed7fc019e3f48994ae4e65139a9ed7f))
@@ -14,6 +16,7 @@
 * parse tag input in one place and deduplicate it ([2c3d5d7](https://github.com/SaintKlinn/saint-daily/commit/2c3d5d7e30ff51a0f21ce1fc8e26336b4edb2f9b))
 * read project composition through the link table ([58995dc](https://github.com/SaintKlinn/saint-daily/commit/58995dc3eb44edcfad579ad7a0c7ac0de19ec0f7))
 * rename, retag, annotate and archive a project ([32bfadf](https://github.com/SaintKlinn/saint-daily/commit/32bfadf8c27742bc2f993b43cc8159db9fd1b6af))
+* rework the Bilan into a dashboard with key figures and a weekly trend ([1cb2fdb](https://github.com/SaintKlinn/saint-daily/commit/1cb2fdba293fae17e92f8a08832133ee3d58742e))
 * show a project's milestones and its progress ([f8941af](https://github.com/SaintKlinn/saint-daily/commit/f8941afdbf51d6b40ebfd409fc1d8552d6f722fa))
 * show a project's time, dormancy and rhythm goal ([f9f2946](https://github.com/SaintKlinn/saint-daily/commit/f9f2946187fd501af4d2f7d2ae6da720f3638d32))
 * show time and dormancy on each project row ([26592ec](https://github.com/SaintKlinn/saint-daily/commit/26592ec263c4e1b1523154b75498ec06a5f813ef))
