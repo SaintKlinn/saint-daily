@@ -14,6 +14,7 @@ import {
   entreesDuProjet,
   formatDormance,
   membresRecursifs,
+  ordonnerEnArbre,
   projetsDeLEngagement,
   tempsCumuleMinutes,
   trierProjets,
@@ -21,6 +22,7 @@ import {
 import type { CritereTri } from '../lib/projets';
 import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
+import { joursAvantEcheance, libelleEcheance } from '../lib/echeances';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -86,23 +88,21 @@ export default function ListeProjets() {
           // `null` dit « aucun jalon », que le tri range en bas ; `0` dirait
           // « aucun jalon franchi », qui est autre chose.
           avancement: total === 0 ? null : ratio,
+          echeance: p.dueAt ? joursAvantEcheance(p.dueAt) : null,
         };
       }),
     [projects, membresParProjet, entriesBySkill, milestonesByEngagement]
   );
 
-  // La liste reste plate : un sous-projet y figure comme les autres, avec le
-  // nom de son parent pour le situer.
-  const parentsParProjet = useMemo(() => {
-    const parProjet = new Map<string, string>();
-    for (const p of projects) {
-      const parents = projetsDeLEngagement(engagements, liaisons, p.id);
-      if (parents.length > 0) parProjet.set(p.id, parents.map((x) => x.name).join(', '));
-    }
+  // Chaque sous-projet sous son (premier) parent, en retrait : trié à plat,
+  // il pouvait passer avant son propre parent (audit graphique, M4).
+  const parentDe = useMemo(() => {
+    const parProjet = new Map<string, string | null>();
+    for (const p of projects) parProjet.set(p.id, projetsDeLEngagement(engagements, liaisons, p.id)[0]?.id ?? null);
     return parProjet;
   }, [projects, engagements, liaisons]);
 
-  const lignesTriees = useMemo(() => trierProjets(lignes, critere), [lignes, critere]);
+  const lignesTriees = useMemo(() => ordonnerEnArbre(trierProjets(lignes, critere), parentDe), [lignes, critere, parentDe]);
   const franchisParProjet = useMemo(() => {
     const parProjet = new Map<string, string>();
     for (const p of projects) {
@@ -157,6 +157,7 @@ export default function ListeProjets() {
               <option value="dormance">Dernière activité</option>
               <option value="temps">Temps cumulé</option>
               <option value="avancement">Avancement</option>
+              <option value="echeance">Échéance</option>
               <option value="nom">Nom</option>
             </select>
           </label>
@@ -187,14 +188,24 @@ export default function ListeProjets() {
           ListeSkills : son fond plein dénaturait le cadre de l'EmptyState. */}
       {lignesTriees.length > 0 && (
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-        {lignesTriees.map((ligne) => {
+        {lignesTriees.map(({ ligne, profondeur }) => {
           const archive = projetsArchives.has(ligne.id);
           return (
             <Link
               key={ligne.id}
               to={`/projets/${ligne.id}`}
-              className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
+              // Retrait et filet vertical doré pour un sous-projet : il se lit
+              // comme une branche de la ligne au-dessus.
+              style={profondeur > 0 ? { paddingLeft: `${16 + profondeur * 32}px` } : undefined}
+              className={`relative flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
             >
+              {profondeur > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 w-px bg-accent-bright/40"
+                  style={{ left: `${profondeur * 32}px` }}
+                />
+              )}
               {/* L'anneau de la liste des skills, rempli ici par les jalons
                   franchis : chaque projet montre où il en est sans ouvrir sa
                   fiche. Sans jalon, rien à mesurer — un anneau vide dirait
@@ -223,7 +234,14 @@ export default function ListeProjets() {
                       écrit pour être lu seul (fiche du projet). */}
                   {formatMinutes(ligne.minutes)} · {enMinuscule(formatDormance(ligne.jours))}
                   {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
-                  {parentsParProjet.has(ligne.id) ? ` · dans ${parentsParProjet.get(ligne.id)}` : ''}
+                  {/* L'échéance, absente de la liste : un projet en retard ne
+                      s'y signalait pas (audit graphique, M4). */}
+                  {ligne.echeance !== null && ligne.echeance !== undefined && (
+                    <span className={ligne.echeance < 0 ? 'text-danger' : ligne.echeance <= 7 ? 'text-accent-bright' : ''}>
+                      {' · échéance '}
+                      {enMinuscule(libelleEcheance(ligne.echeance))}
+                    </span>
+                  )}
                 </p>
               </div>
             </Link>

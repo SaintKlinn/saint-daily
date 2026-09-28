@@ -8,6 +8,11 @@ import { createPomodoroOverlay } from './pomodoroOverlay';
 import { createAgendaWidget } from './agendaWidget';
 
 const isDev = !app.isPackaged;
+
+// L'app est en français de bout en bout ; ses champs date natifs suivaient
+// pourtant la langue de Windows (« mm/dd/yyyy » sur un système en anglais).
+// Le switch doit être posé avant `ready` pour que Chromium le prenne.
+app.commandLine.appendSwitch('lang', 'fr-FR');
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
 

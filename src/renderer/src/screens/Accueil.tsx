@@ -7,7 +7,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
 import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
-import { dateEcheance, echeancesProches, libelleEcheance } from '../lib/echeances';
+import { dateCourte, echeancesProches } from '../lib/echeances';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
 import PremiersPas from '../components/PremiersPas';
@@ -477,22 +477,44 @@ export default function Accueil() {
 
       {echeances.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-sans text-corps font-semibold text-champagne">Échéances</h2>
-          <div className="flex flex-col">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+            className="font-sans text-corps font-semibold text-champagne"
+          >
+            Échéances
+          </motion.h2>
+          {/* Même cascade que les rappels, et une action directe comme leur
+              « Logger » : on vient ici pour avancer, pas seulement pour lire
+              (audit graphique, B2). */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.5 }}
+            className="flex flex-col"
+          >
             {echeances.map(({ projet, jours }, i) => (
-              <Link
+              <motion.div
                 key={projet.id}
-                to={`/projets/${projet.id}`}
-                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 transition-colors hover:bg-ink-700 ${i > 0 ? 'border-t-0' : ''} ${FOCUS_RING}`}
+                variants={itemVariants}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
               >
-                <p className="flex-1 font-serif text-titre text-champagne">{projet.name}</p>
-                <p className="font-data text-secondaire text-muted first-letter:uppercase">{dateEcheance(projet.dueAt as string)}</p>
-                <p className={`w-40 text-right font-data text-secondaire ${jours < 0 ? 'text-danger' : 'text-accent-bright'}`}>
-                  {libelleEcheance(jours)}
+                <Link to={`/projets/${projet.id}`} className={`flex-1 transition-opacity duration-150 hover:opacity-80 ${FOCUS_RING}`}>
+                  <p className="font-serif text-titre text-champagne">{projet.name}</p>
+                  <p className="mt-1 font-data text-secondaire text-muted">{dateCourte(projet.dueAt as string)}</p>
+                </Link>
+                <p className={`font-data text-secondaire ${jours < 0 ? 'text-danger' : 'text-accent-bright'}`}>
+                  {jours < 0 ? `${-jours} j de retard` : jours === 0 ? "aujourd'hui" : `J-${jours}`}
                 </p>
-              </Link>
+                <Link to={`/pomodoro?skillId=${projet.id}`} className={buttonClassName('accent-outline', 'sm')}>
+                  Session
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
       )}
 

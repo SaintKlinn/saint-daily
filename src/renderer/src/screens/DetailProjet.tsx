@@ -9,8 +9,10 @@ import {
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
+  cheminDesParents,
   membresRecursifs,
   projetsDeLEngagement,
+  repartitionDuTemps,
   sousProjetsRattachables,
   tempsCumuleMinutes,
 } from '../lib/projets';
@@ -31,6 +33,7 @@ import Introuvable from './Introuvable';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
+import MenuActions from '../components/MenuActions';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
@@ -41,6 +44,10 @@ import { analyserTags } from '../lib/tags';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+
+// Une part de temps par membre direct, du doré au vert : assez distinctes
+// pour se suivre de la barre à la légende, sans sortir de la palette.
+const COULEURS_REPARTITION = ['bg-accent-bright', 'bg-accent-mid', 'bg-accent-deep', 'bg-muted', 'bg-ink-700'];
 
 export default function DetailProjet() {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +83,9 @@ export default function DetailProjet() {
     () => (id ? projetsDeLEngagement(engagements, liaisons, id) : []),
     [engagements, liaisons, id]
   );
+  // Fil d'Ariane : « Projets › Maison › Toiture » plutôt qu'un « Retour »
+  // qui ne disait pas où il menait (audit graphique, B5).
+  const ancetres = useMemo(() => (id ? cheminDesParents(engagements, liaisons, id) : []), [engagements, liaisons, id]);
   // Règle de remontée : le temps, la dormance et l'objectif comptent aussi
   // les sous-projets et leurs membres. La composition affichée reste celle
   // des membres directs.
@@ -88,6 +98,7 @@ export default function DetailProjet() {
   // cet état, le bouton reste armable pendant toute l'attente réseau.
   const [deleting, setDeleting] = useState(false);
   const [enEditionNom, setEnEditionNom] = useState(false);
+  const [enEditionEcheance, setEnEditionEcheance] = useState(false);
 
   // Les identifiants sont TRIÉS : `useAllPracticeEntries` mémorise sur
   // `engagementIds.join(',')`, donc deux tableaux de même contenu dans un
@@ -103,6 +114,12 @@ export default function DetailProjet() {
     [entriesBySkill, tousLesMembres, id]
   );
   const minutes = useMemo(() => tempsCumuleMinutes(entrees), [entrees]);
+  // D'où vient ce total : une part par membre direct, sous-projets compris
+  // (audit graphique, B6).
+  const repartition = useMemo(
+    () => (id ? repartitionDuTemps(engagements, liaisons, entriesBySkill, id) : []),
+    [engagements, liaisons, entriesBySkill, id]
+  );
   const dormance = useMemo(() => formatDormance(daysSinceLastPractice(entrees)), [entrees]);
   const objectif = useMemo(
     () =>
@@ -250,13 +267,24 @@ export default function DetailProjet() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Link
-        to="/projets"
-        className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
-      >
+      <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-2 font-sans text-secondaire text-muted">
         <ChevronLeftIcon />
-        Retour
-      </Link>
+        <Link to="/projets" className={`transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}>
+          Projets
+        </Link>
+        {ancetres.map((ancetre) => (
+          <span key={ancetre.id} className="flex items-center gap-2">
+            <span aria-hidden="true">›</span>
+            <Link to={`/projets/${ancetre.id}`} className={`transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}>
+              {ancetre.name}
+            </Link>
+          </span>
+        ))}
+        <span aria-hidden="true">›</span>
+        <span aria-current="page" className="text-champagne">
+          {project.name}
+        </span>
+      </nav>
 
       {actionError && (
         <p role="alert" className="text-corps text-danger">
@@ -308,10 +336,12 @@ export default function DetailProjet() {
                 </button>
               </h1>
             )}
-            {parents.length > 0 && (
+            {/* Le fil d'Ariane suit le premier parent ; les autres, s'il y
+                en a, sont nommés ici. */}
+            {parents.length > 1 && (
               <p className="relative mt-1 text-secondaire text-muted">
-                Sous-projet de{' '}
-                {parents.map((parent, i) => (
+                Aussi dans{' '}
+                {parents.slice(1).map((parent, i) => (
                   <span key={parent.id}>
                     {i > 0 && ', '}
                     <Link to={`/projets/${parent.id}`} className={`text-accent-bright underline-offset-4 hover:underline ${FOCUS_RING}`}>
@@ -322,29 +352,34 @@ export default function DetailProjet() {
               </p>
             )}
         </div>
-        <div className="flex max-w-sm flex-col items-end gap-2">
+        <div className="flex flex-col items-end gap-2">
           {/* Session de chantier : travailler le projet pour lui-même. Le
               temps s'enregistre sur le projet et compte dans son total. Pas
               sur un projet archivé, que le Pomodoro ne propose pas. */}
-          {!project.archivedAt && (
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <Link to={`/pomodoro?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
-                Session de chantier
-              </Link>
-              <Link to={`/entree/nouvelle?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
-                Nouvelle entrée
-              </Link>
-            </div>
-          )}
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm" onClick={handleArchiver}>
-              {project.archivedAt ? 'Désarchiver' : 'Archiver'}
-            </Button>
-            <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
+          {/* L'action qu'on vient faire en premier et en doré ; les actions
+              rares derrière « … », avec l'avertissement de suppression là
+              où il sert (audit graphique, M1). */}
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {!project.archivedAt && (
+              <>
+                <Link to={`/entree/nouvelle?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
+                  Nouvelle entrée
+                </Link>
+                <Link to={`/pomodoro?skillId=${project.id}`} className={buttonClassName('primary', 'sm')}>
+                  Session de chantier
+                </Link>
+              </>
+            )}
+            <MenuActions libelle="Archiver ou supprimer le projet">
+              <Button variant="secondary" size="sm" onClick={handleArchiver}>
+                {project.archivedAt ? 'Désarchiver' : 'Archiver'}
+              </Button>
+              <BoutonSuppression onConfirm={handleDelete} busy={deleting} label="Supprimer le projet" />
+              <p className="text-secondaire text-muted">
+                Supprimer envoie aussi à la corbeille les skills et tâches dont ce projet est le projet principal.
+              </p>
+            </MenuActions>
           </div>
-          <p className="text-right text-secondaire text-muted">
-            Supprimer le projet envoie aussi à la corbeille les skills et tâches dont il est le projet principal.
-          </p>
         </div>
       </div>
 
@@ -359,28 +394,93 @@ export default function DetailProjet() {
         </div>
         <div>
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Échéance</p>
-          <div className="mt-1 flex flex-wrap items-center gap-3">
-            {/* Non contrôlé : contrôlé, le champ reviendrait à l'ancienne
-                date à chaque année intermédiaire ignorée (« 0002 ») et on ne
-                pourrait plus taper l'année au clavier. */}
-            <input
-              key={project.id}
-              type="date"
-              defaultValue={echeanceVersChamp(project.dueAt)}
-              onChange={(e) => void handleEcheance(e.target.value)}
-              aria-label="Échéance du projet"
-              className={`h-8 border border-ink-700 bg-ink-800 px-2 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING}`}
-            />
-            {joursEcheance !== null && (
-              <span
-                className={`text-corps ${joursEcheance < 0 ? 'text-danger' : joursEcheance <= HORIZON_ECHEANCE_JOURS ? 'text-accent-bright' : 'text-champagne'}`}
-              >
-                {libelleEcheance(joursEcheance)}
-              </span>
-            )}
-          </div>
+          {/* Une valeur en texte comme ses voisines, modifiable au clic comme
+              le nom : un champ date natif, vide, affichait « mm/dd/yyyy » au
+              milieu des chiffres (audit graphique, M2). */}
+          {enEditionEcheance ? (
+            <div className="mt-1 flex flex-wrap items-center gap-3" onBlur={() => setEnEditionEcheance(false)}>
+              {/* Non contrôlé : contrôlé, le champ reviendrait à l'ancienne
+                  date à chaque année intermédiaire ignorée (« 0002 ») et on
+                  ne pourrait plus taper l'année au clavier. */}
+              <input
+                key={project.id}
+                type="date"
+                autoFocus
+                defaultValue={echeanceVersChamp(project.dueAt)}
+                onChange={(e) => void handleEcheance(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape') setEnEditionEcheance(false);
+                }}
+                aria-label="Échéance du projet"
+                className={`h-8 border border-ink-700 bg-ink-800 px-2 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING}`}
+              />
+              {project.dueAt && (
+                <button
+                  type="button"
+                  // `mousedown` et non `click` : le `blur` du champ referme
+                  // l'édition avant qu'un clic n'arrive.
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    void handleEcheance('');
+                    setEnEditionEcheance(false);
+                  }}
+                  className={`text-secondaire text-muted underline-offset-4 hover:text-champagne hover:underline ${FOCUS_RING}`}
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setActionError(null);
+                setEnEditionEcheance(true);
+              }}
+              aria-label={project.dueAt ? `Échéance : ${dateCourte(project.dueAt)}, modifier` : 'Fixer une échéance'}
+              className={`mt-1 block text-left text-corps ${FOCUS_RING} ${
+                joursEcheance === null
+                  ? 'text-accent-bright underline-offset-4 hover:underline'
+                  : joursEcheance < 0
+                    ? 'text-danger'
+                    : joursEcheance <= HORIZON_ECHEANCE_JOURS
+                      ? 'text-accent-bright'
+                      : 'text-champagne'
+              }`}
+            >
+              {project.dueAt && joursEcheance !== null
+                ? `${dateCourte(project.dueAt)} · ${libelleEcheance(joursEcheance).toLowerCase()}`
+                : 'Fixer une échéance'}
+            </button>
+          )}
         </div>
       </div>
+
+      {repartition.length > 1 && (
+        <section aria-label="Répartition du temps cumulé" className="flex flex-col gap-2">
+          <div className="flex h-2 w-full gap-px overflow-hidden bg-ink-950">
+            {repartition.map((part, i) => (
+              <div
+                key={part.id}
+                title={`${part.nom} · ${formatMinutes(part.minutes)} · ${Math.round((part.minutes / minutes) * 100)} %`}
+                className={COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}
+                style={{ flexGrow: part.minutes, flexBasis: 0 }}
+              />
+            ))}
+          </div>
+          <ul className="flex flex-wrap gap-x-5 gap-y-1">
+            {repartition.map((part, i) => (
+              <li key={part.id} className="flex items-center gap-2 text-secondaire text-muted">
+                <span aria-hidden="true" className={`h-2 w-2 ${COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}`} />
+                <span className="text-champagne">{part.nom}</span>
+                <span className="font-data tabular-nums">
+                  {formatMinutes(part.minutes)} · {Math.round((part.minutes / minutes) * 100)} %
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <div className="mb-1 flex items-baseline justify-between">
@@ -515,30 +615,12 @@ export default function DetailProjet() {
             ))}
           </div>
         )}
-        <label className="mt-3 flex flex-col gap-2">
-          <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
-            Rattacher un skill
-          </span>
-          <select
-            value=""
-            onChange={(e) => {
-              if (e.target.value) handleLier(e.target.value);
-            }}
-            className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
-          >
-            <option value="">Choisir…</option>
-            {rattachables.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {sousProjetsPossibles.length > 0 && (
+        {/* Un seul menu, groupé par type : deux menus pleine largeur
+            empilés pesaient plus lourd que la liste elle-même (audit
+            graphique, M10). */}
+        {(rattachables.length > 0 || sousProjetsPossibles.length > 0) && (
           <label className="mt-3 flex flex-col gap-2">
-            <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
-              Rattacher un sous-projet
-            </span>
+            <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Rattacher</span>
             <select
               value=""
               onChange={(e) => {
@@ -546,16 +628,31 @@ export default function DetailProjet() {
               }}
               className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
             >
-              <option value="">Choisir…</option>
-              {sousProjetsPossibles.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
+              <option value="">Un skill ou un sous-projet…</option>
+              {rattachables.length > 0 && (
+                <optgroup label="Skills">
+                  {rattachables.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {sousProjetsPossibles.length > 0 && (
+                <optgroup label="Sous-projets">
+                  {sousProjetsPossibles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
-            <span className="text-secondaire text-muted">
-              Son temps remonte dans celui de ce projet ; ses jalons restent les siens.
-            </span>
+            {sousProjetsPossibles.length > 0 && (
+              <span className="text-secondaire text-muted">
+                Le temps d'un sous-projet remonte dans celui de ce projet ; ses jalons restent les siens.
+              </span>
+            )}
           </label>
         )}
       </section>

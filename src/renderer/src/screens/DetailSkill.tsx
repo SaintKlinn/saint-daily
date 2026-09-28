@@ -205,13 +205,21 @@ export default function DetailSkill() {
   return (
     <div className="flex flex-col gap-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-        <Link
-          to="/skills"
-          className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
-        >
+        {/* Fil d'Ariane, comme sur la fiche d'un projet : « Retour » ne
+            disait pas où il menait (audit graphique, B5). */}
+        <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-2 font-sans text-secondaire text-muted">
           <ChevronLeftIcon />
-          Retour
-        </Link>
+          <Link
+            to="/skills"
+            className="transition-colors duration-150 hover:text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+          >
+            Skills
+          </Link>
+          <span aria-hidden="true">›</span>
+          <span aria-current="page" className="text-champagne">
+            {skill.name}
+          </span>
+        </nav>
       </motion.div>
 
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
