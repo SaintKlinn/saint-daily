@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.11.0](https://github.com/SaintKlinn/saint-daily/compare/v1.10.0...v1.11.0) (2026-09-28)
+
+
+### Nouveautés
+
+* add a Ctrl+K command palette ([14c97c1](https://github.com/SaintKlinn/saint-daily/commit/14c97c1367f74f941cf59fab8f2fb2351c6e9a30))
+* add rest days that keep streaks alive ([de9d950](https://github.com/SaintKlinn/saint-daily/commit/de9d950fca5873dbe3d9fa3e31747114919f0a43))
+* breathe life into the background and tint it with the time of day ([486af2b](https://github.com/SaintKlinn/saint-daily/commit/486af2bbf9fc0f4dd98c80e60011627e0f04ea50))
+* celebrate streak milestones on the home screen ([711c0fb](https://github.com/SaintKlinn/saint-daily/commit/711c0fbe93031aebcddf04fd2a21574ee41adc4d))
+* chantiers C, D, E des projets, nouvelles fonctionnalités, deux audits visuels et démarrage ([d9f137b](https://github.com/SaintKlinn/saint-daily/commit/d9f137b5253fc160e2323fa8cbf53f78c9c2b8d4))
+* edit or delete a logged session ([77d32b2](https://github.com/SaintKlinn/saint-daily/commit/77d32b2838a2d58347402d54a05cf4457ddb7a0f))
+* give projects a deadline shown on the calendar and the home screen ([3e062d7](https://github.com/SaintKlinn/saint-daily/commit/3e062d7e496b6fa00d5e4e32bfccfd2698703c8a))
+* give the pomodoro overlay icon buttons, a skip button and room to breathe ([7c7f018](https://github.com/SaintKlinn/saint-daily/commit/7c7f018323d8a46e262d162bd224b2f4ed9cfcab))
+* guide first steps with warmer empty states ([c3ed125](https://github.com/SaintKlinn/saint-daily/commit/c3ed125323284f9315794e8a0383ab96320c8a2e))
+* log a session or start a Pomodoro from the tray ([00073bb](https://github.com/SaintKlinn/saint-daily/commit/00073bb3dfa2484476b53489719f894c590a43e7))
+* nest projects with time roll-up and cycle protection ([796dcc8](https://github.com/SaintKlinn/saint-daily/commit/796dcc8949862270ceca9e37ae246e75f2dbaa25))
+* one set of session controls with a « Quand » field ([d18b2e6](https://github.com/SaintKlinn/saint-daily/commit/d18b2e639adf7a447d8e40128108b5bc2554c61a))
+* play a chime with the streak milestone burst ([a0f11e3](https://github.com/SaintKlinn/saint-daily/commit/a0f11e345e91909f026445f09c9952475103efae))
+* pomodoro chime, taskbar progress, cycle dots, break colour, session recap and daily count ([0921e0a](https://github.com/SaintKlinn/saint-daily/commit/0921e0a3b0912e0a858a591f5ff81466bbb46882))
+* Pomodoro complet, CI, phase 3 « plus vivante », états vides, audits visuel et RLS/index ([55d8009](https://github.com/SaintKlinn/saint-daily/commit/55d8009c8413fd6fbbf8ef2e009401fc6052c499))
+* restore the pomodoro session after the app closes, add skip break, +5 min and Space ([37a015b](https://github.com/SaintKlinn/saint-daily/commit/37a015bad8ef64a09eb287ff2335902c8d7d81b8))
+* turn the project page into a dashboard ([f4a8dcb](https://github.com/SaintKlinn/saint-daily/commit/f4a8dcb3a24a1c1b19067a0fd9a9a0f46b0f91d1))
+* work on a project itself with a chantier session ([9276811](https://github.com/SaintKlinn/saint-daily/commit/92768119d3524ec3d470339fa4141600742a7907))
+
+
+### Corrections
+
+* add missing indexes and tighten API role grants (RLS/index audit) ([4912479](https://github.com/SaintKlinn/saint-daily/commit/49124799c17c18edea117540c2d856c6871cf383))
+* keep the milestone burst from blending into the logo ([5dd2717](https://github.com/SaintKlinn/saint-daily/commit/5dd27173c7c24196e7256e12fbc2c7d1e68d30fe))
+* make types, today, rest days and palette results readable at a glance ([c37c212](https://github.com/SaintKlinn/saint-daily/commit/c37c2127fd94b5985bfb335041dc735c0b9ab12e))
+* quick visual audit fixes (calendar, placeholders, dates, disabled button) ([3a627ad](https://github.com/SaintKlinn/saint-daily/commit/3a627ad5a9813d46a2f807376ce9aa2457b07811))
+* resolve the high-severity visual audit findings ([b73ccad](https://github.com/SaintKlinn/saint-daily/commit/b73ccad10e08e17503396140a37bc42e994bd396))
+* resolve the remaining medium and low visual audit findings ([c518bc7](https://github.com/SaintKlinn/saint-daily/commit/c518bc77969b59347d7ff0b00096d5ccc9899f32))
+* shared dialog that keeps keyboard focus inside ([33c2b9c](https://github.com/SaintKlinn/saint-daily/commit/33c2b9c0a305348cfe15b8c7b77f0d29d163535b))
+
+
+### Performance
+
+* faster startup through minification, code splitting and bundled fonts ([2dfcdb8](https://github.com/SaintKlinn/saint-daily/commit/2dfcdb836e11dcdadf4d6800759ef604702316a2))
+* play the rail logo loop on focus and hover, then let it settle ([6ad40ea](https://github.com/SaintKlinn/saint-daily/commit/6ad40ea8106e1da8cb3d34e91996554d5a2f7d0a))
+
+
+### Divers
+
+* **master:** release 1.10.0 ([661128a](https://github.com/SaintKlinn/saint-daily/commit/661128a50fd5c59c5ca5481a3ca0a35fc152924f))
+* **master:** release 1.10.0 ([b3fdd09](https://github.com/SaintKlinn/saint-daily/commit/b3fdd09c7c45093dd40c5a0e68bc42fa243d58c4))
+* run typecheck, tests and build on every PR and push to master ([e6d8d76](https://github.com/SaintKlinn/saint-daily/commit/e6d8d7697b0d6bec9d3668521b0280d86fe4aad4))
+
+
+### Documentation
+
+* add visual audit findings for every screen ([2a18d40](https://github.com/SaintKlinn/saint-daily/commit/2a18d401015413fe3ccc9d36820b58cff53c84f8))
+
 ## [1.10.0](https://github.com/SaintKlinn/saint-daily/compare/v1.9.0...v1.10.0) (2026-09-28)
 
 
