@@ -5,7 +5,9 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
-import { calculateStreak, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
+import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
+import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
+import CelebrationPalier from '../components/CelebrationPalier';
 import { formatMinutes } from '../lib/retrospective';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import StatCard from '../components/StatCard';
@@ -54,6 +56,25 @@ export default function Accueil() {
     const activeSkillIds = new Set(activeSkills.map((s) => s.id));
     return Object.fromEntries(Object.entries(entriesBySkill).filter(([id]) => activeSkillIds.has(id)));
   }, [entriesBySkill, activeSkills]);
+  // Série toutes pratiques confondues, sur les engagements actifs — la
+  // même base que la carte « Séries en cours » juste en dessous. Calculée
+  // une fois les entrées chargées : avant, `entriesBySkill` vaut `{}` et
+  // chaque palier paraîtrait perdu.
+  const [palierAFeterMaintenant, setPalierAFeterMaintenant] = useState<{
+    palier: number;
+    fetes: PaliersFetes;
+  } | null>(null);
+  useEffect(() => {
+    if (entriesLoading) return;
+    const toutes = Object.values(entriesBySkill).flat();
+    setPalierAFeterMaintenant(palierAFeter(calculateStreak(toutes), currentStreakStart(toutes), lirePaliersFetes()));
+  }, [entriesLoading, entriesBySkill]);
+
+  function fermerCelebration() {
+    if (palierAFeterMaintenant) ecrirePaliersFetes(palierAFeterMaintenant.fetes);
+    setPalierAFeterMaintenant(null);
+  }
+
   const resumeSkill = useMemo(() => {
     const id = lastPracticedEngagementId(skillEntriesBySkill);
     return id ? (activeSkills.find((s) => s.id === id) ?? null) : null;
@@ -298,6 +319,10 @@ export default function Accueil() {
           passé à 40 px et les boutons à 15 px. Replier met la grappe
           d'actions sous le titre, ce qui reste lisible ; 24 px parce que le
           titre et les actions sont deux groupes. */}
+      {palierAFeterMaintenant && (
+        <CelebrationPalier palier={palierAFeterMaintenant.palier} onFermer={fermerCelebration} />
+      )}
+
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
