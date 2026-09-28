@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './lib/auth';
 import { PomodoroProvider } from './lib/pomodoro';
 import { useEngagementReminders } from './hooks/useEngagementReminders';
 import { useTrayNextEngagement } from './hooks/useTrayNextEngagement';
+import { useActionsRapidesTray } from './hooks/useActionsRapidesTray';
 import { useAgendaWidgetFeed } from './hooks/useAgendaWidgetFeed';
 
 // Tout ce qui dépend de la connexion — et donc du client Supabase, près de
@@ -96,6 +97,13 @@ function EngagementWatchers() {
   return null;
 }
 
+// Sous `PomodoroProvider` et non dans `EngagementWatchers` : le menu du
+// tray démarre des pomodoros.
+function ActionsRapidesTray() {
+  useActionsRapidesTray();
+  return null;
+}
+
 // Sépare « être authentifié et connecté au Pomodoro » de « avoir le rail
 // de navigation », pour que le mode focus puisse être l'un sans l'autre.
 // Hisser `PomodoroProvider` ici lui fait aussi survivre à l'entrée et à la
@@ -107,6 +115,7 @@ function AppProvidersLayout() {
     <AuthGate>
       <EngagementWatchers />
       <PomodoroProvider>
+        <ActionsRapidesTray />
         <Outlet />
       </PomodoroProvider>
     </AuthGate>

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
 import { registerDevLoginHandler } from './devLogin';
-import { createTray, setTrayNextEngagement } from './tray';
+import { createTray, setTrayNextEngagement, setTrayQuickSkills, type SkillRapide } from './tray';
 import { registerAutoLaunchHandlers } from './autoLaunch';
 import { registerAutoUpdateHandlers } from './autoUpdate';
 import { createPomodoroOverlay } from './pomodoroOverlay';
@@ -99,6 +99,17 @@ app
     });
     ipcMain.on('tray:set-next-engagement', (_event, label: string | null) => {
       setTrayNextEngagement(label);
+    });
+    ipcMain.on('tray:set-quick-skills', (_event, skills: SkillRapide[]) => {
+      // Borné et assaini : le menu n'affiche que des libellés, mais rien
+      // de ce qui vient du renderer ne doit pouvoir le faire grossir.
+      if (!Array.isArray(skills)) return;
+      setTrayQuickSkills(
+        skills
+          .filter((s) => typeof s?.id === 'string' && typeof s?.name === 'string')
+          .slice(0, 5)
+          .map((s) => ({ id: s.id, name: s.name.slice(0, 60) }))
+      );
     });
     registerDevLoginHandler();
     registerAutoLaunchHandlers();
