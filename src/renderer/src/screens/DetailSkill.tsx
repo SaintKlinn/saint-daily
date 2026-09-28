@@ -43,10 +43,15 @@ const MOOD_LABELS: Record<Mood, string> = {
 // la référence et le pulse de récompense ne se déclencherait jamais.
 const knownStreakBySkillId = new Map<string, number>();
 
+// Le journal d'un skill s'affiche par pages : avec un an de pratique, la
+// liste d'un bloc repoussait les Notes à des milliers de pixels plus bas.
+const SEANCES_PAR_PAGE = 20;
+
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { engagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } = useEngagements();
+  const { engagements, deletedEngagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } =
+    useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const { liaisons, remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
@@ -73,6 +78,9 @@ export default function DetailSkill() {
   // `softDelete` : sans cet état, le bouton reste armable pendant toute
   // l'attente réseau.
   const [deleting, setDeleting] = useState(false);
+  // Pas de remise à zéro au changement de skill : AppShell remonte l'écran
+  // à chaque changement d'adresse (clé de transition), donc l'état repart.
+  const [nbSeances, setNbSeances] = useState(SEANCES_PAR_PAGE);
   const streak = useMemo(() => calculateStreak(entries), [entries]);
   const [streakPulse, setStreakPulse] = useState(false);
 
@@ -194,7 +202,7 @@ export default function DetailSkill() {
         </p>
       );
     }
-    return <Introuvable />;
+    return <Introuvable sujet="skill" enCorbeille={deletedEngagements.some((e) => e.id === id)} />;
   }
 
   return (
@@ -277,7 +285,13 @@ export default function DetailSkill() {
       </div>
 
       <div className="flex min-h-0 flex-1 gap-8">
-        <div className="relative flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6">
+        {/* `self-start sticky top-6` : la colonne ne s'étire plus sur toute la
+            hauteur du journal (plusieurs milliers de pixels avec un an de
+            séances), où son contenu centré se retrouvait hors de vue, et elle
+            reste visible pendant qu'on fait défiler. `<main>` est le
+            conteneur qui défile ; `top-6` la garde à 24 px de son bord plutôt
+            que collée contre. */}
+        <div className="sticky top-6 flex w-[260px] min-w-[260px] flex-col items-center gap-3 self-start overflow-hidden border border-ink-700 bg-ink-900 p-6">
           <RayCorner variant={0} />
           <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
@@ -372,8 +386,8 @@ export default function DetailSkill() {
                 + Nouvelle entrée
               </Link>
             </div>
-            <div className="flex flex-col overflow-y-auto">
-              {entries.map((entry) => (
+            <div className="flex flex-col">
+              {entries.slice(0, nbSeances).map((entry) => (
                 <div key={entry.id} className="flex gap-2 border-t border-ink-700 py-4 last:border-b">
                   <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
@@ -392,6 +406,19 @@ export default function DetailSkill() {
                 </div>
               ))}
             </div>
+            {entries.length > nbSeances && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3 self-center"
+                onClick={() => setNbSeances((n) => n + SEANCES_PAR_PAGE)}
+              >
+                Afficher {Math.min(SEANCES_PAR_PAGE, entries.length - nbSeances)} séances de plus
+                <span className="font-data text-libelle text-muted">
+                  · {entries.length - nbSeances} restante{entries.length - nbSeances > 1 ? 's' : ''}
+                </span>
+              </Button>
+            )}
           </section>
 
           <section>

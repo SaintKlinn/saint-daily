@@ -34,7 +34,7 @@ const FOCUS_RING =
 export default function DetailProjet() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { engagements, loading, error, softDelete, updateEngagement, setArchived } = useEngagements();
+  const { engagements, deletedEngagements, loading, error, softDelete, updateEngagement, setArchived } = useEngagements();
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const project = projects.find((p) => p.id === id);
   const { liaisons, lier, delier, synchroniserColonne } = useLiaisonsProjet();
@@ -196,7 +196,7 @@ export default function DetailProjet() {
         </p>
       );
     }
-    return <Introuvable />;
+    return <Introuvable sujet="projet" enCorbeille={deletedEngagements.some((e) => e.id === id)} />;
   }
 
   return (

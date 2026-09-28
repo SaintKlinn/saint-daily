@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterJournalEntries } from './journal';
+import { filterJournalEntries, grouperParJour, libelleJour } from './journal';
 
 const entries = [
   { id: '1', engagementName: 'Guitare', note: 'Travaillé les Barrés', tags: ['technique'], practicedAt: '2026-09-03T09:00:00Z' },
@@ -44,5 +44,38 @@ describe('filterJournalEntries', () => {
     expect(filterJournalEntries(entries, 'Échecs').map((e) => e.id)).toEqual(['4']);
     expect(filterJournalEntries(entries, 'rejouée').map((e) => e.id)).toEqual(['4']);
     expect(filterJournalEntries(entries, 'découverte').map((e) => e.id)).toEqual(['4']);
+  });
+});
+
+describe('grouperParJour', () => {
+  const at = (d: number, h: number) => ({ date: new Date(2026, 8, d, h) });
+
+  it('groups consecutive rows by local day, keeping their order', () => {
+    const lignes = [at(28, 20), at(28, 9), at(27, 23), at(25, 8)];
+    const groupes = grouperParJour(lignes, (l) => l.date);
+    expect(groupes.map((g) => [g.cle, g.lignes.length])).toEqual([
+      ['2026-09-28', 2],
+      ['2026-09-27', 1],
+      ['2026-09-25', 1],
+    ]);
+    expect(groupes[0].lignes[0]).toBe(lignes[0]);
+  });
+
+  it('returns no group for no rows', () => {
+    expect(grouperParJour([], () => new Date())).toEqual([]);
+  });
+});
+
+describe('libelleJour', () => {
+  const now = new Date(2026, 8, 28, 15);
+
+  it('names today and yesterday', () => {
+    expect(libelleJour(new Date(2026, 8, 28, 1), now)).toBe("Aujourd'hui");
+    expect(libelleJour(new Date(2026, 8, 27, 23), now)).toBe('Hier');
+  });
+
+  it('spells out older days, with the year only when it differs', () => {
+    expect(libelleJour(new Date(2026, 8, 22, 9), now)).toBe('mardi 22 septembre');
+    expect(libelleJour(new Date(2025, 11, 31, 9), now)).toBe('mercredi 31 décembre 2025');
   });
 });

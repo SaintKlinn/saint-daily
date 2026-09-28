@@ -1,20 +1,22 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntriesForUser } from '../hooks/usePracticeEntries';
 import { useDailyReflections } from '../hooks/useDailyReflections';
-import { filterJournalEntries, type JournalEntry } from '../lib/journal';
+import { filterJournalEntries, grouperParJour, libelleJour, type JournalEntry } from '../lib/journal';
 import { formatMinutes } from '../lib/retrospective';
 import EmptyState from '../components/EmptyState';
 import { SearchIcon } from '../components/icons';
+import Button from '../components/Button';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
-// Au-delà de ce seuil, on tronque le rendu plutôt que de reconstruire des
-// milliers de nœuds DOM à chaque frappe. Pas de virtualisation ici :
-// c'est un écran qu'on consulte, pas un qu'on habite, et 200 lignes
-// couvrent déjà largement un scan visuel.
-const MAX_VISIBLE_ROWS = 200;
+// Rendu par pages plutôt que tout l'historique d'un coup : pas de
+// reconstruction de milliers de nœuds DOM à chaque frappe, et pas de
+// virtualisation — c'est un écran qu'on consulte, pas un qu'on habite.
+// L'ancien plafond fixe (200 lignes) laissait le reste inaccessible sauf par
+// la recherche ; « Afficher plus » y donne accès.
+const PAGE = 50;
 
 interface Row extends JournalEntry {
   kind: 'seance' | 'reflexion';
@@ -35,8 +37,8 @@ function parseRowDate(value: string): Date {
   return new Date(year, month - 1, day, 12);
 }
 
-function formatDate(iso: string): string {
-  return parseRowDate(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+function formatHeure(iso: string): string {
+  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function Journal() {
@@ -91,8 +93,14 @@ export default function Journal() {
   }, [entries, namesById, reflections]);
 
   const visible = useMemo(() => filterJournalEntries(rows, deferredSearch), [rows, deferredSearch]);
-  const visibleRows = visible.slice(0, MAX_VISIBLE_ROWS);
+  const [nbAffiches, setNbAffiches] = useState(PAGE);
+  // Une nouvelle recherche repart de la première page.
+  useEffect(() => setNbAffiches(PAGE), [deferredSearch]);
+  const visibleRows = useMemo(() => visible.slice(0, nbAffiches), [visible, nbAffiches]);
   const hiddenCount = visible.length - visibleRows.length;
+  // La date de chaque ligne passe en en-tête de journée : elle n'est plus
+  // répétée ligne après ligne, et les journées se distinguent d'un coup d'œil.
+  const journees = useMemo(() => grouperParJour(visibleRows, (row) => parseRowDate(row.practicedAt)), [visibleRows]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -131,27 +139,47 @@ export default function Journal() {
       ) : visible.length === 0 ? (
         <EmptyState>Aucun résultat pour « {search.trim()} ».</EmptyState>
       ) : (
-        <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-          {visibleRows.map((row) => (
-            <article key={row.id} className="flex flex-col gap-2 bg-ink-800 px-4 py-4">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
-                <span className="font-data text-libelle tabular-nums text-muted">
-                  {formatDate(row.practicedAt)}
-                  {row.kind === 'seance' ? ` · ${formatMinutes(row.durationMinutes)}` : ' · bilan du soir'}
-                </span>
-              </div>
-              {row.note && <p className="whitespace-pre-wrap text-secondaire text-champagne">{row.note}</p>}
-              {row.tags.length > 0 && (
-                <p className="text-secondaire text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
-              )}
-            </article>
-          ))}
+        <div className="flex flex-col gap-6">
+          {journees.map((journee) => {
+            const minutes = journee.lignes.reduce((total, row) => total + row.durationMinutes, 0);
+            return (
+              <section key={journee.cle} aria-label={libelleJour(journee.date)} className="flex flex-col gap-2">
+                <h2 className="flex items-baseline justify-between gap-2">
+                  <span className="font-sans text-corps font-semibold text-champagne first-letter:uppercase">
+                    {libelleJour(journee.date)}
+                  </span>
+                  {minutes > 0 && (
+                    <span className="font-data text-libelle tabular-nums text-muted">{formatMinutes(minutes)}</span>
+                  )}
+                </h2>
+                <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
+                  {journee.lignes.map((row) => (
+                    <article key={row.id} className="flex flex-col gap-2 bg-ink-800 px-4 py-4">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
+                        <span className="font-data text-libelle tabular-nums text-muted">
+                          {row.kind === 'seance'
+                            ? `${formatHeure(row.practicedAt)} · ${formatMinutes(row.durationMinutes)}`
+                            : 'bilan du soir'}
+                        </span>
+                      </div>
+                      {row.note && <p className="whitespace-pre-wrap text-secondaire text-champagne">{row.note}</p>}
+                      {row.tags.length > 0 && (
+                        <p className="text-secondaire text-muted">{row.tags.map((tag) => `#${tag}`).join(' ')}</p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
           {hiddenCount > 0 && (
-            <p className="bg-ink-800 px-4 py-3 font-data text-libelle text-muted">
-              + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} résultat{hiddenCount > 1 ? 's' : ''} — affine ta
-              recherche pour les voir.
-            </p>
+            <Button variant="secondary" className="self-center" onClick={() => setNbAffiches((n) => n + PAGE)}>
+              Afficher {Math.min(PAGE, hiddenCount)} de plus
+              <span className="font-data text-libelle text-muted">
+                · {hiddenCount} entrée{hiddenCount > 1 ? 's' : ''} restante{hiddenCount > 1 ? 's' : ''}
+              </span>
+            </Button>
           )}
         </div>
       )}
