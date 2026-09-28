@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
+import FondAmbiant from './FondAmbiant';
 import {
   HomeIcon,
   SkillIcon,
@@ -282,13 +283,11 @@ export default function AppShell() {
         </button>
         <RailFlare />
       </motion.nav>
-      <main
-        ref={mainRef}
-        className="flex-1 overflow-y-auto px-12 py-12"
-        style={{
-          backgroundImage: `radial-gradient(ellipse 1100px 560px at 62% -6%, ${colors.accent.bright}1a, transparent 62%), radial-gradient(ellipse 700px 420px at 8% 78%, ${colors.accent.bright}0c, transparent 68%)`,
-        }}
-      >
+      {/* Le fond d'ambiance vit à côté de <main> et non dedans : <main>
+          défile, et le halo doit rester en haut de la fenêtre. */}
+      <div className="relative min-w-0 flex-1">
+      <FondAmbiant />
+      <main ref={mainRef} className="relative h-full overflow-y-auto px-12 py-12">
         {/* Fondu court et 6 px seulement : les écrans ont déjà leurs
             propres cascades (Accueil, Bilan), cette entrée ne fait que
             lier la navigation à l'apparition du contenu sans la doubler. */}
@@ -304,6 +303,7 @@ export default function AppShell() {
           <Outlet />
         </motion.div>
       </main>
+      </div>
       </div>
     </div>
   );

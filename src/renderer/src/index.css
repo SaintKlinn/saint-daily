@@ -126,3 +126,29 @@
     animation: none;
   }
 }
+
+/* Dérive du fond d'ambiance (FondAmbiant.tsx) : le halo glisse et se dilate
+   à peine, sur 40 s en aller-retour. Assez lent pour ne jamais se voir
+   bouger — on perçoit seulement que le fond n'est pas figé. */
+@keyframes fond-derive {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-3%, 2%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(2%, -1%, 0) scale(1.02);
+  }
+}
+
+.fond-derive {
+  animation: fond-derive 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fond-derive {
+    animation: none;
+  }
+}
