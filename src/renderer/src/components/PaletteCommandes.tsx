@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
 import { usePomodoro } from '../lib/pomodoro';
 import { basculerDateRepos, cleJourLocal, ecrireJoursRepos, useJoursRepos } from '../lib/joursRepos';
 import { filtrerCommandes, type Commande, type GroupeCommande } from '../lib/palette';
 import { SearchIcon } from './icons';
-import { EASE_SORTIE } from '../theme/mouvement';
+import Dialogue from './Dialogue';
 
 interface CommandeExecutable extends Commande {
   executer: () => void;
@@ -107,26 +106,18 @@ export default function PaletteCommandes({ onFermer }: { onFermer: () => void })
     } else if (e.key === 'Enter') {
       e.preventDefault();
       executer(resultats[actif]);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onFermer();
     }
   }
 
   let groupePrecedent: GroupeCommande | null = null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink-950/60 px-6 pt-[12vh]" onClick={onFermer}>
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Palette de commandes"
-        initial={{ opacity: 0, y: -8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.18, ease: EASE_SORTIE }}
-        className="flex max-h-[70vh] w-full max-w-xl flex-col border border-ink-700 bg-ink-900 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialogue
+      onFermer={onFermer}
+      libelle="Palette de commandes"
+      placement="haut"
+      className="flex max-h-[70vh] w-full max-w-xl flex-col"
+    >
         <div className="flex items-center gap-3 border-b border-ink-700 px-4">
           <SearchIcon className="shrink-0 text-muted" />
           <input
@@ -181,7 +172,6 @@ export default function PaletteCommandes({ onFermer }: { onFermer: () => void })
         <p className="border-t border-ink-700 px-4 py-2 font-data text-libelle text-muted">
           ↑↓ pour choisir · Entrée pour valider · Ctrl+K pour ouvrir ou fermer
         </p>
-      </motion.div>
-    </div>
+    </Dialogue>
   );
 }

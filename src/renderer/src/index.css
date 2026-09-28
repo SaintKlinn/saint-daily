@@ -11,6 +11,14 @@
     font-style: italic;
     opacity: 0.75;
   }
+  /* Flèches natives des champs numériques : blanches et hors palette sur le
+     vert (audit graphique, B1). Les flèches du clavier et la molette
+     continuent de changer la valeur. */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }
 
 /* Révélation du logo (voir LogoMark.tsx, prop `animation="revelation"`) : chaque trait

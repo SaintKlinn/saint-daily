@@ -107,25 +107,18 @@ export default function AppShell() {
 
   // Palette de commandes : Ctrl+K (Cmd+K sur macOS) l'ouvre et la ferme.
   // Pas en mode focus, route sœur hors d'AppShell : ce mode veut justement
-  // qu'on ne parte nulle part. À la fermeture, le focus revient là où il
-  // était, pour qu'un clavier ne se retrouve pas en haut de la page.
+  // qu'on ne parte nulle part. Le retour du focus à la fermeture est géré
+  // par `Dialogue`.
   const [paletteOuverte, setPaletteOuverte] = useState(false);
-  const focusAvantPaletteRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k') return;
       e.preventDefault();
-      setPaletteOuverte((ouverte) => {
-        if (!ouverte) focusAvantPaletteRef.current = document.activeElement as HTMLElement | null;
-        return !ouverte;
-      });
+      setPaletteOuverte((ouverte) => !ouverte);
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
-  useEffect(() => {
-    if (!paletteOuverte) focusAvantPaletteRef.current?.focus?.();
-  }, [paletteOuverte]);
 
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);

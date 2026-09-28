@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { motion } from 'motion/react';
+import { useState, type FormEvent } from 'react';
 import RayCorner from './RayCorner';
+import Dialogue from './Dialogue';
 import Button from './Button';
 import BoutonSuppression from './BoutonSuppression';
 import { FormField, SelectField, TextAreaField } from './FormField';
@@ -8,7 +8,7 @@ import { modifierSeance, supprimerSeance } from '../hooks/usePracticeEntries';
 import { analyserTags } from '../lib/tags';
 import { depuisChampDateHeure, erreurSaisieSeance, HUMEURS, MOOD_LABELS, versChampDateHeure } from '../lib/seances';
 import type { Mood, PracticeEntry } from '../lib/types';
-import { EASE_SORTIE } from '../theme/mouvement';
+import { dateCourte } from '../lib/echeances';
 
 interface EditeurSeanceProps {
   seance: PracticeEntry;
@@ -33,16 +33,6 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
   const [note, setNote] = useState(seance.note ?? '');
   const [erreur, setErreur] = useState<string | null>(null);
   const [occupe, setOccupe] = useState(false);
-
-  // Échap ferme, comme toute fenêtre de ce type ; pas pendant un
-  // enregistrement, pour ne pas laisser croire qu'il a été annulé.
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !occupe) onFermer();
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onFermer, occupe]);
 
   async function enregistrer(e: FormEvent) {
     e.preventDefault();
@@ -85,23 +75,23 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60 p-6" onClick={() => !occupe && onFermer()}>
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="editeur-seance-titre"
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.3, ease: EASE_SORTIE }}
-        className="relative flex max-h-full w-full max-w-md flex-col gap-6 overflow-y-auto border border-ink-700 bg-ink-900 p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
+    // Échap et clic à côté ferment, sauf pendant un enregistrement, pour ne
+    // pas laisser croire qu'il a été annulé.
+    <Dialogue
+      onFermer={onFermer}
+      titreId="editeur-seance-titre"
+      fermable={!occupe}
+      className="flex max-h-full w-full max-w-md flex-col gap-6 overflow-y-auto p-8"
+    >
         <RayCorner variant={0} />
         <div className="relative">
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Modifier la séance</p>
           <h2 id="editeur-seance-titre" className="mt-2 font-serif text-titre-ecran text-champagne">
             {nom}
           </h2>
+          {/* La séance d'origine, pour savoir laquelle on corrige même après
+              avoir changé la date dans le champ. */}
+          <p className="mt-1 font-data text-secondaire text-muted">{dateCourte(seance.practicedAt, true)}</p>
         </div>
         <form onSubmit={enregistrer} className="relative flex flex-col gap-6">
           <div className="grid grid-cols-[1fr_7rem] gap-3">
@@ -143,7 +133,7 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
             </p>
           )}
           <div className="flex items-center justify-between gap-3">
-            <BoutonSuppression onConfirm={supprimer} busy={occupe} label="Supprimer" />
+            <BoutonSuppression onConfirm={supprimer} busy={occupe} label="Supprimer" taille="md" variante="texte" />
             <div className="flex items-center gap-3">
               <Button type="button" variant="secondary" onClick={onFermer} disabled={occupe}>
                 Annuler
@@ -154,7 +144,6 @@ export default function EditeurSeance({ seance, nom, onFermer, onChange }: Edite
             </div>
           </div>
         </form>
-      </motion.div>
-    </div>
+    </Dialogue>
   );
 }
