@@ -52,9 +52,11 @@ export function ecrireRailEpingle(
   }
 }
 
-// Son de fin de phase du Pomodoro — même statut que l'épinglage du rail :
-// une préférence de la machine (on coupe le son au bureau, pas chez soi),
-// pas du compte, et donc pas une colonne de `settings`.
+// Sons de l'app (fin de phase du Pomodoro, palier de série) — même statut
+// que l'épinglage du rail : une préférence de la machine (on coupe le son
+// au bureau, pas chez soi), pas du compte, et donc pas une colonne de
+// `settings`. La clé garde son nom d'origine, du temps où seul le Pomodoro
+// avait un son, pour ne pas perdre le choix déjà enregistré.
 export const CLE_SON_POMODORO = 'saint-daily.pomodoro-son';
 
 /** Activé par défaut : seule la valeur explicite `'false'` le coupe, donc

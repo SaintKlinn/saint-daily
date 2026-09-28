@@ -344,8 +344,8 @@ export default function Reglages() {
             // vient d'accepter, plutôt qu'au bout de 25 minutes.
             if (checked) jouerCarillon('pause');
           }}
-          label="Son de fin de phase"
-          description="Un carillon discret quand le travail ou la pause se termine — réglage propre à cet ordinateur"
+          label="Sons"
+          description="Un carillon discret en fin de phase Pomodoro et quand tu atteins un palier de série — réglage propre à cet ordinateur"
         />
       </section>
 

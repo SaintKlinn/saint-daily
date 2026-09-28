@@ -9,8 +9,14 @@ describe('notesCarillon', () => {
     expect(pause).toEqual([...pause].sort((a, b) => b - a));
   });
 
+  it('opens up to the octave for a streak milestone', () => {
+    const palier = notesCarillon('palier').map((n) => n.frequence);
+    expect(palier).toEqual([...palier].sort((a, b) => a - b));
+    expect(palier[palier.length - 1]).toBeCloseTo(palier[0] * 2, 0);
+  });
+
   it('plays its notes in order, each starting after the previous one', () => {
-    for (const type of ['travail', 'pause'] as const) {
+    for (const type of ['travail', 'pause', 'palier'] as const) {
       const debuts = notesCarillon(type).map((n) => n.debut);
       expect(debuts).toEqual([...debuts].sort((a, b) => a - b));
       expect(new Set(debuts).size).toBe(debuts.length);

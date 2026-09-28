@@ -1,9 +1,9 @@
-// Carillon de fin de phase du Pomodoro, synthétisé avec Web Audio plutôt
+// Carillons de l'app (fin de phase du Pomodoro, palier de série), synthétisés avec Web Audio plutôt
 // que lu depuis un fichier : aucun fichier son à embarquer dans l'installeur,
 // et un timbre doux (sinusoïdes à attaque et extinction progressives) qui
 // signale sans faire sursauter.
 
-export type Carillon = 'travail' | 'pause';
+export type Carillon = 'travail' | 'pause' | 'palier';
 
 export interface NoteCarillon {
   frequence: number; // Hz
@@ -24,6 +24,15 @@ const NOTES: Record<Carillon, NoteCarillon[]> = {
     { frequence: 659.25, debut: 0.16, duree: 0.5 }, // mi5
     { frequence: 523.25, debut: 0.32, duree: 0.9 }, // do5
   ],
+  // Palier de série : le même arpège que `travail`, plus serré, prolongé
+  // jusqu'à l'octave — reconnaissable comme un son de l'app, mais plus
+  // lumineux et qui « s'ouvre » au lieu de simplement repartir.
+  palier: [
+    { frequence: 523.25, debut: 0, duree: 0.45 }, // do5
+    { frequence: 659.25, debut: 0.09, duree: 0.45 }, // mi5
+    { frequence: 783.99, debut: 0.18, duree: 0.5 }, // sol5
+    { frequence: 1046.5, debut: 0.27, duree: 1.3 }, // do6
+  ],
 };
 
 export function notesCarillon(type: Carillon): NoteCarillon[] {
@@ -39,6 +48,9 @@ export function jouerCarillon(type: Carillon): void {
     const AudioContextCtor = globalThis.AudioContext;
     if (!AudioContextCtor) return;
     const ctx = new AudioContextCtor();
+    // Un contexte créé sans geste de l'utilisateur peut naître suspendu (le
+    // palier s'affiche à l'ouverture de l'Accueil) : on le relance.
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
     const t0 = ctx.currentTime + 0.02;
     let fin = 0;
     for (const note of notesCarillon(type)) {

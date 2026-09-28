@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RayCorner from './RayCorner';
 import Button from './Button';
 import { messagePalier } from '../lib/paliers';
+import { jouerCarillon } from '../lib/carillon';
+import { lireSonPomodoro } from '../lib/preferencesAffichage';
 import { colors } from '../theme/colors';
 import { EASE_SORTIE } from '../theme/mouvement';
 
@@ -29,6 +32,17 @@ const ETINCELLES = Array.from({ length: 12 }, (_, i) => {
 export default function CelebrationPalier({ palier, onFermer }: { palier: number; onFermer: () => void }) {
   const reduire = useReducedMotion();
   const { titre, detail } = messagePalier(palier);
+
+  // Le carillon part avec l'éclat, pas à l'apparition du bandeau : le son
+  // souligne le moment fort. Sans animation (moins de mouvement demandé),
+  // il n'y a pas d'éclat à attendre, il joue tout de suite. Le nettoyage
+  // annule un son pas encore parti si le bandeau disparaît avant — et évite
+  // aussi le double son du double montage de StrictMode en développement.
+  useEffect(() => {
+    if (!lireSonPomodoro()) return;
+    const id = window.setTimeout(() => jouerCarillon('palier'), reduire ? 0 : DEBUT_ECLAT * 1000);
+    return () => window.clearTimeout(id);
+  }, [reduire]);
   return (
     <motion.section
       role="status"
