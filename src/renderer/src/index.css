@@ -32,7 +32,8 @@
   }
 }
 
-/* Boucle du logo du rail (voir LogoMark.tsx, prop `animation="boucle"`).
+/* Boucle infinie du logo (voir LogoMark.tsx, prop `animation="boucle"`) —
+   le rail ne l'utilise plus, il joue `.logo-ray-regard` plus bas.
    Portée telle quelle depuis Saint Gym (gym/app/globals.css, keyframe
    logo-ray-grow), y compris le rejet du décalage par trait : la variante
    décalée y a été testée puis écartée au profit du simultané. Ne pas
@@ -60,6 +61,28 @@
     animation: none;
     stroke-dashoffset: 0;
     opacity: var(--o);
+  }
+}
+
+/* Même geste que .logo-ray-grow, mais joué deux fois puis posé (voir
+   LogoMark, `animation="regard"`). La boucle infinie faisait redessiner le
+   rail à chaque image tant que la fenêtre était visible : ~300 ms de
+   travail par seconde sur un processeur ralenti ×4, contre ~5 ms sans elle.
+   Une animation terminée ne coûte plus rien.
+
+   Le départ est décalé à 65 % du cycle (-2,925 s), l'instant où les traits
+   sont entièrement déployés, et la durée totale de 2,65 cycles la fait
+   finir sur ce même instant : le logo part de son état posé, joue deux
+   cycles complets et y revient, sans saut ni au début ni à la fin. */
+.logo-ray-regard {
+  stroke-dashoffset: 0;
+  opacity: var(--o);
+  animation: logo-ray-grow 4.5s cubic-bezier(0.33, 0, 0.2, 1) -2.925s 2.65 both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-ray-regard {
+    animation: none;
   }
 }
 

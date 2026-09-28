@@ -88,6 +88,22 @@ export default function AppShell() {
     return () => (window.cancelIdleCallback ?? window.clearTimeout)(id as number);
   }, []);
 
+  // Le logo du rail joue deux cycles quand on revient sur la fenêtre ou
+  // qu'on survole le rail, puis se pose (voir `.logo-ray-regard`). Pas de
+  // relance pendant qu'il joue encore : repartir en plein milieu ferait
+  // sauter les traits. 9 s = deux cycles de 4,5 s.
+  const [relanceLogo, setRelanceLogo] = useState(0);
+  const derniereRelanceRef = useRef(Date.now());
+  function relancerLogo() {
+    if (Date.now() - derniereRelanceRef.current < 9000) return;
+    derniereRelanceRef.current = Date.now();
+    setRelanceLogo((n) => n + 1);
+  }
+  useEffect(() => {
+    window.addEventListener('focus', relancerLogo);
+    return () => window.removeEventListener('focus', relancerLogo);
+  }, []);
+
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);
   }
@@ -150,6 +166,7 @@ export default function AppShell() {
         initial={false}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex shrink-0 flex-col items-center gap-10 overflow-hidden border-r border-ink-700 pt-6"
+        onMouseEnter={relancerLogo}
         style={{
           background: `linear-gradient(180deg, ${colors.ink[900]} 0%, #054838 55%, ${colors.ink[950]} 100%)`,
         }}
@@ -166,7 +183,7 @@ export default function AppShell() {
             (main/index.ts), soit trois pixels de marge — la prochaine entrée
             ajoutée au rail (40 + 8) l'écraserait silencieusement à la taille
             minimale autorisée. */}
-        <LogoMark width={48} height={32} animation="boucle" className="relative shrink-0" />
+        <LogoMark width={48} height={32} animation="regard" relance={relanceLogo} className="relative shrink-0" />
         {/* `flex-1` : c'est ce bloc, et non la ligne de compte, qui porte
             la poussée vers le bas — `mt-auto` s'applique au groupe
             Réglages à l'intérieur. */}
