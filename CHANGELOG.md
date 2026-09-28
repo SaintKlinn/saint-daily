@@ -1,5 +1,61 @@
 # Changelog
 
+## [1.10.0](https://github.com/SaintKlinn/saint-daily/compare/v1.9.0...v1.10.0) (2026-09-27)
+
+
+### Nouveautés
+
+* add the project link table and its resolution rules ([d14f910](https://github.com/SaintKlinn/saint-daily/commit/d14f9102056ce345e43bb7d4a7923325c41c346c))
+* add the project link table migration ([5110ee3](https://github.com/SaintKlinn/saint-daily/commit/5110ee3506674d5b7088dd29172e4aaa3814f792))
+* attach and detach project members through the link table ([f3833cf](https://github.com/SaintKlinn/saint-daily/commit/f3833cf549e4b5539b97e5575ab08e251f1124ff))
+* derive a project's milestone progress and sort its list ([62114e7](https://github.com/SaintKlinn/saint-daily/commit/62114e74b924c7967a22b9a289e400e1d250183b))
+* derive a project's practice entries, time and dormancy ([cbea1fc](https://github.com/SaintKlinn/saint-daily/commit/cbea1fc3eed7fc019e3f48994ae4e65139a9ed7f))
+* hide archived projects behind a toggle ([bb2cdf1](https://github.com/SaintKlinn/saint-daily/commit/bb2cdf1f98f9dce4bcfb61ab6bf6635b07eeb407))
+* parse tag input in one place and deduplicate it ([2c3d5d7](https://github.com/SaintKlinn/saint-daily/commit/2c3d5d7e30ff51a0f21ce1fc8e26336b4edb2f9b))
+* read project composition through the link table ([58995dc](https://github.com/SaintKlinn/saint-daily/commit/58995dc3eb44edcfad579ad7a0c7ac0de19ec0f7))
+* rename, retag, annotate and archive a project ([32bfadf](https://github.com/SaintKlinn/saint-daily/commit/32bfadf8c27742bc2f993b43cc8159db9fd1b6af))
+* show a project's milestones and its progress ([f8941af](https://github.com/SaintKlinn/saint-daily/commit/f8941afdbf51d6b40ebfd409fc1d8552d6f722fa))
+* show a project's time, dormancy and rhythm goal ([f9f2946](https://github.com/SaintKlinn/saint-daily/commit/f9f2946187fd501af4d2f7d2ae6da720f3638d32))
+* show time and dormancy on each project row ([26592ec](https://github.com/SaintKlinn/saint-daily/commit/26592ec263c4e1b1523154b75498ec06a5f813ef))
+* sort the project list and show each project's progress ([adc1cd3](https://github.com/SaintKlinn/saint-daily/commit/adc1cd3185fc2f5493805dad9c18ed944c62c9e4))
+
+
+### Corrections
+
+* address final review findings on project editing slice ([9fce1e2](https://github.com/SaintKlinn/saint-daily/commit/9fce1e24816aca9b155860ed38f5d71acef868c3))
+* derive project links from writes, not intent, across all creation paths ([c94efd6](https://github.com/SaintKlinn/saint-daily/commit/c94efd629c0e1cfc0d70409a7b3491ac8109116b))
+* distinguish empty state when all projects are archived ([c96e40f](https://github.com/SaintKlinn/saint-daily/commit/c96e40f24a81aa94a51f4a0b2da27b0389130938))
+* guard practice-entry refresh against superseded requests ([fe5845f](https://github.com/SaintKlinn/saint-daily/commit/fe5845fb71a6dc8f9de5d6847281af048ae70e7c))
+* read the skill's project from the links, not the legacy column ([88fb16e](https://github.com/SaintKlinn/saint-daily/commit/88fb16ec9cca6bcd161380e2b0422bac20d8427d))
+* remove over-applied quote escaping from comments ([b61c59b](https://github.com/SaintKlinn/saint-daily/commit/b61c59b8aa229b3921fde96ce7a7f1dc3549d3da))
+* stop the compatibility column from writing back stale or wiped links ([2d2d41e](https://github.com/SaintKlinn/saint-daily/commit/2d2d41e772596adb72da36b44a50cf91cf2d6741))
+* surface practice-entry fetch error and order paginated reads ([97f1ad4](https://github.com/SaintKlinn/saint-daily/commit/97f1ad4b2fc619b1dcdb9d219e57b1018e51cffa))
+* surface rename refusals and restore the project name heading ([93b1c48](https://github.com/SaintKlinn/saint-daily/commit/93b1c48e9344f0d998955403620b972999819228))
+
+
+### Améliorations internes
+
+* extract the save-on-blur field out of the skill screen ([f7ab3b3](https://github.com/SaintKlinn/saint-daily/commit/f7ab3b39bc173a3c7f61cdfeae9a995db1bad4fb))
+* merge the two milestone lists into one component ([5b3cdb5](https://github.com/SaintKlinn/saint-daily/commit/5b3cdb5783e7ddcba4541e359394fccf21c1399b))
+
+
+### Documentation
+
+* add design spec for editing and archiving a project ([24dac01](https://github.com/SaintKlinn/saint-daily/commit/24dac011ca6323707d91f40ddb05f1d46bc0eee3))
+* add design spec for multi-project links and project composition ([3036ae3](https://github.com/SaintKlinn/saint-daily/commit/3036ae341e14e426a98e73781619863f58c64c25))
+* add design spec for project milestones, progress and list sorting ([9116673](https://github.com/SaintKlinn/saint-daily/commit/911667314379585f2beba561f9013121a617651f))
+* add design spec for project time, dormancy and rhythm goal ([d4273fb](https://github.com/SaintKlinn/saint-daily/commit/d4273fb25fec020a535de91e64f3f6ca827a44ae))
+* add implementation plan for editing and archiving a project ([06b265c](https://github.com/SaintKlinn/saint-daily/commit/06b265c9e649c72b6794bf1143d821880806c2ac))
+* add implementation plan for multi-project links ([e39b337](https://github.com/SaintKlinn/saint-daily/commit/e39b3378c9afe12d907d0e2885bd5d3d1a8cb052))
+* add implementation plan for project milestones, progress and sorting ([aef1717](https://github.com/SaintKlinn/saint-daily/commit/aef1717d0f3190a1c3e933eb871b70a12e62fbf8))
+* add implementation plan for project time, dormancy and goal ([5e1f9b2](https://github.com/SaintKlinn/saint-daily/commit/5e1f9b27bb24a0011ce8c260e5373437bd3f7717))
+* correct the planned test count from twelve to eleven ([8036491](https://github.com/SaintKlinn/saint-daily/commit/80364913695ea7a03950cb3358c841acce9dcda6))
+* pose the current-project pointer and record why home needs one ([93b4f0c](https://github.com/SaintKlinn/saint-daily/commit/93b4f0ced18dda7efc44c5f87e7f60f566a6c0e0))
+* pose the due date column and the self-link check in the same migration ([2eeed74](https://github.com/SaintKlinn/saint-daily/commit/2eeed742ef6ea090218f71a0c6ad3f49c63b13c0))
+* record that 0016 is applied and the degraded path stays unverified live ([67440af](https://github.com/SaintKlinn/saint-daily/commit/67440af10e4ab5b541a6ff755eeaf051f7bcd532))
+* record the full roadmap and what exploring ruled out ([6c93984](https://github.com/SaintKlinn/saint-daily/commit/6c939842e418234ceb87feea458469187aa68352))
+* spell out the spacing exception so the class audit cannot misread it ([3479ba8](https://github.com/SaintKlinn/saint-daily/commit/3479ba809530955cd7097a4cde3faab7292f7e4f))
+
 ## [1.9.0](https://github.com/SaintKlinn/saint-daily/compare/v1.8.0...v1.9.0) (2026-09-25)
 
 
