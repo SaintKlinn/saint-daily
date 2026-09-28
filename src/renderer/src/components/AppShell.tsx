@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
+import { Fragment, Suspense, useEffect, useRef, useState, type JSX } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
@@ -18,6 +18,7 @@ import {
 import { GROUPES_NAV, type CleIcone } from '../lib/navigation';
 import { colors } from '../theme/colors';
 import { EASE_SORTIE } from '../theme/mouvement';
+import { prechargerEcrans } from '../ecrans';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
@@ -77,6 +78,15 @@ export default function AppShell() {
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [pathname]);
+
+  // Une fois le rail et le premier écran affichés, les autres écrans sont
+  // chargés quand le navigateur n'a rien d'autre à faire : l'ouverture reste
+  // légère, et aucune navigation n'attend ensuite son fichier.
+  useEffect(() => {
+    const planifier = window.requestIdleCallback ?? ((f: () => void) => window.setTimeout(f, 1500));
+    const id = planifier(() => prechargerEcrans());
+    return () => (window.cancelIdleCallback ?? window.clearTimeout)(id as number);
+  }, []);
 
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);
@@ -300,7 +310,10 @@ export default function AppShell() {
           // <main>, ce que ce conteneur intercalé ne doit pas lui retirer.
           className="h-full"
         >
-          <Outlet />
+          {/* Le rail reste en place pendant qu'un écran se charge. */}
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </main>
       </div>
