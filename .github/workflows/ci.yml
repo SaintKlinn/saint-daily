@@ -1,0 +1,46 @@
+name: ci
+
+# Vérifie chaque PR et chaque push sur master avant qu'une release ne parte :
+# release-please.yml publie dès qu'une Release PR est fusionnée, donc c'est
+# ici, et nulle part ailleurs, qu'un typecheck ou un test cassé est arrêté.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# Un nouveau push sur la même PR annule la vérification précédente, devenue
+# sans objet.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Même version que le build Windows de release-please.yml.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Le binaire Electron (~100 Mo) ne sert ni au typecheck, ni aux tests
+      # (Vitest tourne sous Node), ni à `electron-vite build`.
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      # Attrape ce que le typecheck ne voit pas : imports introuvables à la
+      # résolution, CSS/Tailwind invalides, erreurs de bundling du main, du
+      # preload et du renderer.
+      - run: npm run build
