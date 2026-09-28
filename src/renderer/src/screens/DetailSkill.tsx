@@ -8,7 +8,8 @@ import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
 import { projetAffiche } from '../lib/projets';
-import type { GenericLevel, GoalMetric, GoalPeriod, Mood } from '../lib/types';
+import { MOOD_LABELS } from '../lib/seances';
+import type { GenericLevel, GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
@@ -18,6 +19,7 @@ import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
 import ChampSauvegarde from '../components/ChampSauvegarde';
+import EditeurSeance from '../components/EditeurSeance';
 import { ChevronLeftIcon, ChevronDownIcon, PlusIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
@@ -27,15 +29,6 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
   expert: 'Expert',
 };
 
-// Même libellés que le sélecteur de NouvelleEntree — l'humeur était captée
-// et stockée mais jamais réaffichée nulle part, y compris ici.
-const MOOD_LABELS: Record<Mood, string> = {
-  difficile: 'Difficile',
-  moyen: 'Moyen',
-  correct: 'Correct',
-  bien: 'Bien',
-  excellent: 'Excellent',
-};
 
 // Persiste tout le temps que l'app tourne, pas seulement le montage
 // courant du composant — sans ça, revenir sur DetailSkill après avoir
@@ -66,7 +59,7 @@ export default function DetailSkill() {
   // valent la même chose ici.
   const projetDuSkill = projetAffiche(engagements, liaisons, id ?? '');
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
-  const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
+  const { entries, loading: entriesLoading, error: entriesError, refresh: rechargerSeances } = usePracticeEntries(id ?? null);
 
   const skill = skills.find((s) => s.id === id);
 
@@ -81,6 +74,8 @@ export default function DetailSkill() {
   // Pas de remise à zéro au changement de skill : AppShell remonte l'écran
   // à chaque changement d'adresse (clé de transition), donc l'état repart.
   const [nbSeances, setNbSeances] = useState(SEANCES_PAR_PAGE);
+  const [enEdition, setEnEdition] = useState<string | null>(null);
+  const seanceEnEdition = enEdition ? entries.find((e) => e.id === enEdition) : undefined;
   const streak = useMemo(() => calculateStreak(entries), [entries]);
   const [streakPulse, setStreakPulse] = useState(false);
 
@@ -404,6 +399,14 @@ export default function DetailSkill() {
                       <span className="ml-2 font-sans not-italic text-secondaire text-muted">· {MOOD_LABELS[entry.mood]}</span>
                     )}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setEnEdition(entry.id)}
+                    aria-label={`Modifier la séance du ${new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`}
+                    className="self-start font-data text-libelle text-muted underline-offset-4 hover:text-champagne hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                  >
+                    Modifier
+                  </button>
                 </div>
               ))}
             </div>
@@ -419,6 +422,14 @@ export default function DetailSkill() {
                   · {entries.length - nbSeances} restante{entries.length - nbSeances > 1 ? 's' : ''}
                 </span>
               </Button>
+            )}
+            {seanceEnEdition && (
+              <EditeurSeance
+                seance={seanceEnEdition}
+                nom={skill.name}
+                onFermer={() => setEnEdition(null)}
+                onChange={() => void rechargerSeances()}
+              />
             )}
           </section>
 

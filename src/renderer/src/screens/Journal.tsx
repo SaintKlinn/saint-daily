@@ -7,6 +7,7 @@ import { formatMinutes } from '../lib/retrospective';
 import EmptyState from '../components/EmptyState';
 import { SearchIcon } from '../components/icons';
 import Button from '../components/Button';
+import EditeurSeance from '../components/EditeurSeance';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
@@ -48,10 +49,14 @@ export default function Journal() {
     loading: engagementsLoading,
     error: engagementsError,
   } = useEngagements();
-  const { entries, loading: entriesLoading, error: entriesError } = useAllPracticeEntriesForUser();
+  const { entries, loading: entriesLoading, error: entriesError, refresh: rechargerSeances } = useAllPracticeEntriesForUser();
+  // Séance ouverte dans l'éditeur (voir EditeurSeance), par identifiant :
+  // l'objet complet est relu dans `entries`, toujours à jour.
   const { reflections } = useDailyReflections();
   const loading = engagementsLoading || entriesLoading;
   const [search, setSearch] = useState('');
+  const [enEdition, setEnEdition] = useState<string | null>(null);
+  const seanceEnEdition = enEdition ? entries.find((e) => e.id === enEdition) ?? null : null;
   // Différé pour que la frappe reste fluide sur un long historique : la
   // reconstruction de la liste filtrée n'a pas besoin d'être synchrone
   // avec chaque touche.
@@ -157,10 +162,22 @@ export default function Journal() {
                     <article key={row.id} className="flex flex-col gap-2 bg-ink-800 px-4 py-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-serif text-titre text-champagne">{row.engagementName}</span>
-                        <span className="font-data text-libelle tabular-nums text-muted">
-                          {row.kind === 'seance'
-                            ? `${formatHeure(row.practicedAt)} · ${formatMinutes(row.durationMinutes)}`
-                            : 'bilan du soir'}
+                        <span className="flex items-baseline gap-3">
+                          <span className="font-data text-libelle tabular-nums text-muted">
+                            {row.kind === 'seance'
+                              ? `${formatHeure(row.practicedAt)} · ${formatMinutes(row.durationMinutes)}`
+                              : 'bilan du soir'}
+                          </span>
+                          {row.kind === 'seance' && (
+                            <button
+                              type="button"
+                              onClick={() => setEnEdition(row.id)}
+                              aria-label={`Modifier la séance ${row.engagementName} de ${formatHeure(row.practicedAt)}`}
+                              className={`font-data text-libelle text-muted underline-offset-4 hover:text-champagne hover:underline ${FOCUS_RING}`}
+                            >
+                              Modifier
+                            </button>
+                          )}
                         </span>
                       </div>
                       {row.note && <p className="whitespace-pre-wrap text-secondaire text-champagne">{row.note}</p>}
@@ -182,6 +199,14 @@ export default function Journal() {
             </Button>
           )}
         </div>
+      )}
+      {seanceEnEdition && (
+        <EditeurSeance
+          seance={seanceEnEdition}
+          nom={namesById[seanceEnEdition.engagementId] ?? 'Séance'}
+          onFermer={() => setEnEdition(null)}
+          onChange={() => void rechargerSeances()}
+        />
       )}
     </div>
   );
