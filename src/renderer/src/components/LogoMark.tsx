@@ -10,6 +10,7 @@ export default function LogoMark({
   height,
   className,
   animation,
+  relance = 0,
 }: {
   size?: number;
   width?: number;
@@ -28,12 +29,18 @@ export default function LogoMark({
    *
    *  `strokeLinecap` rond dans les deux cas : un trait qui grandit a besoin
    *  d'un bout doux, sinon il paraît tronqué en cours de dessin. */
-  animation?: 'revelation' | 'boucle';
+  animation?: 'revelation' | 'boucle' | 'regard';
+  /** `'regard'` seulement : incrémenter cette valeur rejoue les deux cycles
+   *  (voir `.logo-ray-regard` dans index.css et AppShell). */
+  relance?: number;
 }) {
   const vb = `${LOGO_VIEWBOX.minX} ${LOGO_VIEWBOX.minY} ${LOGO_VIEWBOX.width} ${LOGO_VIEWBOX.height}`;
   return (
     <svg width={width ?? size} height={height ?? size} viewBox={vb} className={className} aria-hidden="true">
       <g
+        // Une nouvelle clé remonte les traits : c'est ce qui relance une
+        // animation CSS déjà terminée (`animation="regard"`).
+        key={relance}
         stroke={colors.accent.bright}
         strokeWidth="2.4"
         strokeLinecap={animation ? 'round' : 'butt'}
@@ -50,7 +57,9 @@ export default function LogoMark({
               y1={r.y1}
               x2={r.x2}
               y2={r.y2}
-              className={animation === 'boucle' ? 'logo-ray-grow' : 'logo-ray-reveal'}
+              className={
+                animation === 'boucle' ? 'logo-ray-grow' : animation === 'regard' ? 'logo-ray-regard' : 'logo-ray-reveal'
+              }
               style={
                 {
                   strokeDasharray: longueur,

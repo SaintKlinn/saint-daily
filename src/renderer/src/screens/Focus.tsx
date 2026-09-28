@@ -72,7 +72,7 @@ export default function Focus() {
             {error}
           </p>
         ) : (
-          <p className="text-corps text-muted">Cet engagement n'existe plus.</p>
+          <p className="text-corps text-muted">Cet élément n'existe plus.</p>
         )}
         <Button variant="secondary" size="sm" onClick={() => navigate('/')}>
           Retour à l'accueil
@@ -140,7 +140,7 @@ export default function Focus() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Sous-tâches</p>
+          <p className="text-libelle uppercase tracking-[0.04em] text-muted">Jalons</p>
           <MilestoneChecklist
             milestones={milestones}
             onToggle={handleToggleMilestone}

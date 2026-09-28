@@ -68,3 +68,14 @@ export function blockPositionFromRange(startIso: string, endIso: string): BlockP
   const durationMinutes = Math.max(0, (new Date(endIso).getTime() - new Date(startIso).getTime()) / 60_000);
   return blockPositionFromDuration(startIso, durationMinutes);
 }
+
+/**
+ * Heure sur laquelle la grille de la semaine s'ouvre : une heure avant
+ * l'heure actuelle, pour voir ce qui vient plutôt que la matinée déjà
+ * passée — l'ancienne ouverture fixe sur 7 h cachait, l'après-midi, les
+ * tâches du soir sous le pli. Bornée pour que les `heuresVisibles`
+ * dernières heures de la journée restent atteignables sans trou en bas.
+ */
+export function heureDOuverture(now: Date = new Date(), heuresVisibles = 9): number {
+  return Math.min(Math.max(now.getHours() - 1, 0), 24 - heuresVisibles);
+}

@@ -1,6 +1,7 @@
 import { fetchAllPages } from '../hooks/usePracticeEntries';
 import { getSupabaseClient } from './supabase';
 import { toFrenchError } from './errors';
+import { MOOD_LABELS } from './seances';
 import type { Mood } from './types';
 
 export interface ExportMilestone {
@@ -194,17 +195,6 @@ export function toJson(bundle: ExportBundle): string {
 // (ExportEntry.tags) — deux ensembles distincts qui se chevauchent
 // rarement, d'où une colonne séparée plutôt qu'un cumul dans la première.
 const CSV_HEADER = ['Date', 'Engagement', 'Tags', 'Durée (min)', 'Note', 'Humeur', 'Tags de la séance'];
-
-// Mêmes libellés que le sélecteur de NouvelleEntree et que le journal de
-// DetailSkill — l'un des trois endroits où l'humeur choisie doit apparaître
-// enfin quelque part.
-const MOOD_LABELS: Record<Mood, string> = {
-  difficile: 'Difficile',
-  moyen: 'Moyen',
-  correct: 'Correct',
-  bien: 'Bien',
-  excellent: 'Excellent',
-};
 
 // Encadre et double les guillemets dès que la valeur contient un
 // séparateur, un guillemet ou un saut de ligne : sans ça, une note

@@ -40,6 +40,63 @@ export function membresDuProjet(
 }
 
 /**
+ * Tous les engagements d'un projet, sous-projets compris : ses membres, les
+ * membres de ses sous-projets, et ainsi de suite. C'est la règle de
+ * remontée — le temps passé sur « la toiture » est du temps passé sur « la
+ * maison ».
+ *
+ * Chaque engagement n'apparaît qu'une fois, même rattaché à deux niveaux :
+ * un skill membre de la maison ET de la toiture ne compte pas double. Le
+ * projet lui-même n'est jamais renvoyé.
+ *
+ * La traversée tient un ensemble de visités, amorcé avec le projet : la
+ * contrainte `check (engagement_id <> project_id)` n'interdit que le cycle
+ * trivial, et une maison dans une toiture dans une maison bouclerait sans
+ * lui. L'interface refuse de créer un cycle (`sousProjetsRattachables`),
+ * mais cette fonction ne doit pas dépendre d'une garantie posée ailleurs.
+ */
+export function membresRecursifs(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  projetId: string
+): Engagement[] {
+  const visites = new Set([projetId]);
+  const resultat: Engagement[] = [];
+  const aParcourir = [projetId];
+  while (aParcourir.length > 0) {
+    const courant = aParcourir.shift() as string;
+    for (const membre of membresDuProjet(engagements, liaisons, courant)) {
+      if (visites.has(membre.id)) continue;
+      visites.add(membre.id);
+      resultat.push(membre);
+      if (membre.isProject) aParcourir.push(membre.id);
+    }
+  }
+  return resultat;
+}
+
+/**
+ * Les projets qu'on peut rattacher comme sous-projets de `projetId` : actifs,
+ * ni lui-même, ni déjà membres directs, et surtout aucun qui contient déjà
+ * `projetId`, même indirectement — le rattacher fermerait un cycle.
+ */
+export function sousProjetsRattachables(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  projetId: string
+): Engagement[] {
+  const directs = new Set(membresDuProjet(engagements, liaisons, projetId).map((m) => m.id));
+  return engagements.filter(
+    (e) =>
+      e.isProject &&
+      !e.archivedAt &&
+      e.id !== projetId &&
+      !directs.has(e.id) &&
+      !membresRecursifs(engagements, liaisons, e.id).some((m) => m.id === projetId)
+  );
+}
+
+/**
  * Les projets auxquels un engagement appartient — le sens qui n'existait
  * pas avec une colonne unique, et la raison d'être de ce chantier.
  *
@@ -107,10 +164,12 @@ export function projetAffiche(
 
 /**
  * Les entrées de pratique d'un projet : celles de ses membres, plus les
- * siennes propres.
+ * siennes propres. Pour faire remonter les sous-projets, l'appelant passe
+ * `membresRecursifs` et non les seuls membres directs.
  *
  * Un projet EST un engagement et peut donc porter des entrées directement —
- * c'est ce que fera la « session de chantier ». Ne compter que les membres
+ * c'est ce que fait la « session de chantier » (Pomodoro ou nouvelle entrée
+ * sur le projet). Ne compter que les membres
  * rendrait ce temps-là invisible dans le total de son propre projet. La règle
  * vit ici et non chez l'appelant, précisément pour qu'un test puisse la
  * contredire.
@@ -201,7 +260,7 @@ export function avancementProjet(jalons: { completedAt: string | null }[]): {
 }
 
 /** Le critère de tri de la liste des projets. Chacun a un sens unique. */
-export type CritereTri = 'dormance' | 'temps' | 'avancement' | 'nom';
+export type CritereTri = 'dormance' | 'temps' | 'avancement' | 'echeance' | 'nom';
 
 /**
  * Une ligne de la liste des projets, réduite à ce sur quoi on trie.
@@ -217,6 +276,8 @@ export interface LigneProjet {
   minutes: number;
   jours: number | null;
   avancement: number | null;
+  // Jours avant l'échéance (négatif en retard), `null` sans échéance.
+  echeance?: number | null;
 }
 
 export function trierProjets(lignes: LigneProjet[], critere: CritereTri): LigneProjet[] {
@@ -249,10 +310,112 @@ export function trierProjets(lignes: LigneProjet[], critere: CritereTri): LigneP
         return decroissant(a.minutes, b.minutes);
       case 'avancement':
         return absentEnBas(a.avancement, b.avancement, croissant);
+      case 'echeance':
+        // La plus pressante d'abord, retards compris ; sans échéance en bas.
+        return absentEnBas(a.echeance ?? null, b.echeance ?? null, croissant);
       case 'nom':
         // En français : sans la locale, « Élagage » passerait après
         // « Zinguerie », son point de code étant plus haut.
         return a.nom.localeCompare(b.nom, 'fr');
     }
   });
+}
+
+/**
+ * La liste des projets en arbre : chaque sous-projet sous son parent, en
+ * retrait, dans l'ordre déjà trié. Un sous-projet trié avant son propre
+ * parent (plus actif que lui) s'en trouvait séparé, relié par la seule
+ * mention « dans … » (audit graphique, M4).
+ *
+ * `parentDe` donne un parent par projet : un projet rattaché à plusieurs
+ * n'apparaît qu'une fois, sous le premier. Un parent absent de la liste
+ * (archivé et masqué) laisse l'enfant à la racine. Les visités protègent
+ * d'un cycle déjà en base, comme dans `membresRecursifs`.
+ */
+export function ordonnerEnArbre<T extends { id: string }>(
+  lignesTriees: T[],
+  parentDe: Map<string, string | null>
+): { ligne: T; profondeur: number }[] {
+  const presents = new Set(lignesTriees.map((l) => l.id));
+  const enfants = new Map<string, T[]>();
+  const racines: T[] = [];
+  for (const ligne of lignesTriees) {
+    const parent = parentDe.get(ligne.id) ?? null;
+    if (parent && presents.has(parent) && parent !== ligne.id) {
+      enfants.set(parent, [...(enfants.get(parent) ?? []), ligne]);
+    } else {
+      racines.push(ligne);
+    }
+  }
+  const resultat: { ligne: T; profondeur: number }[] = [];
+  const vus = new Set<string>();
+  const poser = (ligne: T, profondeur: number) => {
+    if (vus.has(ligne.id)) return;
+    vus.add(ligne.id);
+    resultat.push({ ligne, profondeur });
+    for (const enfant of enfants.get(ligne.id) ?? []) poser(enfant, profondeur + 1);
+  };
+  for (const racine of racines) poser(racine, 0);
+  // Un cycle complet n'a pas de racine : ses projets restent affichés, à
+  // plat, plutôt que de disparaître.
+  for (const ligne of lignesTriees) poser(ligne, 0);
+  return resultat;
+}
+
+/**
+ * Les ancêtres d'un projet, du plus haut au parent direct, en suivant le
+ * premier parent à chaque niveau : le fil d'Ariane de sa fiche.
+ */
+export function cheminDesParents(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  projetId: string
+): Engagement[] {
+  const chemin: Engagement[] = [];
+  const vus = new Set([projetId]);
+  let courant = projetId;
+  for (;;) {
+    const parent = projetsDeLEngagement(engagements, liaisons, courant)[0];
+    if (!parent || vus.has(parent.id)) break;
+    vus.add(parent.id);
+    chemin.unshift(parent);
+    courant = parent.id;
+  }
+  return chemin;
+}
+
+/**
+ * D'où vient le temps cumulé d'un projet : une part par membre direct, un
+ * sous-projet comptant avec tout ce qu'il contient, plus le temps passé sur
+ * le projet lui-même. Chaque engagement n'est compté qu'une fois : un skill
+ * membre direct garde son temps, même s'il figure aussi dans un
+ * sous-projet ; sinon, il revient au premier sous-projet qui le contient.
+ * La somme des parts vaut donc exactement le temps cumulé.
+ */
+export function repartitionDuTemps(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  entreesParEngagement: Record<string, { durationMinutes: number }[]>,
+  projetId: string
+): { id: string; nom: string; minutes: number; estProjet: boolean }[] {
+  const directs = membresDuProjet(engagements, liaisons, projetId);
+  const attribues = new Set<string>([projetId, ...directs.map((d) => d.id)]);
+  const minutesDe = (id: string) => tempsCumuleMinutes(entreesParEngagement[id] ?? []);
+  const parts = directs.map((membre) => {
+    let minutes = minutesDe(membre.id);
+    if (membre.isProject) {
+      for (const sous of membresRecursifs(engagements, liaisons, membre.id)) {
+        if (attribues.has(sous.id)) continue;
+        attribues.add(sous.id);
+        minutes += minutesDe(sous.id);
+      }
+    }
+    return { id: membre.id, nom: membre.name, minutes, estProjet: membre.isProject };
+  });
+  const propre = minutesDe(projetId);
+  if (propre > 0) {
+    const projet = engagements.find((e) => e.id === projetId);
+    parts.push({ id: projetId, nom: projet ? `${projet.name} (sessions de chantier)` : 'Sessions de chantier', minutes: propre, estProjet: true });
+  }
+  return parts.filter((p) => p.minutes > 0).sort((a, b) => b.minutes - a.minutes);
 }

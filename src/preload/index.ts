@@ -36,6 +36,13 @@ interface PomodoroStateSnapshot {
 
 type PomodoroControlAction = 'pause' | 'resume' | 'stop' | 'advance' | 'skip' | 'extend';
 
+// Clic sur « Démarrer un pomodoro › skill » dans le menu du tray.
+interface TrayPomodoroStart {
+  skillId: string;
+  skillName: string;
+  fenetreVisible: boolean;
+}
+
 interface AgendaWidgetItem {
   id: string;
   name: string;
@@ -60,6 +67,14 @@ const api = {
   },
   setTrayNextEngagement: (label: string | null): void => {
     ipcRenderer.send('tray:set-next-engagement', label);
+  },
+  setTrayQuickSkills: (skills: { id: string; name: string }[]): void => {
+    ipcRenderer.send('tray:set-quick-skills', skills);
+  },
+  onTrayPomodoroStart: (callback: (demande: TrayPomodoroStart) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, demande: TrayPomodoroStart) => callback(demande);
+    ipcRenderer.on('tray:pomodoro-start', listener);
+    return () => ipcRenderer.removeListener('tray:pomodoro-start', listener);
   },
   onNavigateRequest: (callback: (path: string) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, path: string) => callback(path);

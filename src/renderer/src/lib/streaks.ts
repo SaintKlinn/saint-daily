@@ -1,3 +1,5 @@
+import { AUCUN_REPOS, estJourDeRepos, type JoursRepos } from './joursRepos';
+
 export interface PracticeEntryLike {
   practicedAt: string; // ISO 8601
 }
@@ -5,50 +7,69 @@ export interface PracticeEntryLike {
 /**
  * Jours consécutifs (jusqu'à aujourd'hui) avec au moins une entrée de
  * pratique. Une absence aujourd'hui ne casse pas un streak déjà en cours
- * (on n'a peut-être pas encore pratiqué) ; une absence hier le remet à 0.
+ * (on n'a peut-être pas encore pratiqué) ; une absence hier le remet à 0,
+ * sauf si c'était un jour de repos (lib/joursRepos.ts) : un jour de repos
+ * sans pratique est sauté, ni compté ni bloquant.
  * Tout est calculé en UTC pour rester déterministe quel que soit le fuseau
  * de la machine qui exécute le code.
  */
-export function calculateStreak(entries: PracticeEntryLike[], now: Date = new Date()): number {
-  if (entries.length === 0) return 0;
-
-  const practicedDays = new Set(entries.map((e) => toDayKey(new Date(e.practicedAt))));
-
-  let streak = 0;
-  const cursor = startOfUtcDay(now);
-
-  if (!practicedDays.has(toDayKey(cursor))) {
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
-
-  while (practicedDays.has(toDayKey(cursor))) {
-    streak += 1;
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
-
-  return streak;
+export function calculateStreak(
+  entries: PracticeEntryLike[],
+  now: Date = new Date(),
+  repos: JoursRepos = AUCUN_REPOS
+): number {
+  return parcourirSerie(entries, now, repos)?.jours ?? 0;
 }
 
 /**
  * Premier jour (clé UTC YYYY-MM-DD) de la série en cours, ou null s'il n'y
  * en a pas. Mêmes règles que `calculateStreak` : une absence aujourd'hui ne
- * coupe pas la série. Identifie UNE série : deux séries successives de 7
- * jours ont des débuts différents, ce qui permet de fêter chacune.
+ * coupe pas la série, un jour de repos non plus. Identifie UNE série : deux
+ * séries successives de 7 jours ont des débuts différents, ce qui permet de
+ * fêter chacune.
  */
-export function currentStreakStart(entries: PracticeEntryLike[], now: Date = new Date()): string | null {
+export function currentStreakStart(
+  entries: PracticeEntryLike[],
+  now: Date = new Date(),
+  repos: JoursRepos = AUCUN_REPOS
+): string | null {
+  return parcourirSerie(entries, now, repos)?.debut ?? null;
+}
+
+/** Remonte le temps depuis aujourd'hui : chaque jour pratiqué compte, un
+ *  jour de repos sans pratique est sauté, le premier autre jour vide arrête.
+ *  null s'il n'y a aucune série en cours. */
+function parcourirSerie(
+  entries: PracticeEntryLike[],
+  now: Date,
+  repos: JoursRepos
+): { jours: number; debut: string } | null {
   if (entries.length === 0) return null;
   const practicedDays = new Set(entries.map((e) => toDayKey(new Date(e.practicedAt))));
+  // Borne de la remontée : sans elle, sept jours de repos par semaine
+  // feraient boucler sans fin.
+  const plusAncien = entries.reduce(
+    (min, e) => Math.min(min, startOfUtcDay(new Date(e.practicedAt)).getTime()),
+    Infinity
+  );
   const cursor = startOfUtcDay(now);
-  if (!practicedDays.has(toDayKey(cursor))) cursor.setUTCDate(cursor.getUTCDate() - 1);
-  if (!practicedDays.has(toDayKey(cursor))) return null;
-  // `toDayKey` est une clé interne (mois à partir de 0, sans zéros) : la
-  // valeur publique est une vraie date ISO, stable et lisible en stockage.
-  let start = cursor.toISOString().slice(0, 10);
-  while (practicedDays.has(toDayKey(cursor))) {
-    start = cursor.toISOString().slice(0, 10);
+  let jours = 0;
+  let debut: string | null = null;
+  let premier = true;
+  while (cursor.getTime() >= plusAncien) {
+    if (practicedDays.has(toDayKey(cursor))) {
+      jours += 1;
+      // `toDayKey` est une clé interne (mois à partir de 0, sans zéros) :
+      // la valeur publique est une vraie date ISO, stable et lisible en
+      // stockage.
+      debut = cursor.toISOString().slice(0, 10);
+    } else if (!premier && !estJourDeRepos(cursor, repos)) {
+      break;
+    }
+    premier = false;
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
-  return start;
+  return debut ? { jours, debut } : null;
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -56,14 +77,15 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 /**
  * Plus longue suite de jours consécutifs pratiqués **de toute l'histoire**,
  * pas seulement celle qui se termine aujourd'hui — c'est le record, pas le
- * streak en cours.
+ * streak en cours. Les jours de repos entre deux jours pratiqués ne
+ * rompent pas la suite, comme pour `calculateStreak`.
  *
  * Travaille sur des index de jour entiers plutôt que sur des clés texte :
  * une suite se détecte alors par une simple différence de 1, sans
  * arithmétique de dates sensible aux mois de longueurs inégales. En UTC,
  * comme `calculateStreak`, pour rester déterministe quel que soit le fuseau.
  */
-export function calculateBestStreak(entries: PracticeEntryLike[]): number {
+export function calculateBestStreak(entries: PracticeEntryLike[], repos: JoursRepos = AUCUN_REPOS): number {
   if (entries.length === 0) return 0;
   const dayIndexes = [
     ...new Set(entries.map((e) => Math.floor(startOfUtcDay(new Date(e.practicedAt)).getTime() / MS_PER_DAY))),
@@ -71,10 +93,19 @@ export function calculateBestStreak(entries: PracticeEntryLike[]): number {
   let best = 1;
   let run = 1;
   for (let i = 1; i < dayIndexes.length; i++) {
-    run = dayIndexes[i] === dayIndexes[i - 1] + 1 ? run + 1 : 1;
+    run = seSuivent(dayIndexes[i - 1], dayIndexes[i], repos) ? run + 1 : 1;
     if (run > best) best = run;
   }
   return best;
+}
+
+/** Deux jours pratiqués se suivent s'ils sont consécutifs, ou si tous les
+ *  jours qui les séparent sont des jours de repos. */
+function seSuivent(avant: number, apres: number, repos: JoursRepos): boolean {
+  for (let jour = avant + 1; jour < apres; jour++) {
+    if (!estJourDeRepos(new Date(jour * MS_PER_DAY), repos)) return false;
+  }
+  return true;
 }
 
 /** Vrai seulement si `current` dépasse une valeur précédente connue —

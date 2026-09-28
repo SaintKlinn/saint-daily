@@ -12,8 +12,8 @@ constat a été recoupé dans le code avant d'être noté ; ceux qui venaient de
 données de test ont été écartés. Aucune erreur JavaScript pendant les 49
 captures.
 
-**Rien n'est corrigé ici**, à l'exception des états vides (voir la dernière
-section), qui faisaient l'objet d'un chantier à part. Le reste est à arbitrer.
+**Tous les constats sont corrigés** (voir la dernière section), hors celui
+signalé « hors périmètre », qui dépend de la langue de Windows.
 
 Sévérités :
 - **haute** : casse la mise en page ou mène à une impasse ;
@@ -30,10 +30,13 @@ Sévérités :
   (`DetailSkill.tsx:280`, `justify-center`). Avec un an de séances, le journal
   dépasse 4 000 px et le panneau apparaît vide en haut d'écran. Correctif :
   `self-start` et `sticky top-0` sur la colonne, contenu aligné en haut.
-- **Fiche d'une compétence — journal sans limite.** Toutes les séances sont
-  listées d'un bloc (une centaine ici), sans pagination ni regroupement. Même
-  constat sur l'écran **Journal** : plusieurs milliers de pixels de lignes au
-  même niveau visuel, sans en-tête de jour ni de mois.
+- **Fiche d'une compétence — journal sans limite ; écran Journal plafonné.**
+  - **Fiche d'une compétence :** toutes les séances étaient listées d'un bloc
+    (une centaine ici), sans pagination ni regroupement.
+  - **Écran Journal :** le rendu s'arrêtait à 200 lignes (et non « sans
+    limite », comme l'indiquait une première version de ce rapport), mais la
+    suite n'était accessible que par la recherche. Les lignes s'enchaînaient au
+    même niveau visuel, chacune répétant sa date complète.
 - **Impasses au premier lancement.** Sans aucun skill :
   - **Pomodoro** affiche « Aucun skill ne correspond. » et un bouton Démarrer
     grisé, sans chemin pour créer un skill ;
@@ -115,9 +118,38 @@ Sévérités :
 
 ---
 
-## Traité dans ce chantier : les états vides
+## Corrigé
 
-Voir le commit « feat: guide first steps with warmer empty states ». Couvre :
-- les impasses du premier lancement (Pomodoro, Nouvelle entrée) ;
-- le message trompeur et le style incohérent de Skills et Projets vides ;
-- les états vides sans action de l'Accueil, du Journal et du Bilan.
+- **États vides** (commit « feat: guide first steps with warmer empty states ») :
+  - les impasses du premier lancement (Pomodoro, Nouvelle entrée) ;
+  - le message trompeur et le style incohérent de Skills et Projets vides ;
+  - les états vides sans action de l'Accueil, du Journal et du Bilan.
+- **Les trois autres constats hauts** (commit « fix: resolve the high-severity
+  visual audit findings ») :
+  - le panneau latéral de la fiche d'une compétence, désormais en haut et
+    collant ;
+  - le journal de la fiche, affiché par pages de 20 ;
+  - l'écran Journal, regroupé par jour avec le total de chaque journée, l'heure
+    de chaque séance, et « Afficher plus » par pages de 50 ;
+  - l'écran introuvable : un message par cas (adresse inconnue, élément
+    supprimé définitivement, élément encore dans la corbeille, avec un lien
+    vers celle-ci), au tutoiement.
+- **Constats moyens et bas** (commit « fix: resolve the remaining medium and
+  low visual audit findings ») :
+  - en-têtes de Skills et Projets repliés sous le titre à 960 px ;
+  - « série » partout au lieu de « streak » ; « jalons » au lieu de
+    « sous-tâches » ; « engagement » remplacé par « skill », « tâche » ou
+    « élément » dans les textes affichés ;
+  - fiche projet : titre et actions dans l'en-tête, composition avant les tags
+    et les notes ;
+  - actions de l'Accueil à la même taille ; boutons et liens de création avec
+    l'icône « + » ;
+  - calendrier ouvert sur l'heure en cours, grille à la hauteur de la fenêtre ;
+  - place réservée à la pastille de priorité ; « pas de série en cours » au
+    lieu de « série de 0 j » ; objectif affiché au format « 2h 58 sur 3h » ;
+  - liste des projets : anneau d'avancement, « 2 jalons sur 3 », minuscule en
+    milieu de ligne ;
+  - jalons alignés sur la colonne ; champs de l'objectif à la même hauteur ;
+    choix de Nouvelle tâche en grilles ; placeholder du Journal raccourci.
+- **Déjà corrigés avec les états vides :** le double style d'état vide et le
+  message trompeur de Skills vide.

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
+import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
 import { buildHeatmapGrid, countEntriesByDay, type HeatmapCell, type HeatmapLevel, type PracticeEntryLike } from '../lib/retrospective';
 
 interface SelectableEngagement {
@@ -36,9 +37,15 @@ const LEVEL_RANGE_LABEL: Record<HeatmapLevel, string> = {
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-function cellTitle(cell: HeatmapCell): string {
+// Un jour de repos sans séance est hachuré plutôt que laissé en case vide :
+// il ne se confond plus avec un jour manqué (audit graphique, B3).
+const HACHURES = {
+  backgroundImage: 'repeating-linear-gradient(135deg, transparent 0 3px, rgba(188, 204, 194, 0.35) 3px 4px)',
+};
+
+function cellTitle(cell: HeatmapCell, repos: boolean): string {
   const date = cell.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  if (cell.count === 0) return `${date} — aucune entrée`;
+  if (cell.count === 0) return `${date} — ${repos ? 'jour de repos' : 'aucune entrée'}`;
   return `${date} — ${cell.count} entrée${cell.count > 1 ? 's' : ''}`;
 }
 
@@ -49,6 +56,8 @@ export default function HeatmapCalendrier({
   onSelectEngagement,
 }: HeatmapCalendrierProps) {
   const grid = useMemo(() => buildHeatmapGrid(countEntriesByDay(entries)), [entries]);
+  const repos = useJoursRepos();
+  const aDesRepos = repos.hebdo.length > 0 || repos.dates.length > 0;
   const defilementRef = useRef<HTMLDivElement>(null);
 
   // Quand la grille dépasse (fenêtre étroite), elle s'ouvre sur les semaines
@@ -73,12 +82,12 @@ export default function HeatmapCalendrier({
   return (
     <div className="flex flex-col gap-3">
       <select
-        aria-label="Engagement affiché dans la heatmap"
+        aria-label="Filtrer la heatmap"
         value={selectedEngagementId}
         onChange={(event) => onSelectEngagement(event.target.value)}
         className="w-full max-w-[240px] truncate border border-ink-700 bg-ink-800 px-3 py-2 text-secondaire text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
       >
-        <option value="tous">Tous les engagements</option>
+        <option value="tous">Tout ce que tu pratiques</option>
         {engagements.map((engagement) => (
           <option key={engagement.id} value={engagement.id}>
             {engagement.name}
@@ -115,10 +124,13 @@ export default function HeatmapCalendrier({
                 className="heatmap-colonne flex flex-col gap-1"
                 style={{ animationDelay: `${index * 10}ms` }}
               >
-                {column.map((cell) => (
+                {column.map((cell) => {
+                  const enRepos = !cell.isFuture && cell.count === 0 && estJourDeReposLocal(cell.date, repos);
+                  return (
                   <div
                     key={cell.dayKey}
-                    title={cell.isFuture ? undefined : cellTitle(cell)}
+                    title={cell.isFuture ? undefined : cellTitle(cell, enRepos)}
+                    style={enRepos ? HACHURES : undefined}
                     // Contour champagne au survol : la case visée se détache
                     // de ses voisines, ce que le seul `title` natif (qui
                     // n'apparaît qu'après un délai) ne faisait pas.
@@ -126,7 +138,8 @@ export default function HeatmapCalendrier({
                       cell.isFuture ? 'bg-ink-800' : `${LEVEL_CLASS[cell.level]} hover:outline hover:outline-1 hover:outline-offset-1 hover:outline-champagne`
                     }`}
                   />
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -145,6 +158,18 @@ export default function HeatmapCalendrier({
           />
         ))}
         <span className="font-data text-libelle text-muted">Plus</span>
+        {aDesRepos && (
+          <>
+            <div
+              role="img"
+              aria-label="Jour de repos"
+              title="Jour de repos"
+              className="ml-4 h-[13px] w-[13px] bg-heatmap-0"
+              style={HACHURES}
+            />
+            <span className="font-data text-libelle text-muted">Repos</span>
+          </>
+        )}
       </div>
     </div>
   );

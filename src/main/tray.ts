@@ -11,7 +11,82 @@ export function setTrayNextEngagement(label: string | null): void {
   tray?.setToolTip(label ? `Saint Daily\n${label}` : 'Saint Daily');
 }
 
+// Skills pratiqués récemment, envoyés par le renderer (voir
+// useActionsRapidesTray) : de quoi logger une séance ou lancer un pomodoro
+// depuis l'icône, sans ouvrir la fenêtre ni chercher le skill.
+export interface SkillRapide {
+  id: string;
+  name: string;
+}
+
+let skillsRapides: SkillRapide[] = [];
+let agendaAffiche = false;
+let fenetre: () => BrowserWindow | null = () => null;
+
+export function setTrayQuickSkills(skills: SkillRapide[]): void {
+  // Le renderer renvoie la même liste toutes les minutes : ne reconstruire
+  // le menu que si elle change, pour ne pas fermer un menu ouvert.
+  if (JSON.stringify(skills) === JSON.stringify(skillsRapides)) return;
+  skillsRapides = skills;
+  construireMenu();
+}
+
+function montrer(): BrowserWindow | null {
+  const win = fenetre();
+  if (!win) return null;
+  win.show();
+  win.focus();
+  return win;
+}
+
+function naviguer(chemin: string): void {
+  montrer()?.webContents.send('navigate:request', chemin);
+}
+
+function demarrerPomodoro(skill: SkillRapide): void {
+  const win = fenetre();
+  if (!win) return;
+  // Fenêtre cachée dans le tray : on le reste, et c'est l'overlay qui
+  // montre le minuteur (le renderer l'épingle). Fenêtre visible : on y
+  // affiche l'écran Pomodoro.
+  const fenetreVisible = win.isVisible() && !win.isMinimized();
+  if (fenetreVisible) win.focus();
+  win.webContents.send('tray:pomodoro-start', { skillId: skill.id, skillName: skill.name, fenetreVisible });
+}
+
+function construireMenu(): void {
+  if (!tray) return;
+  const sousMenu = (action: (skill: SkillRapide) => void) =>
+    skillsRapides.map((skill) => ({ label: skill.name.replace(/&/g, '&&'), click: () => action(skill) }));
+  const template: Electron.MenuItemConstructorOptions[] = [
+    { label: 'Ouvrir Saint Daily', click: () => montrer() },
+    { label: 'Nouvelle entrée', click: () => naviguer('/entree/nouvelle') },
+  ];
+  if (skillsRapides.length > 0) {
+    template.push(
+      { label: 'Logger une séance', submenu: sousMenu((skill) => naviguer(`/entree/nouvelle?skillId=${skill.id}`)) },
+      { label: 'Démarrer un pomodoro', submenu: sousMenu(demarrerPomodoro) }
+    );
+  }
+  template.push(
+    { type: 'separator' },
+    {
+      label: "Afficher l'agenda du jour",
+      type: 'checkbox',
+      checked: agendaAffiche,
+      click: (item) => {
+        agendaAffiche = toggleAgendaWidget();
+        item.checked = agendaAffiche;
+      },
+    },
+    { type: 'separator' },
+    { label: 'Quitter', click: () => app.quit() }
+  );
+  tray.setContextMenu(Menu.buildFromTemplate(template));
+}
+
 export function createTray(getWindow: () => BrowserWindow | null): void {
+  fenetre = getWindow;
   // En dev l'icône est lue depuis le dossier resources/ du projet ; dans
   // l'app packagée elle n'est PAS dans l'asar (electron-builder ne
   // packe que out/**) mais copiée à côté via `extraResources`, donc dans
@@ -23,30 +98,7 @@ export function createTray(getWindow: () => BrowserWindow | null): void {
     : join(__dirname, '../../resources/icon.png');
   tray = new Tray(iconPath);
   setTrayNextEngagement(null);
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      {
-        label: 'Ouvrir Saint Daily',
-        click: () => {
-          const win = getWindow();
-          if (win) {
-            win.show();
-            win.focus();
-          }
-        },
-      },
-      {
-        label: "Afficher l'agenda du jour",
-        type: 'checkbox',
-        checked: false,
-        click: (item) => {
-          item.checked = toggleAgendaWidget();
-        },
-      },
-      { type: 'separator' },
-      { label: 'Quitter', click: () => app.quit() },
-    ])
-  );
+  construireMenu();
   tray.on('click', () => {
     const win = getWindow();
     if (!win) return;

@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { analyserTags } from '../lib/tags';
 import type { GenericLevel } from '../lib/types';
@@ -10,7 +10,9 @@ import { FormField, SelectField, TextAreaField } from '../components/FormField';
 export default function NouveauSkill() {
   const navigate = useNavigate();
   const { engagements, createEngagement } = useEngagements();
-  const [name, setName] = useState('');
+  // `?nom=` : prérempli depuis la palette (« Créer le skill « … » »).
+  const [searchParams] = useSearchParams();
+  const [name, setName] = useState(() => searchParams.get('nom') ?? '');
   const [tagsInput, setTagsInput] = useState('');
   const [genericLevel, setGenericLevel] = useState<GenericLevel>('debutant');
   const [notes, setNotes] = useState('');
@@ -57,7 +59,7 @@ export default function NouveauSkill() {
           label="Tags (séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="Musique, Créatif"
+          placeholder="ex. Musique, Créatif"
         />
         <SelectField label="Niveau de départ" value={genericLevel} onChange={(e) => setGenericLevel(e.target.value as GenericLevel)}>
           <option value="debutant">Débutant</option>

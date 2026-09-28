@@ -68,14 +68,13 @@ describe('computeGoalProgress', () => {
     expect(computeGoalProgress([], 'hebdomadaire', 'seances', 0, NOW).ratio).toBe(0);
   });
 
-  // 178 min = 2.9666... h : `toFixed(1)` seul arrondirait à « 3.0 », un
-  // affichage qui dit l'objectif atteint alors que `current >= target`
-  // (comparé ailleurs sur la valeur brute) dirait le contraire. Tronquer
-  // avant d'arrondir garantit que le chiffre affiché ne peut jamais
-  // dépasser la progression réelle.
+  // 178 min = 2.9666... h : arrondir afficherait « 3h », un affichage qui
+  // dit l'objectif atteint alors que `current >= target` (comparé ailleurs
+  // sur la valeur brute) dirait le contraire. Les minutes sont tronquées,
+  // donc le chiffre affiché ne peut jamais dépasser la progression réelle.
   it('floors the displayed hours instead of rounding them up (178 min stays under 3 h)', () => {
     const progress = computeGoalProgress([entry(new Date(2026, 8, 8, 9).toISOString(), 178)], 'hebdomadaire', 'heures', 3, NOW);
-    expect(progress.label).toBe('2.9 h sur 3 h');
+    expect(progress.label).toBe('2h 58 sur 3h');
     expect(progress.current).toBeLessThan(progress.target);
   });
 

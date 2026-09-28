@@ -4,6 +4,11 @@ import {
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
+  membresRecursifs,
+  ordonnerEnArbre,
+  cheminDesParents,
+  repartitionDuTemps,
+  sousProjetsRattachables,
   projetAffiche,
   projetPrincipal,
   projetsDeLEngagement,
@@ -38,6 +43,7 @@ function unEngagement(partiel: Partial<Engagement> & { id: string }): Engagement
     goalPeriod: null,
     goalMetric: null,
     goalTarget: null,
+    dueAt: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     ...partiel,
   };
@@ -407,5 +413,132 @@ describe('trierProjets', () => {
 
   it('ne jette pas sur une liste vide', () => {
     expect(trierProjets([], 'dormance')).toEqual([]);
+  });
+});
+
+describe('sous-projets', () => {
+  const toiture = unEngagement({ id: 'toiture', isProject: true });
+  const charpente = unEngagement({ id: 'charpente', isProject: true });
+  const couverture = unEngagement({ id: 'couverture' });
+  const engagements = [maison, atelier, toiture, charpente, menuiserie, plomberie, couverture];
+  // maison ⊃ toiture ⊃ charpente ; menuiserie à deux niveaux.
+  const liaisons = [
+    uneLiaison({ engagementId: 'plomberie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'toiture', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'couverture', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'charpente', projectId: 'toiture' }),
+  ];
+  const ids = (liste: Engagement[]) => liste.map((e) => e.id).sort();
+
+  it('remonte les membres des sous-projets, sans doublon ni le projet lui-même', () => {
+    expect(ids(membresRecursifs(engagements, liaisons, 'maison'))).toEqual(
+      ['charpente', 'couverture', 'menuiserie', 'plomberie', 'toiture'].sort()
+    );
+    expect(ids(membresRecursifs(engagements, liaisons, 'toiture'))).toEqual(['charpente', 'couverture', 'menuiserie']);
+  });
+
+  it('ne boucle pas sur un cycle déjà en base', () => {
+    const cycle = [...liaisons, uneLiaison({ engagementId: 'maison', projectId: 'charpente' })];
+    expect(ids(membresRecursifs(engagements, cycle, 'maison'))).toEqual(
+      ['charpente', 'couverture', 'menuiserie', 'plomberie', 'toiture'].sort()
+    );
+    expect(ids(membresRecursifs(engagements, cycle, 'charpente'))).toContain('maison');
+  });
+
+  it('le temps remonte une seule fois par engagement', () => {
+    const parEngagement = {
+      maison: [{ durationMinutes: 5 }],
+      toiture: [{ durationMinutes: 10 }],
+      menuiserie: [{ durationMinutes: 30 }],
+      couverture: [{ durationMinutes: 60 }],
+    };
+    const membres = membresRecursifs(engagements, liaisons, 'maison');
+    expect(tempsCumuleMinutes(entreesDuProjet(parEngagement, membres, 'maison'))).toBe(105);
+  });
+
+  it('ne propose ni soi-même, ni un membre direct, ni un ancêtre', () => {
+    // Pour la charpente : la maison et la toiture la contiennent déjà.
+    expect(ids(sousProjetsRattachables(engagements, liaisons, 'charpente'))).toEqual(['atelier']);
+    // Pour la maison : la toiture est déjà là ; la charpente, indirecte, reste proposable.
+    expect(ids(sousProjetsRattachables(engagements, liaisons, 'maison'))).toEqual(['atelier', 'charpente']);
+  });
+
+  it('ne propose pas un projet archivé', () => {
+    const archive = unEngagement({ id: 'grenier', isProject: true, archivedAt: '2026-01-02T00:00:00.000Z' });
+    expect(ids(sousProjetsRattachables([...engagements, archive], liaisons, 'atelier'))).not.toContain('grenier');
+  });
+});
+
+describe('tri par échéance', () => {
+  it('la plus pressante d’abord, sans échéance en bas', () => {
+    const l = (id: string, echeance: number | null) => ({ id, nom: id, minutes: 0, jours: null, avancement: null, echeance });
+    expect(trierProjets([l('loin', 30), l('sans', null), l('retard', -2), l('proche', 3)], 'echeance').map((x) => x.id)).toEqual([
+      'retard',
+      'proche',
+      'loin',
+      'sans',
+    ]);
+  });
+});
+
+describe('ordonnerEnArbre', () => {
+  const ids = (r: { ligne: { id: string }; profondeur: number }[]) => r.map((x) => `${x.ligne.id}:${x.profondeur}`);
+  it('range chaque sous-projet sous son parent, dans l’ordre trié', () => {
+    const lignes = [{ id: 'toiture' }, { id: 'demenagement' }, { id: 'maison' }, { id: 'charpente' }];
+    const parents = new Map([
+      ['toiture', 'maison'],
+      ['charpente', 'toiture'],
+    ]);
+    expect(ids(ordonnerEnArbre(lignes, parents))).toEqual(['demenagement:0', 'maison:0', 'toiture:1', 'charpente:2']);
+  });
+  it('laisse à la racine un enfant dont le parent est masqué, et survit à un cycle', () => {
+    expect(ids(ordonnerEnArbre([{ id: 'toiture' }], new Map([['toiture', 'maison']])))).toEqual(['toiture:0']);
+    const cycle = new Map([
+      ['a', 'b'],
+      ['b', 'a'],
+    ]);
+    expect(ids(ordonnerEnArbre([{ id: 'a' }, { id: 'b' }], cycle)).sort()).toEqual(['a:0', 'b:1']);
+  });
+});
+
+describe('cheminDesParents et répartition', () => {
+  const toiture = unEngagement({ id: 'toiture', name: 'Toiture', isProject: true });
+  const charpente = unEngagement({ id: 'charpente', name: 'Charpente', isProject: true });
+  const couverture = unEngagement({ id: 'couverture', name: 'Couverture' });
+  const tout = [maison, toiture, charpente, menuiserie, plomberie, couverture];
+  const liaisons = [
+    uneLiaison({ engagementId: 'plomberie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'toiture', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'charpente', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'couverture', projectId: 'charpente' }),
+  ];
+
+  it('remonte du parent direct au plus haut', () => {
+    expect(cheminDesParents(tout, liaisons, 'charpente').map((e) => e.id)).toEqual(['maison', 'toiture']);
+    expect(cheminDesParents(tout, liaisons, 'maison')).toEqual([]);
+  });
+
+  it('répartit sans doublon, et la somme vaut le temps cumulé', () => {
+    const parEngagement = {
+      maison: [{ durationMinutes: 15 }],
+      plomberie: [{ durationMinutes: 60 }],
+      menuiserie: [{ durationMinutes: 30 }],
+      toiture: [{ durationMinutes: 10 }],
+      couverture: [{ durationMinutes: 45 }],
+    };
+    const parts = repartitionDuTemps(tout, liaisons, parEngagement, 'maison');
+    // Menuiserie est membre direct : son temps reste le sien, pas celui de la toiture.
+    expect(parts.map((p) => [p.id, p.minutes])).toEqual([
+      ['plomberie', 60],
+      ['toiture', 55],
+      ['menuiserie', 30],
+      ['maison', 15],
+    ]);
+    const total = tempsCumuleMinutes(entreesDuProjet(parEngagement, membresRecursifs(tout, liaisons, 'maison'), 'maison'));
+    expect(parts.reduce((s, p) => s + p.minutes, 0)).toBe(total);
   });
 });

@@ -5,22 +5,31 @@ import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useAllMilestones } from '../hooks/useMilestones';
 import EmptyState from '../components/EmptyState';
+import ProgressRing from '../components/ProgressRing';
+import { PlusIcon } from '../components/icons';
 import { buttonClassName } from '../components/Button';
 import Toggle from '../components/Toggle';
 import {
   avancementProjet,
   entreesDuProjet,
   formatDormance,
-  membresDuProjet,
+  membresRecursifs,
+  ordonnerEnArbre,
+  projetsDeLEngagement,
   tempsCumuleMinutes,
   trierProjets,
 } from '../lib/projets';
 import type { CritereTri } from '../lib/projets';
 import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
+import { joursAvantEcheance, libelleEcheance } from '../lib/echeances';
 
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+
+function enMinuscule(texte: string): string {
+  return texte.charAt(0).toLowerCase() + texte.slice(1);
+}
 
 export default function ListeProjets() {
   const { engagements, loading, error } = useEngagements();
@@ -37,7 +46,9 @@ export default function ListeProjets() {
 
   const { liaisons } = useLiaisonsProjet();
   const membresParProjet = useMemo(
-    () => new Map(projects.map((p) => [p.id, membresDuProjet(engagements, liaisons, p.id)])),
+    // Membres des sous-projets compris : le temps et la dormance remontent
+    // (voir `membresRecursifs`).
+    () => new Map(projects.map((p) => [p.id, membresRecursifs(engagements, liaisons, p.id)])),
     [projects, engagements, liaisons]
   );
   // Une seule requête pour l'écran entier, et non une par projet : on réunit
@@ -77,17 +88,28 @@ export default function ListeProjets() {
           // `null` dit « aucun jalon », que le tri range en bas ; `0` dirait
           // « aucun jalon franchi », qui est autre chose.
           avancement: total === 0 ? null : ratio,
+          echeance: p.dueAt ? joursAvantEcheance(p.dueAt) : null,
         };
       }),
     [projects, membresParProjet, entriesBySkill, milestonesByEngagement]
   );
 
-  const lignesTriees = useMemo(() => trierProjets(lignes, critere), [lignes, critere]);
+  // Chaque sous-projet sous son (premier) parent, en retrait : trié à plat,
+  // il pouvait passer avant son propre parent (audit graphique, M4).
+  const parentDe = useMemo(() => {
+    const parProjet = new Map<string, string | null>();
+    for (const p of projects) parProjet.set(p.id, projetsDeLEngagement(engagements, liaisons, p.id)[0]?.id ?? null);
+    return parProjet;
+  }, [projects, engagements, liaisons]);
+
+  const lignesTriees = useMemo(() => ordonnerEnArbre(trierProjets(lignes, critere), parentDe), [lignes, critere, parentDe]);
   const franchisParProjet = useMemo(() => {
     const parProjet = new Map<string, string>();
     for (const p of projects) {
       const { franchis, total } = avancementProjet(milestonesByEngagement[p.id] ?? []);
-      if (total > 0) parProjet.set(p.id, `${franchis}/${total}`);
+      // « 2 jalons sur 3 » et non « 2/3 », qui ne disait pas ce qu'il
+      // comptait — même libellé que la fiche du projet.
+      if (total > 0) parProjet.set(p.id, `${franchis} jalon${franchis > 1 ? 's' : ''} sur ${total}`);
     }
     return parProjet;
   }, [projects, milestonesByEngagement]);
@@ -108,9 +130,10 @@ export default function ListeProjets() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
+      {/* Même repli que la liste des skills à la largeur minimale. */}
+      <div className="flex flex-wrap items-center justify-between gap-6">
         <h1 className="font-serif text-titre-ecran text-champagne">Projets</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Toggle
             bordered={false}
             checked={voirArchives}
@@ -134,11 +157,13 @@ export default function ListeProjets() {
               <option value="dormance">Dernière activité</option>
               <option value="temps">Temps cumulé</option>
               <option value="avancement">Avancement</option>
+              <option value="echeance">Échéance</option>
               <option value="nom">Nom</option>
             </select>
           </label>
           <Link to="/projets/nouveau" className={buttonClassName('primary')}>
-            + Nouveau projet
+            <PlusIcon />
+            Nouveau projet
           </Link>
         </div>
       </div>
@@ -163,14 +188,36 @@ export default function ListeProjets() {
           ListeSkills : son fond plein dénaturait le cadre de l'EmptyState. */}
       {lignesTriees.length > 0 && (
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-        {lignesTriees.map((ligne) => {
+        {lignesTriees.map(({ ligne, profondeur }) => {
           const archive = projetsArchives.has(ligne.id);
           return (
             <Link
               key={ligne.id}
               to={`/projets/${ligne.id}`}
-              className={`flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
+              // Retrait et filet vertical doré pour un sous-projet : il se lit
+              // comme une branche de la ligne au-dessus.
+              style={profondeur > 0 ? { paddingLeft: `${16 + profondeur * 32}px` } : undefined}
+              className={`relative flex items-center gap-2 bg-ink-800 p-4 transition-colors duration-200 hover:bg-ink-700 ${archive ? 'opacity-55' : ''}`}
             >
+              {profondeur > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 w-px bg-accent-bright/40"
+                  style={{ left: `${profondeur * 32}px` }}
+                />
+              )}
+              {/* L'anneau de la liste des skills, rempli ici par les jalons
+                  franchis : chaque projet montre où il en est sans ouvrir sa
+                  fiche. Sans jalon, rien à mesurer — un anneau vide dirait
+                  « 0 % » à tort ; la place reste réservée pour l'alignement. */}
+              {(() => {
+                const { total, ratio } = avancementProjet(milestonesByEngagement[ligne.id] ?? []);
+                return total > 0 ? (
+                  <ProgressRing size={40} radius={17} filled={archive ? 0 : ratio} />
+                ) : (
+                  <span aria-hidden="true" className="h-10 w-10 shrink-0" />
+                );
+              })()}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-serif text-titre text-champagne">{ligne.nom}</span>
@@ -183,8 +230,18 @@ export default function ListeProjets() {
                 {/* Le point médian sépare des informations de même rang. Un
                     projet sans jalon n'en porte que deux : pas de « 0/0 ». */}
                 <p className="mt-1 text-secondaire text-muted">
-                  {formatMinutes(ligne.minutes)} · {formatDormance(ligne.jours)}
+                  {/* Minuscule en milieu de ligne : « Il y a 2 jours » est
+                      écrit pour être lu seul (fiche du projet). */}
+                  {formatMinutes(ligne.minutes)} · {enMinuscule(formatDormance(ligne.jours))}
                   {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
+                  {/* L'échéance, absente de la liste : un projet en retard ne
+                      s'y signalait pas (audit graphique, M4). */}
+                  {ligne.echeance !== null && ligne.echeance !== undefined && (
+                    <span className={ligne.echeance < 0 ? 'text-danger' : ligne.echeance <= 7 ? 'text-accent-bright' : ''}>
+                      {' · échéance '}
+                      {enMinuscule(libelleEcheance(ligne.echeance))}
+                    </span>
+                  )}
                 </p>
               </div>
             </Link>

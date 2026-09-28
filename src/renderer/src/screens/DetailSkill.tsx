@@ -7,8 +7,11 @@ import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
+import { formatMinutes } from '../lib/retrospective';
+import { useJoursRepos } from '../lib/joursRepos';
 import { projetAffiche } from '../lib/projets';
-import type { GenericLevel, GoalMetric, GoalPeriod, Mood } from '../lib/types';
+import { MOOD_LABELS } from '../lib/seances';
+import type { GenericLevel, GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
 import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
@@ -18,7 +21,8 @@ import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
 import ChampSauvegarde from '../components/ChampSauvegarde';
-import { ChevronLeftIcon, ChevronDownIcon } from '../components/icons';
+import EditeurSeance from '../components/EditeurSeance';
+import { ChevronLeftIcon, ChevronDownIcon, PencilIcon, PlusIcon } from '../components/icons';
 
 const LEVEL_LABELS: Record<GenericLevel, string> = {
   debutant: 'Débutant',
@@ -27,15 +31,6 @@ const LEVEL_LABELS: Record<GenericLevel, string> = {
   expert: 'Expert',
 };
 
-// Même libellés que le sélecteur de NouvelleEntree — l'humeur était captée
-// et stockée mais jamais réaffichée nulle part, y compris ici.
-const MOOD_LABELS: Record<Mood, string> = {
-  difficile: 'Difficile',
-  moyen: 'Moyen',
-  correct: 'Correct',
-  bien: 'Bien',
-  excellent: 'Excellent',
-};
 
 // Persiste tout le temps que l'app tourne, pas seulement le montage
 // courant du composant — sans ça, revenir sur DetailSkill après avoir
@@ -43,10 +38,15 @@ const MOOD_LABELS: Record<Mood, string> = {
 // la référence et le pulse de récompense ne se déclencherait jamais.
 const knownStreakBySkillId = new Map<string, number>();
 
+// Le journal d'un skill s'affiche par pages : avec un an de pratique, la
+// liste d'un bloc repoussait les Notes à des milliers de pixels plus bas.
+const SEANCES_PAR_PAGE = 20;
+
 export default function DetailSkill() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { engagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } = useEngagements();
+  const { engagements, deletedEngagements, loading, error: skillsError, updateEngagement, setArchived, softDelete } =
+    useEngagements();
   const skills = useMemo(() => engagements.filter((e) => !e.scheduledAt && !e.isProject), [engagements]);
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const { liaisons, remplacerProjet, synchroniserColonne } = useLiaisonsProjet();
@@ -61,7 +61,7 @@ export default function DetailSkill() {
   // valent la même chose ici.
   const projetDuSkill = projetAffiche(engagements, liaisons, id ?? '');
   const { milestones, error: milestonesError, addMilestone, toggleMilestone } = useMilestones(id ?? null);
-  const { entries, loading: entriesLoading, error: entriesError } = usePracticeEntries(id ?? null);
+  const { entries, loading: entriesLoading, error: entriesError, refresh: rechargerSeances } = usePracticeEntries(id ?? null);
 
   const skill = skills.find((s) => s.id === id);
 
@@ -73,7 +73,13 @@ export default function DetailSkill() {
   // `softDelete` : sans cet état, le bouton reste armable pendant toute
   // l'attente réseau.
   const [deleting, setDeleting] = useState(false);
-  const streak = useMemo(() => calculateStreak(entries), [entries]);
+  // Pas de remise à zéro au changement de skill : AppShell remonte l'écran
+  // à chaque changement d'adresse (clé de transition), donc l'état repart.
+  const [nbSeances, setNbSeances] = useState(SEANCES_PAR_PAGE);
+  const [enEdition, setEnEdition] = useState<string | null>(null);
+  const seanceEnEdition = enEdition ? entries.find((e) => e.id === enEdition) : undefined;
+  const repos = useJoursRepos();
+  const streak = useMemo(() => calculateStreak(entries, undefined, repos), [entries, repos]);
   const [streakPulse, setStreakPulse] = useState(false);
 
   useEffect(() => {
@@ -97,13 +103,12 @@ export default function DetailSkill() {
 
 
   const daysSince = useMemo(() => daysSinceLastPractice(entries), [entries]);
-  const totalHours = useMemo(
-    () => Math.round((entries.reduce((sum, e) => sum + e.durationMinutes, 0) / 60) * 10) / 10,
-    [entries]
-  );
+  // Même format que partout ailleurs (« 38h 48 ») plutôt qu'un décimal
+  // « 38.8h » propre à ce panneau (audit graphique, B4).
+  const totalMinutes = useMemo(() => entries.reduce((sum, e) => sum + e.durationMinutes, 0), [entries]);
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
-  const bestStreak = useMemo(() => calculateBestStreak(entries), [entries]);
-  const badges = useMemo(() => computeBadges(entries), [entries]);
+  const bestStreak = useMemo(() => calculateBestStreak(entries, repos), [entries, repos]);
+  const badges = useMemo(() => computeBadges(entries, repos), [entries, repos]);
   const goal = useMemo(
     () =>
       skill?.goalPeriod && skill.goalMetric && skill.goalTarget
@@ -194,19 +199,27 @@ export default function DetailSkill() {
         </p>
       );
     }
-    return <Introuvable />;
+    return <Introuvable sujet="skill" enCorbeille={deletedEngagements.some((e) => e.id === id)} />;
   }
 
   return (
     <div className="flex flex-col gap-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-        <Link
-          to="/skills"
-          className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
-        >
+        {/* Fil d'Ariane, comme sur la fiche d'un projet : « Retour » ne
+            disait pas où il menait (audit graphique, B5). */}
+        <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-2 font-sans text-secondaire text-muted">
           <ChevronLeftIcon />
-          Retour
-        </Link>
+          <Link
+            to="/skills"
+            className="transition-colors duration-150 hover:text-champagne focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+          >
+            Skills
+          </Link>
+          <span aria-hidden="true">›</span>
+          <span aria-current="page" className="text-champagne">
+            {skill.name}
+          </span>
+        </nav>
       </motion.div>
 
       {/* Le skill est affiché, mais une requête annexe a pu échouer :
@@ -277,15 +290,21 @@ export default function DetailSkill() {
       </div>
 
       <div className="flex min-h-0 flex-1 gap-8">
-        <div className="relative flex w-[260px] min-w-[260px] flex-col items-center justify-center gap-3 overflow-hidden border border-ink-700 bg-ink-900 p-6">
+        {/* `self-start sticky top-6` : la colonne ne s'étire plus sur toute la
+            hauteur du journal (plusieurs milliers de pixels avec un an de
+            séances), où son contenu centré se retrouvait hors de vue, et elle
+            reste visible pendant qu'on fait défiler. `<main>` est le
+            conteneur qui défile ; `top-6` la garde à 24 px de son bord plutôt
+            que collée contre. */}
+        <div className="sticky top-6 flex w-[260px] min-w-[260px] flex-col items-center gap-3 self-start overflow-hidden border border-ink-700 bg-ink-900 p-6">
           <RayCorner variant={0} />
           <svg viewBox="0 0 220 130" className="relative w-full" role="img" aria-label="Heures cumulées de pratique dans le temps">
             <polyline points={chartPoints} fill="none" stroke="#E7B94E" strokeWidth="2" />
           </svg>
-          <p className="relative font-data text-titre-ecran text-champagne">{totalHours}h</p>
+          <p className="relative font-data text-titre-ecran text-champagne">{formatMinutes(totalMinutes)}</p>
           <p className="relative font-data text-libelle uppercase tracking-[0.1em] text-muted">cumulées</p>
           <p className="relative text-center text-corps text-muted">
-            Streak :{' '}
+            Série :{' '}
             <motion.span
               // `inline-block` : un élément inline nu ignore `transform`,
               // donc l'animation `scale` ci-dessous n'aurait aucun effet
@@ -297,7 +316,9 @@ export default function DetailSkill() {
               {streak} j
             </motion.span>{' '}
             · dernière pratique{' '}
-            {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
+            <span className="whitespace-nowrap">
+              {daysSince === null ? 'jamais' : daysSince === 0 ? "aujourd'hui" : `il y a ${daysSince} j`}
+            </span>
           </p>
         </div>
 
@@ -306,7 +327,7 @@ export default function DetailSkill() {
             <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
             {goal ? (
               <div className="flex flex-col gap-3">
-                <GoalProgress progress={goal} />
+                <GoalProgress progress={goal} periode={skill.goalPeriod} />
                 <Button
                   type="button"
                   variant="secondary"
@@ -325,7 +346,7 @@ export default function DetailSkill() {
           <section>
             <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Records</h2>
             <p className="mb-3 text-corps text-muted">
-              Meilleur streak : <span className="text-champagne">{bestStreak} j</span> · Streak actuel :{' '}
+              Meilleure série : <span className="text-champagne">{bestStreak} j</span> · Série actuelle :{' '}
               <span className="text-champagne">{streak} j</span>
             </p>
             <ul className="flex flex-wrap gap-2">
@@ -368,13 +389,14 @@ export default function DetailSkill() {
           <section className="flex min-h-0 flex-1 flex-col">
             <div className="mb-1 flex items-center justify-between">
               <h2 className="font-sans text-corps font-semibold text-champagne">Journal</h2>
-              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="text-corps text-accent-bright underline">
-                + Nouvelle entrée
+              <Link to={`/entree/nouvelle?skillId=${skill.id}`} className="inline-flex items-center gap-1 text-corps text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+                <PlusIcon />
+                Nouvelle entrée
               </Link>
             </div>
-            <div className="flex flex-col overflow-y-auto">
-              {entries.map((entry) => (
-                <div key={entry.id} className="flex gap-2 border-t border-ink-700 py-4 last:border-b">
+            <div className="flex flex-col">
+              {entries.slice(0, nbSeances).map((entry) => (
+                <div key={entry.id} className="group flex items-baseline gap-2 border-t border-ink-700 py-4 last:border-b">
                   <p className="w-20 font-data text-secondaire text-muted">
                     {new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
@@ -389,9 +411,41 @@ export default function DetailSkill() {
                       <span className="ml-2 font-sans not-italic text-secondaire text-muted">· {MOOD_LABELS[entry.mood]}</span>
                     )}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setEnEdition(entry.id)}
+                    aria-label={`Modifier la séance du ${new Date(entry.practicedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`}
+                    title="Modifier la séance"
+                    // Même crayon discret que dans le Journal (audit
+                    // graphique, M7).
+                    className="flex h-7 w-7 items-center justify-center self-center text-muted opacity-0 transition-opacity hover:text-champagne group-hover:opacity-100 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                  >
+                    <PencilIcon />
+                  </button>
                 </div>
               ))}
             </div>
+            {entries.length > nbSeances && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3 self-center"
+                onClick={() => setNbSeances((n) => n + SEANCES_PAR_PAGE)}
+              >
+                Afficher {Math.min(SEANCES_PAR_PAGE, entries.length - nbSeances)} séances de plus
+                <span className="font-data text-libelle text-muted">
+                  · {entries.length - nbSeances} restante{entries.length - nbSeances > 1 ? 's' : ''}
+                </span>
+              </Button>
+            )}
+            {seanceEnEdition && (
+              <EditeurSeance
+                seance={seanceEnEdition}
+                nom={skill.name}
+                onFermer={() => setEnEdition(null)}
+                onChange={() => void rechargerSeances()}
+              />
+            )}
           </section>
 
           <section>

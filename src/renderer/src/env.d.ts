@@ -34,6 +34,10 @@ export interface SaintDailyApi {
   getAutoLaunch: () => Promise<boolean>;
   focusWindow: () => void;
   setTrayNextEngagement: (label: string | null) => void;
+  setTrayQuickSkills: (skills: { id: string; name: string }[]) => void;
+  onTrayPomodoroStart: (
+    callback: (demande: { skillId: string; skillName: string; fenetreVisible: boolean }) => void
+  ) => () => void;
   onNavigateRequest: (callback: (path: string) => void) => () => void;
   pomodoro: {
     reportState: (state: PomodoroStateSnapshot | null) => void;

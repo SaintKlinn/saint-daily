@@ -9,17 +9,31 @@ import {
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
+  cheminDesParents,
+  membresRecursifs,
+  projetsDeLEngagement,
+  repartitionDuTemps,
+  sousProjetsRattachables,
   tempsCumuleMinutes,
 } from '../lib/projets';
 import { formatMinutes } from '../lib/retrospective';
 import { daysSinceLastPractice } from '../lib/streaks';
 import { computeGoalProgress } from '../lib/motivation';
+import {
+  dateCourte,
+  echeanceDepuisChamp,
+  echeanceVersChamp,
+  HORIZON_ECHEANCE_JOURS,
+  joursAvantEcheance,
+  libelleEcheance,
+  prochainesDates,
+} from '../lib/echeances';
 import type { GoalMetric, GoalPeriod } from '../lib/types';
 import Introuvable from './Introuvable';
-import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
-import Button from '../components/Button';
+import Button, { buttonClassName } from '../components/Button';
 import BoutonSuppression from '../components/BoutonSuppression';
+import MenuActions from '../components/MenuActions';
 import GoalProgress from '../components/GoalProgress';
 import GoalSetter from '../components/GoalSetter';
 import MilestoneChecklist from '../components/MilestoneChecklist';
@@ -31,10 +45,14 @@ import { analyserTags } from '../lib/tags';
 const FOCUS_RING =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 
+// Une part de temps par membre direct, du doré au vert : assez distinctes
+// pour se suivre de la barre à la légende, sans sortir de la palette.
+const COULEURS_REPARTITION = ['bg-accent-bright', 'bg-accent-mid', 'bg-accent-deep', 'bg-muted', 'bg-ink-700'];
+
 export default function DetailProjet() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { engagements, loading, error, softDelete, updateEngagement, setArchived } = useEngagements();
+  const { engagements, deletedEngagements, loading, error, softDelete, updateEngagement, setArchived } = useEngagements();
   const projects = useMemo(() => engagements.filter((e) => e.isProject), [engagements]);
   const project = projects.find((p) => p.id === id);
   const { liaisons, lier, delier, synchroniserColonne } = useLiaisonsProjet();
@@ -54,26 +72,54 @@ export default function DetailProjet() {
       (e) => !e.isProject && !e.scheduledAt && !e.archivedAt && !dejaMembres.has(e.id)
     );
   }, [engagements, children]);
+  // Sous-projets : rattacher un projet à celui-ci, jamais un qui le contient
+  // déjà (voir `sousProjetsRattachables`). Et les projets dont celui-ci est
+  // un sous-projet, pour remonter d'un niveau.
+  const sousProjetsPossibles = useMemo(
+    () => (id ? sousProjetsRattachables(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
+  const parents = useMemo(
+    () => (id ? projetsDeLEngagement(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
+  // Fil d'Ariane : « Projets › Maison › Toiture » plutôt qu'un « Retour »
+  // qui ne disait pas où il menait (audit graphique, B5).
+  const ancetres = useMemo(() => (id ? cheminDesParents(engagements, liaisons, id) : []), [engagements, liaisons, id]);
+  // Règle de remontée : le temps, la dormance et l'objectif comptent aussi
+  // les sous-projets et leurs membres. La composition affichée reste celle
+  // des membres directs.
+  const tousLesMembres = useMemo(
+    () => (id ? membresRecursifs(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
   const [actionError, setActionError] = useState<string | null>(null);
   // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
   // cet état, le bouton reste armable pendant toute l'attente réseau.
   const [deleting, setDeleting] = useState(false);
   const [enEditionNom, setEnEditionNom] = useState(false);
+  const [enEditionEcheance, setEnEditionEcheance] = useState(false);
 
   // Les identifiants sont TRIÉS : `useAllPracticeEntries` mémorise sur
   // `engagementIds.join(',')`, donc deux tableaux de même contenu dans un
   // ordre différent produisent deux clés différentes et relancent la requête
   // à chaque rendu où l'ordre change.
   const idsConcernes = useMemo(
-    () => (id ? [...new Set([...children.map((c) => c.id), id])].sort() : []),
-    [children, id]
+    () => (id ? [...new Set([...tousLesMembres.map((c) => c.id), id])].sort() : []),
+    [tousLesMembres, id]
   );
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(idsConcernes);
   const entrees = useMemo(
-    () => (id ? entreesDuProjet(entriesBySkill, children, id) : []),
-    [entriesBySkill, children, id]
+    () => (id ? entreesDuProjet(entriesBySkill, tousLesMembres, id) : []),
+    [entriesBySkill, tousLesMembres, id]
   );
   const minutes = useMemo(() => tempsCumuleMinutes(entrees), [entrees]);
+  // D'où vient ce total : une part par membre direct, sous-projets compris
+  // (audit graphique, B6).
+  const repartition = useMemo(
+    () => (id ? repartitionDuTemps(engagements, liaisons, entriesBySkill, id) : []),
+    [engagements, liaisons, entriesBySkill, id]
+  );
   const dormance = useMemo(() => formatDormance(daysSinceLastPractice(entrees)), [entrees]);
   const objectif = useMemo(
     () =>
@@ -151,6 +197,22 @@ export default function DetailProjet() {
     return { error: tagsError };
   }
 
+  // Les tâches planifiées parmi les membres : les dates du chantier, qu'on
+  // ne voyait jusqu'ici qu'en parcourant le calendrier semaine par semaine.
+  const dates = useMemo(() => prochainesDates(children), [children]);
+  const joursEcheance = project?.dueAt ? joursAvantEcheance(project.dueAt) : null;
+
+  async function handleEcheance(valeur: string) {
+    if (!project) return;
+    // Le champ date émet aussi pendant la frappe de l'année (« 0002 ») :
+    // on n'enregistre qu'une date plausible, ou l'effacement.
+    const iso = valeur === '' ? null : echeanceDepuisChamp(valeur);
+    if (valeur !== '' && (!iso || new Date(iso).getFullYear() < 2000 || new Date(iso).getFullYear() > 2100)) return;
+    setActionError(null);
+    const { error: echeanceError } = await updateEngagement(project.id, { dueAt: iso });
+    if (echeanceError) setActionError(echeanceError);
+  }
+
   async function handleArchiver() {
     if (!project) return;
     setActionError(null);
@@ -166,6 +228,10 @@ export default function DetailProjet() {
       setActionError(lierError);
       return;
     }
+    // Pas de `project_id` pour un sous-projet : la suppression d'un projet
+    // envoie à la corbeille les engagements dont il est le projet principal
+    // par cette colonne, et y emporterait le sous-projet sans ses membres.
+    if (engagements.find((e) => e.id === engagementId)?.isProject) return;
     const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
@@ -196,60 +262,125 @@ export default function DetailProjet() {
         </p>
       );
     }
-    return <Introuvable />;
+    return <Introuvable sujet="projet" enCorbeille={deletedEngagements.some((e) => e.id === id)} />;
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <Link
-        to="/projets"
-        className="flex w-fit items-center gap-2 font-sans text-secondaire text-muted transition-colors duration-150 hover:text-champagne"
-      >
+      <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-2 font-sans text-secondaire text-muted">
         <ChevronLeftIcon />
-        Retour
-      </Link>
+        <Link to="/projets" className={`transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}>
+          Projets
+        </Link>
+        {ancetres.map((ancetre) => (
+          <span key={ancetre.id} className="flex items-center gap-2">
+            <span aria-hidden="true">›</span>
+            <Link to={`/projets/${ancetre.id}`} className={`transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}>
+              {ancetre.name}
+            </Link>
+          </span>
+        ))}
+        <span aria-hidden="true">›</span>
+        <span aria-current="page" className="text-champagne">
+          {project.name}
+        </span>
+      </nav>
 
       {actionError && (
         <p role="alert" className="text-corps text-danger">
           {actionError}
         </p>
       )}
+      {entriesError && (
+        <p role="alert" className="text-corps text-danger">
+          {entriesError}
+        </p>
+      )}
 
-      <div className="relative overflow-hidden border border-ink-700 bg-ink-900 p-6">
-        <RayCorner variant={0} />
-        {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
-            champ en permanence remplacerait un serif 28 px par une boîte
-            bordée sur un écran qu'on regarde bien plus qu'on ne le modifie.
-            Le mode vit ici et non dans `ChampSauvegarde`, qui ne saurait
-            plus s'il est un champ ou un titre.
+      {/* En-tête sur le modèle de la fiche d'un skill : le titre à gauche, les
+          actions sur le projet à droite. Le titre vivait seul dans un grand
+          cadre, et Archiver/Supprimer se trouvaient au milieu de la page,
+          avant la composition du projet. */}
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="min-w-0 flex-1">
+            {/* Le nom reste un titre tant qu'on ne le modifie pas : le rendre
+                champ en permanence remplacerait un serif 28 px par une boîte
+                bordée sur un écran qu'on regarde bien plus qu'on ne le modifie.
+                Le mode vit ici et non dans `ChampSauvegarde`, qui ne saurait
+                plus s'il est un champ ou un titre.
 
-            Le `onBlur` du div suffit à en sortir : celui de React est un
-            `focusout`, donc il remonte depuis le champ. */}
-        {enEditionNom ? (
-          <div className="relative" onBlur={() => setEnEditionNom(false)}>
-            <ChampSauvegarde
-              key={project.id}
-              valeur={project.name}
-              onSave={handleRenommer}
-              ariaLabel="Nom du projet"
-              confirmation="Nom enregistré."
-              autoFocus
-            />
+                Le `onBlur` du div suffit à en sortir : celui de React est un
+                `focusout`, donc il remonte depuis le champ. */}
+            {enEditionNom ? (
+              <div className="relative" onBlur={() => setEnEditionNom(false)}>
+                <ChampSauvegarde
+                  key={project.id}
+                  valeur={project.name}
+                  onSave={handleRenommer}
+                  ariaLabel="Nom du projet"
+                  confirmation="Nom enregistré."
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <h1 className="relative font-serif text-titre-ecran text-champagne">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionError(null);
+                    setEnEditionNom(true);
+                  }}
+                  className={`block text-left ${FOCUS_RING}`}
+                >
+                  {project.name}
+                </button>
+              </h1>
+            )}
+            {/* Le fil d'Ariane suit le premier parent ; les autres, s'il y
+                en a, sont nommés ici. */}
+            {parents.length > 1 && (
+              <p className="relative mt-1 text-secondaire text-muted">
+                Aussi dans{' '}
+                {parents.slice(1).map((parent, i) => (
+                  <span key={parent.id}>
+                    {i > 0 && ', '}
+                    <Link to={`/projets/${parent.id}`} className={`text-accent-bright underline-offset-4 hover:underline ${FOCUS_RING}`}>
+                      {parent.name}
+                    </Link>
+                  </span>
+                ))}
+              </p>
+            )}
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          {/* Session de chantier : travailler le projet pour lui-même. Le
+              temps s'enregistre sur le projet et compte dans son total. Pas
+              sur un projet archivé, que le Pomodoro ne propose pas. */}
+          {/* L'action qu'on vient faire en premier et en doré ; les actions
+              rares derrière « … », avec l'avertissement de suppression là
+              où il sert (audit graphique, M1). */}
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {!project.archivedAt && (
+              <>
+                <Link to={`/entree/nouvelle?skillId=${project.id}`} className={buttonClassName('secondary', 'sm')}>
+                  Nouvelle entrée
+                </Link>
+                <Link to={`/pomodoro?skillId=${project.id}`} className={buttonClassName('primary', 'sm')}>
+                  Session de chantier
+                </Link>
+              </>
+            )}
+            <MenuActions libelle="Archiver ou supprimer le projet">
+              <Button variant="secondary" size="sm" onClick={handleArchiver}>
+                {project.archivedAt ? 'Désarchiver' : 'Archiver'}
+              </Button>
+              <BoutonSuppression onConfirm={handleDelete} busy={deleting} label="Supprimer le projet" />
+              <p className="text-secondaire text-muted">
+                Supprimer envoie aussi à la corbeille les skills et tâches dont ce projet est le projet principal.
+              </p>
+            </MenuActions>
           </div>
-        ) : (
-          <h1 className="relative font-serif text-titre-ecran text-champagne">
-            <button
-              type="button"
-              onClick={() => {
-                setActionError(null);
-                setEnEditionNom(true);
-              }}
-              className={`block text-left ${FOCUS_RING}`}
-            >
-              {project.name}
-            </button>
-          </h1>
-        )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-8">
@@ -261,13 +392,149 @@ export default function DetailProjet() {
           <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Dernière activité</p>
           <p className="mt-1 text-corps text-champagne">{dormance}</p>
         </div>
+        <div>
+          <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Échéance</p>
+          {/* Une valeur en texte comme ses voisines, modifiable au clic comme
+              le nom : un champ date natif, vide, affichait « mm/dd/yyyy » au
+              milieu des chiffres (audit graphique, M2). */}
+          {enEditionEcheance ? (
+            <div className="mt-1 flex flex-wrap items-center gap-3" onBlur={() => setEnEditionEcheance(false)}>
+              {/* Non contrôlé : contrôlé, le champ reviendrait à l'ancienne
+                  date à chaque année intermédiaire ignorée (« 0002 ») et on
+                  ne pourrait plus taper l'année au clavier. */}
+              <input
+                key={project.id}
+                type="date"
+                autoFocus
+                defaultValue={echeanceVersChamp(project.dueAt)}
+                onChange={(e) => void handleEcheance(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape') setEnEditionEcheance(false);
+                }}
+                aria-label="Échéance du projet"
+                className={`h-8 border border-ink-700 bg-ink-800 px-2 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING}`}
+              />
+              {project.dueAt && (
+                <button
+                  type="button"
+                  // `mousedown` et non `click` : le `blur` du champ referme
+                  // l'édition avant qu'un clic n'arrive.
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    void handleEcheance('');
+                    setEnEditionEcheance(false);
+                  }}
+                  className={`text-secondaire text-muted underline-offset-4 hover:text-champagne hover:underline ${FOCUS_RING}`}
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setActionError(null);
+                setEnEditionEcheance(true);
+              }}
+              aria-label={project.dueAt ? `Échéance : ${dateCourte(project.dueAt)}, modifier` : 'Fixer une échéance'}
+              className={`mt-1 block text-left text-corps ${FOCUS_RING} ${
+                joursEcheance === null
+                  ? 'text-accent-bright underline-offset-4 hover:underline'
+                  : joursEcheance < 0
+                    ? 'text-danger'
+                    : joursEcheance <= HORIZON_ECHEANCE_JOURS
+                      ? 'text-accent-bright'
+                      : 'text-champagne'
+              }`}
+            >
+              {project.dueAt && joursEcheance !== null
+                ? `${dateCourte(project.dueAt)} · ${libelleEcheance(joursEcheance).toLowerCase()}`
+                : 'Fixer une échéance'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {repartition.length > 1 && (
+        <section aria-label="Répartition du temps cumulé" className="flex flex-col gap-2">
+          <div className="flex h-2 w-full gap-px overflow-hidden bg-ink-950">
+            {repartition.map((part, i) => (
+              <div
+                key={part.id}
+                title={`${part.nom} · ${formatMinutes(part.minutes)} · ${Math.round((part.minutes / minutes) * 100)} %`}
+                className={COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}
+                style={{ flexGrow: part.minutes, flexBasis: 0 }}
+              />
+            ))}
+          </div>
+          <ul className="flex flex-wrap gap-x-5 gap-y-1">
+            {repartition.map((part, i) => (
+              <li key={part.id} className="flex items-center gap-2 text-secondaire text-muted">
+                <span aria-hidden="true" className={`h-2 w-2 ${COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}`} />
+                <span className="text-champagne">{part.nom}</span>
+                <span className="font-data tabular-nums">
+                  {formatMinutes(part.minutes)} · {Math.round((part.minutes / minutes) * 100)} %
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section>
+        <div className="mb-1 flex items-baseline justify-between">
+          {/* « Prochaines » ne vaut que tant qu'aucune ligne n'est passée :
+              une échéance dépassée reste listée, en tête et en rouge. */}
+          <h2 className="font-sans text-corps font-semibold text-champagne">
+            {joursEcheance !== null && joursEcheance < 0 ? 'Dates' : 'Prochaines dates'}
+          </h2>
+          <Link to="/calendrier" className="text-secondaire text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+            Voir le calendrier
+          </Link>
+        </div>
+        {dates.length === 0 && !project.dueAt ? (
+          <p className="text-secondaire text-muted">
+            Aucune date. Planifie une tâche depuis le calendrier et rattache-la à ce projet, ou fixe une échéance.
+          </p>
+        ) : (
+          <ul className="flex flex-col border-b border-ink-700">
+            {dates.map((tache) => (
+              <li
+                key={tache.id}
+                // L'échéance se range à sa date parmi les tâches, par `order`
+                // plutôt qu'en triant deux types différents dans une liste.
+                style={{ order: project.dueAt && tache.scheduledAt! > project.dueAt ? 2 : 0 }}
+                className="flex items-baseline gap-4 border-t border-ink-700 py-2"
+              >
+                <span className="w-44 shrink-0 font-data text-secondaire text-muted">
+                  {dateCourte(tache.scheduledAt as string, true)}
+                </span>
+                <span className="text-corps text-champagne">{tache.name}</span>
+              </li>
+            ))}
+            {project.dueAt && (
+              <li
+                style={{ order: joursEcheance !== null && joursEcheance < 0 ? -1 : 1 }}
+                className="flex items-baseline gap-4 border-t border-ink-700 py-2"
+              >
+                <span className="w-44 shrink-0 font-data text-secondaire text-muted">{dateCourte(project.dueAt)}</span>
+                {joursEcheance !== null && joursEcheance < 0 ? (
+                  <span className="text-corps text-danger">Échéance du projet · {libelleEcheance(joursEcheance).toLowerCase()}</span>
+                ) : (
+                  <span className="text-corps text-accent-bright">Échéance du projet</span>
+                )}
+              </li>
+            )}
+          </ul>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Objectif</h2>
         {objectif ? (
           <div className="flex flex-col gap-3">
-            <GoalProgress progress={objectif} />
+            <GoalProgress progress={objectif} periode={project.goalPeriod} />
             <Button
               type="button"
               variant="secondary"
@@ -318,13 +585,86 @@ export default function DetailProjet() {
       </section>
 
       <section>
+        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Composition</h2>
+        {children.length === 0 ? (
+          <EmptyState>Aucun skill, aucune tâche ni aucun sous-projet rattachés à ce projet.</EmptyState>
+        ) : (
+          <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
+            {children.map((child) => (
+              <div
+                key={child.id}
+                className="flex items-center gap-2 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
+              >
+                <Link
+                  to={child.isProject ? `/projets/${child.id}` : child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
+                  className="flex flex-1 items-center gap-2"
+                >
+                  <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
+                    {child.isProject ? 'Sous-projet' : child.scheduledAt ? 'Tâche' : 'Skill'}
+                  </span>
+                  <span className="font-serif text-champagne">{child.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleDelier(child.id)}
+                  className={`font-data text-secondaire text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
+                >
+                  Retirer
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Un seul menu, groupé par type : deux menus pleine largeur
+            empilés pesaient plus lourd que la liste elle-même (audit
+            graphique, M10). */}
+        {(rattachables.length > 0 || sousProjetsPossibles.length > 0) && (
+          <label className="mt-3 flex flex-col gap-2">
+            <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Rattacher</span>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) handleLier(e.target.value);
+              }}
+              className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
+            >
+              <option value="">Un skill ou un sous-projet…</option>
+              {rattachables.length > 0 && (
+                <optgroup label="Skills">
+                  {rattachables.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {sousProjetsPossibles.length > 0 && (
+                <optgroup label="Sous-projets">
+                  {sousProjetsPossibles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            {sousProjetsPossibles.length > 0 && (
+              <span className="text-secondaire text-muted">
+                Le temps d'un sous-projet remonte dans celui de ce projet ; ses jalons restent les siens.
+              </span>
+            )}
+          </label>
+        )}
+      </section>
+
+      <section>
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Tags</h2>
         <ChampSauvegarde
           key={project.id}
           valeur={project.tags.join(', ')}
           onSave={handleTags}
           ariaLabel="Tags du projet"
-          placeholder="Maison, Perso"
+          placeholder="ex. Maison, Perso"
           confirmation="Tags enregistrés."
         />
       </section>
@@ -342,72 +682,7 @@ export default function DetailProjet() {
         />
       </section>
 
-      <div className="flex items-center gap-3">
-        <Button variant="secondary" size="sm" onClick={handleArchiver}>
-          {project.archivedAt ? 'Désarchiver' : 'Archiver'}
-        </Button>
-        <BoutonSuppression onConfirm={handleDelete} busy={deleting} />
-        <p className="text-secondaire text-muted">
-          Supprimer un projet envoie aussi à la corbeille les engagements dont il est le projet principal.
-        </p>
-      </div>
-      {entriesError && (
-        <p role="alert" className="text-corps text-danger">
-          {entriesError}
-        </p>
-      )}
 
-      <section>
-        <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Composition</h2>
-        {children.length === 0 ? (
-          <EmptyState>Aucun engagement rattaché à ce projet.</EmptyState>
-        ) : (
-          <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
-            {children.map((child) => (
-              <div
-                key={child.id}
-                className="flex items-center gap-2 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
-              >
-                <Link
-                  to={child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
-                  className="flex flex-1 items-center gap-2"
-                >
-                  <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
-                    {child.scheduledAt ? 'Tâche' : 'Skill'}
-                  </span>
-                  <span className="font-serif text-champagne">{child.name}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleDelier(child.id)}
-                  className={`font-data text-secondaire text-muted transition-colors duration-150 hover:text-champagne ${FOCUS_RING}`}
-                >
-                  Retirer
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <label className="mt-3 flex flex-col gap-2">
-          <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
-            Rattacher un skill
-          </span>
-          <select
-            value=""
-            onChange={(e) => {
-              if (e.target.value) handleLier(e.target.value);
-            }}
-            className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
-          >
-            <option value="">Choisir…</option>
-            {rattachables.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
     </div>
   );
 }

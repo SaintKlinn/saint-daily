@@ -5,6 +5,12 @@ interface BoutonSuppressionProps {
   label?: string;
   confirmLabel?: string;
   busy?: boolean;
+  // `md` s'aligne sur des boutons de taille normale (pied de l'éditeur de
+  // séance) ; `sm` est le format des en-têtes de fiche.
+  taille?: 'sm' | 'md';
+  // `texte` : rouge sans cadre au repos, pour qu'une action destructive ne
+  // pèse pas autant que « Enregistrer » à côté d'elle.
+  variante?: 'cadre' | 'texte';
 }
 
 // Le bouton s'arme au premier clic et se désarme seul : un bouton laissé
@@ -22,9 +28,11 @@ const DOUBLE_CLICK_GUARD_MS = 300;
 // et `text-danger`) dans la même liste ont un gagnant décidé par l'ordre
 // de la feuille générée, pas par l'ordre d'écriture — donc on n'en met
 // jamais deux.
+const TAILLES = { sm: 'px-4 py-2 text-secondaire', md: 'px-4 py-3 text-corps' } as const;
 const BASE =
-  'inline-flex items-center justify-center gap-2 px-4 py-2 font-sans text-secondaire transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
+  'inline-flex items-center justify-center gap-2 font-sans transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-bright focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900';
 const IDLE = 'border border-ink-700 text-muted hover:text-champagne';
+const IDLE_TEXTE = 'border border-transparent text-danger hover:border-danger/60';
 const ARMED = 'border border-danger font-semibold text-danger';
 
 export default function BoutonSuppression({
@@ -32,6 +40,8 @@ export default function BoutonSuppression({
   label = 'Supprimer',
   confirmLabel = 'Confirmer ?',
   busy = false,
+  taille = 'sm',
+  variante = 'cadre',
 }: BoutonSuppressionProps) {
   const [armed, setArmed] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -65,7 +75,7 @@ export default function BoutonSuppression({
       // Le changement de libellé est la vraie information ; `aria-live`
       // le fait annoncer au lieu de le laisser à la seule couleur.
       aria-live="polite"
-      className={`${BASE} ${armed ? ARMED : IDLE}`}
+      className={`${BASE} ${TAILLES[taille]} ${armed ? ARMED : variante === 'texte' ? IDLE_TEXTE : IDLE}`}
     >
       {armed ? confirmLabel : label}
     </button>

@@ -44,6 +44,7 @@ interface EngagementRow {
   goal_period?: GoalPeriod | null;
   goal_metric?: GoalMetric | null;
   goal_target?: number | null;
+  due_at?: string | null;
   created_at: string;
 }
 
@@ -81,6 +82,7 @@ function fromRow(row: EngagementRow): Engagement {
     goalPeriod: row.goal_period ?? null,
     goalMetric: row.goal_metric ?? null,
     goalTarget: row.goal_target ?? null,
+    dueAt: row.due_at ?? null,
     createdAt: row.created_at,
   };
 }
@@ -250,6 +252,7 @@ export function useEngagements() {
         | 'goalPeriod'
         | 'goalMetric'
         | 'goalTarget'
+        | 'dueAt'
       >
     >
   ) {
@@ -271,6 +274,7 @@ export function useEngagements() {
         ...(patch.goalPeriod !== undefined ? { goal_period: patch.goalPeriod } : {}),
         ...(patch.goalMetric !== undefined ? { goal_metric: patch.goalMetric } : {}),
         ...(patch.goalTarget !== undefined ? { goal_target: patch.goalTarget } : {}),
+        ...(patch.dueAt !== undefined ? { due_at: patch.dueAt } : {}),
       })
       .eq('id', id);
     if (updateError) return { error: toFrenchError(updateError.message) };

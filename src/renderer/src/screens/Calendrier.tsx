@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useLiaisonsProjet } from '../hooks/useLiaisonsProjet';
 import { useSettings } from '../hooks/useSettings';
-import { addDays, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
+import { addDays, heureDOuverture, blockPositionFromDuration, blockPositionFromRange, dayIndexInWeek, startOfDay, startOfWeek } from '../lib/calendarLayout';
 import { findNextFreeSlot, overlappingTaskNames } from '../lib/scheduling';
 import { projetAffiche } from '../lib/projets';
 import {
@@ -20,6 +20,8 @@ import Button from '../components/Button';
 import TaskPopover from '../components/TaskPopover';
 import Toggle from '../components/Toggle';
 import { ChevronLeftIcon } from '../components/icons';
+import { jourDansLaSemaine } from '../lib/echeances';
+import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
 import type { Engagement, Priority } from '../lib/types';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -124,6 +126,33 @@ export default function Calendrier() {
     return byDay;
   }, [activeEngagements, entriesBySkill, settings?.showPracticeInCalendar, weekStart]);
 
+  // Aujourd'hui, l'heure actuelle et les jours de repos : rien ne les
+  // distinguait, les sept en-têtes étaient identiques (audit graphique, M6).
+  // L'heure est relue chaque minute pour faire avancer le trait.
+  const repos = useJoursRepos();
+  const [maintenant, setMaintenant] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setMaintenant(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const indexAujourdhui = useMemo(() => {
+    const index = weekDaysList.findIndex((d) => d.toDateString() === maintenant.toDateString());
+    return index === -1 ? null : index;
+  }, [weekDaysList, maintenant]);
+  const hautMaintenant = ((maintenant.getHours() * 60 + maintenant.getMinutes()) / (24 * 60)) * 100;
+
+  // Les échéances des projets, posées sur leur jour dans l'en-tête : une
+  // échéance n'a pas d'heure, elle n'a donc pas sa place dans la grille.
+  const echeancesParJour = useMemo(() => {
+    const parJour: Record<number, Engagement[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    for (const projet of projects) {
+      if (!projet.dueAt || projet.archivedAt) continue;
+      const index = jourDansLaSemaine(projet.dueAt, weekStart);
+      if (index !== null) parJour[index].push(projet);
+    }
+    return parJour;
+  }, [projects, weekStart]);
+
   const weekRangeLabel = useMemo(() => {
     const end = addDays(weekStart, 6);
     const sameMonth = weekStart.getMonth() === end.getMonth();
@@ -134,7 +163,7 @@ export default function Calendrier() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 7 * HOUR_ROW_PX;
+    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = heureDOuverture() * HOUR_ROW_PX;
   }, []);
 
   function handleEmptySlotClick(day: Date, hour: number) {
@@ -472,13 +501,40 @@ export default function Calendrier() {
         </p>
       )}
 
-      <div ref={scrollContainerRef} className="max-h-[600px] overflow-y-auto border border-ink-700">
-        <div className="grid grid-cols-[50px_repeat(7,1fr)]">
+      {/* Hauteur liée à la fenêtre plutôt que fixe à 600 px : sur un grand
+          écran, la grille laissait un vide sous elle tout en obligeant à
+          défiler dedans. 240 px = en-tête de l'écran et marges de <main>. */}
+      <div
+        ref={scrollContainerRef}
+        className="max-h-[max(360px,calc(100vh-240px))] overflow-y-auto border border-ink-700"
+      >
+        <div className="grid grid-cols-[50px_repeat(7,minmax(0,1fr))]">
           <div className="sticky top-0 z-10 bg-ink-900" />
           {weekDaysList.map((day, i) => (
             <div key={`header-${i}`} className="sticky top-0 z-10 border-l border-ink-700 bg-ink-900 py-2 text-center">
-              <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">{DAY_LABELS[i]}</p>
-              <p className="font-serif text-titre text-champagne">{day.getDate()}</p>
+              <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
+                {DAY_LABELS[i]}
+                {estJourDeReposLocal(day, repos) && <span className="normal-case tracking-normal"> · repos</span>}
+              </p>
+              <p className="font-serif text-titre text-champagne">
+                {i === indexAujourdhui ? (
+                  <span className="inline-block min-w-9 bg-accent-bright px-2 text-ink-900" aria-label={`Aujourd'hui, ${day.getDate()}`}>
+                    {day.getDate()}
+                  </span>
+                ) : (
+                  day.getDate()
+                )}
+              </p>
+              {echeancesParJour[i].map((projet) => (
+                <Link
+                  key={projet.id}
+                  to={`/projets/${projet.id}`}
+                  title={`Échéance : ${projet.name}`}
+                  className={`mx-1 mt-1 block truncate border border-accent-bright/60 px-1 font-data text-libelle text-accent-bright hover:bg-accent-bright/10 ${FOCUS_RING}`}
+                >
+                  Échéance · {projet.name}
+                </Link>
+              ))}
             </div>
           ))}
           <div>
@@ -489,7 +545,19 @@ export default function Calendrier() {
             ))}
           </div>
           {weekDaysList.map((day, dayIndex) => (
-            <div key={dayIndex} className="relative border-l border-ink-800">
+            <div
+              key={dayIndex}
+              className={`relative border-l border-ink-800 ${estJourDeReposLocal(day, repos) ? 'bg-ink-950/25' : ''}`}
+            >
+              {dayIndex === indexAujourdhui && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 z-[5] h-0.5 bg-accent-bright"
+                  style={{ top: `${hautMaintenant}%` }}
+                >
+                  <span className="absolute -left-1 -top-[3px] h-2 w-2 rounded-full bg-accent-bright" />
+                </div>
+              )}
               {HOURS.map((h) => (
                 <div
                   key={h}

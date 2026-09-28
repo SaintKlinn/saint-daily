@@ -6,6 +6,8 @@ import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeE
 import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
+import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
+import { dateCourte, echeancesProches } from '../lib/echeances';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
 import PremiersPas from '../components/PremiersPas';
@@ -46,6 +48,7 @@ export default function Accueil() {
     refresh: refreshEntries,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const repos = useJoursRepos();
   // entriesBySkill couvre TOUS les engagements actifs (tâches et projets
   // compris, voir useAllPracticeEntries(activeEngagements...) plus haut) —
   // cocher une tâche y insère une entrée de 0 minute qui devient aussitôt
@@ -68,8 +71,10 @@ export default function Accueil() {
   useEffect(() => {
     if (entriesLoading) return;
     const toutes = Object.values(entriesBySkill).flat();
-    setPalierAFeterMaintenant(palierAFeter(calculateStreak(toutes), currentStreakStart(toutes), lirePaliersFetes()));
-  }, [entriesLoading, entriesBySkill]);
+    setPalierAFeterMaintenant(
+      palierAFeter(calculateStreak(toutes, undefined, repos), currentStreakStart(toutes, undefined, repos), lirePaliersFetes())
+    );
+  }, [entriesLoading, entriesBySkill, repos]);
 
   function fermerCelebration() {
     if (palierAFeterMaintenant) ecrirePaliersFetes(palierAFeterMaintenant.fetes);
@@ -201,12 +206,16 @@ export default function Accueil() {
         const entries = entriesBySkill[skill.id] ?? [];
         return {
           skill,
-          streak: calculateStreak(entries),
+          streak: calculateStreak(entries, undefined, repos),
           daysSince: daysSinceLastPractice(entries),
         };
       }),
-    [activeSkills, entriesBySkill]
+    [activeSkills, entriesBySkill, repos]
   );
+
+  // L'Accueil est organisé par l'urgence : un projet n'y entrait jamais,
+  // puisqu'un chantier n'est jamais « dû ». Son échéance, elle, l'est.
+  const echeances = useMemo(() => echeancesProches(engagements, now), [engagements, now]);
 
   const dueSkills = useMemo(
     () => (settings ? stats.filter((s) => s.daysSince !== null && s.daysSince >= settings.reminderThresholdDays) : []),
@@ -271,7 +280,7 @@ export default function Accueil() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !eveningSaving) void handleSaveEvening();
               }}
-              placeholder="Journée dense mais satisfaisante."
+              placeholder="ex. Journée dense mais satisfaisante."
               aria-label="Bilan de la journée"
               maxLength={280}
               className={`min-w-0 flex-1 border border-ink-700 bg-ink-900 px-3 py-2 text-secondaire text-champagne placeholder:text-muted ${FOCUS_RING}`}
@@ -349,7 +358,9 @@ export default function Accueil() {
           {resumeSkill && (
             <Link
               to={`/pomodoro?skillId=${resumeSkill.id}`}
-              className={buttonClassName('secondary', 'sm')}
+              // Même taille que ses deux voisines : trois hauteurs de bouton
+              // différentes sur une seule ligne se lisaient comme un défaut.
+              className={buttonClassName('secondary')}
               title={`Reprendre ${resumeSkill.name}`}
             >
               Reprendre {resumeSkill.name}
@@ -400,6 +411,10 @@ export default function Accueil() {
           <StatCard
             label="Séries en cours"
             valeur={stats.filter((s) => s.streak > 0).length}
+            // Un jour de repos, la carte le dit : sans ça, une série qui
+            // n'avance pas aujourd'hui semblait en danger (audit
+            // graphique, B3).
+            detail={estJourDeReposLocal(now, repos) ? 'en pause · jour de repos' : undefined}
             hero
             rayVariant={4}
           />
@@ -460,6 +475,49 @@ export default function Accueil() {
         </>
       )}
 
+      {echeances.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+            className="font-sans text-corps font-semibold text-champagne"
+          >
+            Échéances
+          </motion.h2>
+          {/* Même cascade que les rappels, et une action directe comme leur
+              « Logger » : on vient ici pour avancer, pas seulement pour lire
+              (audit graphique, B2). */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+            transition={{ delayChildren: 0.5 }}
+            className="flex flex-col"
+          >
+            {echeances.map(({ projet, jours }, i) => (
+              <motion.div
+                key={projet.id}
+                variants={itemVariants}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-center gap-4 border border-ink-700 bg-ink-800 p-4 ${i > 0 ? 'border-t-0' : ''}`}
+              >
+                <Link to={`/projets/${projet.id}`} className={`flex-1 transition-opacity duration-150 hover:opacity-80 ${FOCUS_RING}`}>
+                  <p className="font-serif text-titre text-champagne">{projet.name}</p>
+                  <p className="mt-1 font-data text-secondaire text-muted">{dateCourte(projet.dueAt as string)}</p>
+                </Link>
+                <p className={`font-data text-secondaire ${jours < 0 ? 'text-danger' : 'text-accent-bright'}`}>
+                  {jours < 0 ? `${-jours} j de retard` : jours === 0 ? "aujourd'hui" : `J-${jours}`}
+                </p>
+                <Link to={`/pomodoro?skillId=${projet.id}`} className={buttonClassName('accent-outline', 'sm')}>
+                  Session
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </section>
+      )}
+
       <section className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
           <motion.h2
@@ -470,8 +528,9 @@ export default function Accueil() {
           >
             Tâches à faire
           </motion.h2>
-          <Link to="/taches/nouvelle" className="text-corps text-accent-bright underline">
-            + Nouvelle tâche
+          <Link to="/taches/nouvelle" className="inline-flex items-center gap-1 text-corps text-accent-bright underline-offset-4 hover:underline focus:outline-none focus-visible:underline">
+            <PlusIcon />
+            Nouvelle tâche
           </Link>
         </div>
         {entriesLoading ? (
@@ -507,13 +566,18 @@ export default function Accueil() {
                 </button>
                 <div className="flex-1">
                   <p className="flex items-center gap-2 font-serif text-titre text-champagne">
-                    {PRIORITY_COLORS[task.priority] && (
+                    {PRIORITY_COLORS[task.priority] ? (
                       <span
                         role="img"
                         aria-label={`Priorité : ${PRIORITY_LABELS[task.priority]}`}
                         className="h-[7px] w-[7px] shrink-0 rounded-full"
                         style={{ background: PRIORITY_COLORS[task.priority] as string }}
                       />
+                    ) : (
+                      // Même place réservée sans priorité : sinon le titre de
+                      // cette tâche commençait 15 px plus à gauche que ses
+                      // voisines.
+                      <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0" />
                     )}
                     {task.name}
                   </p>

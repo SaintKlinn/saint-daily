@@ -58,7 +58,16 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
-    build: { rollupOptions: { input: resolve(__dirname, 'src/renderer/index.html') } },
+    build: {
+      rollupOptions: { input: resolve(__dirname, 'src/renderer/index.html') },
+      // electron-vite ne minifie pas le renderer par défaut : l'installeur
+      // livrait 2 Mo de JavaScript lisible, que Chromium devait analyser en
+      // entier à chaque ouverture. Minifié : environ 780 Ko. Les noms de
+      // fonctions et de classes sont gardés, pour que les erreurs remontées
+      // (ErrorBoundary, console) restent lisibles.
+      minify: 'esbuild',
+    },
+    esbuild: { keepNames: true },
     plugins: [react(), devLoginCredentialsPlugin()],
   },
 });

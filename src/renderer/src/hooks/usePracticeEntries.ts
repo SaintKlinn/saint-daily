@@ -138,6 +138,41 @@ export function usePracticeEntries(engagementId: string | null) {
   return { entries, loading, error, refresh, logEntry };
 }
 
+export interface ModificationSeance {
+  durationMinutes: number;
+  practicedAt: string;
+  note: string | null;
+  mood: Mood | null;
+  tags: string[];
+}
+
+/**
+ * Corrige une séance déjà enregistrée. Avant, une faute de frappe sur la
+ * durée ou la date restait pour toujours dans les séries et le Bilan.
+ * Fonction simple plutôt que méthode d'un hook : le Journal et la fiche d'un
+ * skill l'appellent chacun avec leur propre rafraîchissement.
+ */
+export async function modifierSeance(id: string, modification: ModificationSeance): Promise<{ error: string | null }> {
+  const { error } = await getSupabaseClient()
+    .from('practice_entry')
+    .update({
+      duration_minutes: modification.durationMinutes,
+      practiced_at: modification.practicedAt,
+      note: modification.note,
+      mood: modification.mood,
+      tags: modification.tags,
+    })
+    .eq('id', id);
+  return { error: error ? toFrenchError(error.message) : null };
+}
+
+/** Supprime définitivement une séance (pas de corbeille : une séance n'a
+ *  pas de fiche à restaurer, et l'éditeur demande confirmation). */
+export async function supprimerSeance(id: string): Promise<{ error: string | null }> {
+  const { error } = await getSupabaseClient().from('practice_entry').delete().eq('id', id);
+  return { error: error ? toFrenchError(error.message) : null };
+}
+
 /**
  * Toutes les entrées de plusieurs engagements en une seule requête —
  * utilisé par l'Accueil pour calculer streak/régularité de chaque skill

@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
+import { Fragment, Suspense, useEffect, useRef, useState, type JSX } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
 import UpdateBanner from './UpdateBanner';
 import FondAmbiant from './FondAmbiant';
+import PaletteCommandes from './PaletteCommandes';
 import {
   HomeIcon,
   SkillIcon,
@@ -18,6 +19,7 @@ import {
 import { GROUPES_NAV, type CleIcone } from '../lib/navigation';
 import { colors } from '../theme/colors';
 import { EASE_SORTIE } from '../theme/mouvement';
+import { prechargerEcrans } from '../ecrans';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
@@ -77,6 +79,46 @@ export default function AppShell() {
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [pathname]);
+
+  // Une fois le rail et le premier écran affichés, les autres écrans sont
+  // chargés quand le navigateur n'a rien d'autre à faire : l'ouverture reste
+  // légère, et aucune navigation n'attend ensuite son fichier.
+  useEffect(() => {
+    const planifier = window.requestIdleCallback ?? ((f: () => void) => window.setTimeout(f, 1500));
+    const id = planifier(() => prechargerEcrans());
+    return () => (window.cancelIdleCallback ?? window.clearTimeout)(id as number);
+  }, []);
+
+  // Le logo du rail joue deux cycles quand on revient sur la fenêtre ou
+  // qu'on survole le rail, puis se pose (voir `.logo-ray-regard`). Pas de
+  // relance pendant qu'il joue encore : repartir en plein milieu ferait
+  // sauter les traits. 9 s = deux cycles de 4,5 s.
+  const [relanceLogo, setRelanceLogo] = useState(0);
+  const derniereRelanceRef = useRef(Date.now());
+  function relancerLogo() {
+    if (Date.now() - derniereRelanceRef.current < 9000) return;
+    derniereRelanceRef.current = Date.now();
+    setRelanceLogo((n) => n + 1);
+  }
+  useEffect(() => {
+    window.addEventListener('focus', relancerLogo);
+    return () => window.removeEventListener('focus', relancerLogo);
+  }, []);
+
+  // Palette de commandes : Ctrl+K (Cmd+K sur macOS) l'ouvre et la ferme.
+  // Pas en mode focus, route sœur hors d'AppShell : ce mode veut justement
+  // qu'on ne parte nulle part. Le retour du focus à la fermeture est géré
+  // par `Dialogue`.
+  const [paletteOuverte, setPaletteOuverte] = useState(false);
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k') return;
+      e.preventDefault();
+      setPaletteOuverte((ouverte) => !ouverte);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);
@@ -140,6 +182,7 @@ export default function AppShell() {
         initial={false}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex shrink-0 flex-col items-center gap-10 overflow-hidden border-r border-ink-700 pt-6"
+        onMouseEnter={relancerLogo}
         style={{
           background: `linear-gradient(180deg, ${colors.ink[900]} 0%, #054838 55%, ${colors.ink[950]} 100%)`,
         }}
@@ -156,7 +199,7 @@ export default function AppShell() {
             (main/index.ts), soit trois pixels de marge — la prochaine entrée
             ajoutée au rail (40 + 8) l'écraserait silencieusement à la taille
             minimale autorisée. */}
-        <LogoMark width={48} height={32} animation="boucle" className="relative shrink-0" />
+        <LogoMark width={48} height={32} animation="regard" relance={relanceLogo} className="relative shrink-0" />
         {/* `flex-1` : c'est ce bloc, et non la ligne de compte, qui porte
             la poussée vers le bas — `mt-auto` s'applique au groupe
             Réglages à l'intérieur. */}
@@ -300,11 +343,15 @@ export default function AppShell() {
           // <main>, ce que ce conteneur intercalé ne doit pas lui retirer.
           className="h-full"
         >
-          <Outlet />
+          {/* Le rail reste en place pendant qu'un écran se charge. */}
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </main>
       </div>
       </div>
+      {paletteOuverte && <PaletteCommandes onFermer={() => setPaletteOuverte(false)} />}
     </div>
   );
 }

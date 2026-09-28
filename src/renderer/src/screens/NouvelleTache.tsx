@@ -156,7 +156,7 @@ export default function NouvelleTache() {
           label="Tags (optionnels, séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="Perso, Urgent"
+          placeholder="ex. Perso, Urgent"
         />
         <FormField
           label="Planification"
@@ -167,14 +167,17 @@ export default function NouvelleTache() {
         />
         <div className="flex flex-col gap-2">
           <p className="text-libelle uppercase tracking-[0.04em] text-muted">Durée</p>
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Grilles à colonnes égales : en `flex-wrap` dans cette colonne de
+              384 px, « 90 min » et « Tous les N jours » tombaient seuls sur
+              une seconde ligne. */}
+          <div className="grid grid-cols-5 gap-2">
             {DURATION_PRESETS.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => setDurationMinutes(preset)}
                 aria-pressed={durationMinutes === preset}
-                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-1 py-2 transition-colors duration-150 ${FOCUS_RING} ${durationMinutes === preset ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {preset} min
               </button>
@@ -183,14 +186,14 @@ export default function NouvelleTache() {
         </div>
         <div className="flex flex-col gap-2">
           <p className="text-libelle uppercase tracking-[0.04em] text-muted">Priorité</p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {PRIORITY_LEVELS.map((level) => (
               <button
                 key={level}
                 type="button"
                 onClick={() => setPriority(level)}
                 aria-pressed={priority === level}
-                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-1 py-2 transition-colors duration-150 ${FOCUS_RING} ${priority === level ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {PRIORITY_LABELS[level]}
               </button>
@@ -199,14 +202,14 @@ export default function NouvelleTache() {
         </div>
         <div className="flex flex-col gap-2">
           <p className="text-libelle uppercase tracking-[0.04em] text-muted">Récurrence</p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {RECURRENCE_TYPES.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => setRecurrenceType(option.value)}
                 aria-pressed={recurrenceType === option.value}
-                className={`font-data text-secondaire px-3 py-2 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
+                className={`font-data text-secondaire px-1 py-2 transition-colors duration-150 ${FOCUS_RING} ${recurrenceType === option.value ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {option.label}
               </button>

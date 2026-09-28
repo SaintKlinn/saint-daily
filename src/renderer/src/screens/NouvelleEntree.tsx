@@ -8,6 +8,8 @@ import RayCorner from '../components/RayCorner';
 import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import { FormField, SelectField, TextAreaField } from '../components/FormField';
+import { ChoixDuree, ChoixHumeur, ChoixQuand } from '../components/ChampsSeance';
+import { depuisChampDateHeure, erreurSaisieSeance, versChampDateHeure } from '../lib/seances';
 import type { Mood } from '../lib/types';
 
 const FOCUS_RING =
@@ -20,6 +22,9 @@ export default function NouvelleEntree() {
 
   const { engagements, loading: engagementsLoading } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
+  // Une séance peut aussi porter sur le projet lui-même (session de
+  // chantier) : son temps compte alors dans le total du projet.
+  const projets = engagements.filter((e) => e.isProject && !e.archivedAt);
   const { logEntry } = usePracticeEntries(null);
   // L'erreur du hook n'est délibérément pas affichée ici : elle signifie
   // « pas de modèles disponibles », ce que l'absence de chips dit déjà, et
@@ -29,6 +34,8 @@ export default function NouvelleEntree() {
 
   const [skillId, setSkillId] = useState(preselectedSkillId ?? '');
   const [duration, setDuration] = useState('30');
+  // Vide = maintenant ; sinon une valeur `datetime-local` (voir ChoixQuand).
+  const [quand, setQuand] = useState('');
   const [mood, setMood] = useState<Mood | ''>('');
   const [tagsInput, setTagsInput] = useState('');
   const [note, setNote] = useState('');
@@ -39,11 +46,19 @@ export default function NouvelleEntree() {
     e.preventDefault();
     const durationMinutes = Number(duration);
     if (!skillId) {
-      setError('Choisis un skill.');
+      setError(projets.length > 0 ? 'Choisis un skill ou un projet.' : 'Choisis un skill.');
       return;
     }
     if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
       setError('La durée doit être un nombre de minutes positif.');
+      return;
+    }
+    // Mêmes règles que l'éditeur de séance : pas plus de 24 h, pas dans le
+    // futur.
+    const dateHeure = quand || versChampDateHeure(new Date().toISOString());
+    const invalide = erreurSaisieSeance({ duree: duration, dateHeure });
+    if (invalide) {
+      setError(invalide);
       return;
     }
     setSubmitting(true);
@@ -52,6 +67,7 @@ export default function NouvelleEntree() {
     const { error: logError } = await logEntry({
       engagementId: skillId,
       durationMinutes,
+      practicedAt: quand ? (depuisChampDateHeure(quand) as string) : undefined,
       note: note || null,
       mood: mood || null,
       tags,
@@ -80,41 +96,45 @@ export default function NouvelleEntree() {
         </EmptyState>
       ) : (
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
-        <SelectField label="Skill" value={skillId} onChange={(e) => setSkillId(e.target.value)}>
+        <SelectField
+          label={projets.length > 0 ? 'Skill ou projet' : 'Skill'}
+          value={skillId}
+          onChange={(e) => setSkillId(e.target.value)}
+        >
           <option value="">Choisir…</option>
-          {skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
+          {projets.length > 0 ? (
+            <>
+              <optgroup label="Skills">
+                {skills.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Projets">
+                {projets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          ) : (
+            skills.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))
+          )}
         </SelectField>
-        <label className="flex flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
-          Durée
-          <div className="flex items-baseline gap-3 border border-ink-700 bg-ink-800 px-4 py-3">
-            <input
-              type="number"
-              min={1}
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              aria-label="Durée en minutes"
-              className={`w-16 bg-transparent font-data text-titre normal-case tracking-normal text-champagne ${FOCUS_RING}`}
-            />
-            <span className="font-sans text-secondaire normal-case tracking-normal text-muted">minutes</span>
-          </div>
-        </label>
-        <SelectField label="Humeur (optionnelle)" value={mood} onChange={(e) => setMood(e.target.value as Mood | '')}>
-          <option value="">Non précisée</option>
-          <option value="difficile">Difficile</option>
-          <option value="moyen">Moyen</option>
-          <option value="correct">Correct</option>
-          <option value="bien">Bien</option>
-          <option value="excellent">Excellent</option>
-        </SelectField>
+        <ChoixQuand valeur={quand} onChange={setQuand} />
+        <ChoixDuree valeur={duration} onChange={setDuration} />
+        <ChoixHumeur valeur={mood} onChange={setMood} />
         <FormField
           label="Tags de la séance (optionnels, séparés par des virgules)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="technique, difficile"
+          placeholder="ex. technique, difficile"
         />
         {templates.length > 0 && (
           <div className="flex flex-col gap-2">

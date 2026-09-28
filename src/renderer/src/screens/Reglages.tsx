@@ -6,6 +6,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useNoteTemplates } from '../hooks/useNoteTemplates';
 import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
+import ReglagesJoursRepos from '../components/ReglagesJoursRepos';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import { downloadTextFile, exportFileName, fetchExportBundle, toCsv, toJson } from '../lib/exportData';
@@ -259,6 +260,8 @@ export default function Reglages() {
         />
       </section>
 
+      <ReglagesJoursRepos />
+
       <section className="flex flex-col gap-0">
         <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Pomodoro</h2>
 
@@ -416,7 +419,7 @@ export default function Reglages() {
             value={newTemplateText}
             onChange={(e) => setNewTemplateText(e.target.value)}
             aria-label="Nouveau modèle de note"
-            placeholder="Ex. : Séance courte, peu de progrès aujourd'hui"
+            placeholder="ex. Séance courte, peu de progrès aujourd'hui"
             className={`flex-1 border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne placeholder:text-muted ${FOCUS_RING}`}
           />
           <Button type="submit" variant="secondary" size="sm" disabled={!newTemplateText.trim()}>
@@ -444,6 +447,17 @@ export default function Reglages() {
             Projet personnel — pas de service tiers, pas de compte séparé à créer : Saint Daily réutilise le
             compte existant de l'écosystème Saint.
           </p>
+        </details>
+        <details className="border-b border-ink-700 py-4">
+          <summary className="cursor-pointer text-corps text-champagne">Raccourcis clavier</summary>
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-corps text-muted">
+            <dt className="font-data text-champagne">Ctrl+K</dt>
+            <dd>Palette de commandes : aller à un écran, un skill, un projet, ou lancer une action</dd>
+            <dt className="font-data text-champagne">Ctrl+Alt+N</dt>
+            <dd>Nouvelle entrée, depuis n'importe quelle application</dd>
+            <dt className="font-data text-champagne">Espace</dt>
+            <dd>Pause ou reprise, sur l'écran Pomodoro</dd>
+          </dl>
         </details>
         <details className="border-b border-ink-700 py-4">
           <summary className="cursor-pointer text-corps text-champagne">FAQ</summary>
