@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { buildHeatmapGrid, countEntriesByDay, type HeatmapCell, type HeatmapLevel, type PracticeEntryLike } from '../lib/retrospective';
 
 interface SelectableEngagement {
@@ -49,6 +49,16 @@ export default function HeatmapCalendrier({
   onSelectEngagement,
 }: HeatmapCalendrierProps) {
   const grid = useMemo(() => buildHeatmapGrid(countEntriesByDay(entries)), [entries]);
+  const defilementRef = useRef<HTMLDivElement>(null);
+
+  // Quand la grille dépasse (fenêtre étroite), elle s'ouvre sur les semaines
+  // récentes, à droite, plutôt que sur l'an dernier : c'est la fin de la
+  // grille qu'on vient regarder. Avant le premier affichage, pour ne pas
+  // montrer un saut de défilement.
+  useLayoutEffect(() => {
+    const conteneur = defilementRef.current;
+    if (conteneur) conteneur.scrollLeft = conteneur.scrollWidth;
+  }, []);
 
   // Résumé unique pour les lecteurs d'écran : `role="img"` traite toute la
   // grille comme une seule image décrite par cet `aria-label`, plutôt que
@@ -78,7 +88,7 @@ export default function HeatmapCalendrier({
 
       {/* La grille dépasse la largeur disponible : elle défile dans son
           propre conteneur, jamais la page entière. */}
-      <div className="overflow-x-auto pb-1">
+      <div ref={defilementRef} className="overflow-x-auto pb-1">
         <div className="flex gap-2" role="img" aria-label={gridLabel}>
           <div className="flex shrink-0 flex-col gap-1 pr-1">
             {DAY_LABELS.map((label, index) => (
@@ -94,13 +104,27 @@ export default function HeatmapCalendrier({
             ))}
           </div>
           <div className="flex gap-1">
-            {grid.map((column) => (
-              <div key={column[0].dayKey} className="flex flex-col gap-1">
+            {/* Les colonnes apparaissent l'une après l'autre, de l'année
+                passée vers aujourd'hui (voir `.heatmap-colonne` dans
+                index.css) : 53 × 10 ms, l'ensemble est posé en un peu plus
+                d'une demi-seconde. Le délai est en ligne parce qu'il dépend
+                de l'index. */}
+            {grid.map((column, index) => (
+              <div
+                key={column[0].dayKey}
+                className="heatmap-colonne flex flex-col gap-1"
+                style={{ animationDelay: `${index * 10}ms` }}
+              >
                 {column.map((cell) => (
                   <div
                     key={cell.dayKey}
                     title={cell.isFuture ? undefined : cellTitle(cell)}
-                    className={`h-[13px] w-[13px] ${cell.isFuture ? 'bg-ink-800' : LEVEL_CLASS[cell.level]}`}
+                    // Contour champagne au survol : la case visée se détache
+                    // de ses voisines, ce que le seul `title` natif (qui
+                    // n'apparaît qu'après un délai) ne faisait pas.
+                    className={`h-[13px] w-[13px] ${
+                      cell.isFuture ? 'bg-ink-800' : `${LEVEL_CLASS[cell.level]} hover:outline hover:outline-1 hover:outline-offset-1 hover:outline-champagne`
+                    }`}
                   />
                 ))}
               </div>

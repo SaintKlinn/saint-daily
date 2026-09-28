@@ -1,4 +1,6 @@
+import { motion } from 'motion/react';
 import type { TimeOfDayBucket } from '../lib/retrospective';
+import { EASE_SORTIE } from '../theme/mouvement';
 
 interface MeilleureHeureProductiviteProps {
   buckets: TimeOfDayBucket[];
@@ -38,7 +40,7 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
           repose ni sur la couleur seule ni sur une comparaison de teintes
           quasi identiques. */}
       <div className="flex items-end gap-3">
-        {buckets.map((bucket) => {
+        {buckets.map((bucket, index) => {
           const height = max === 0 ? 0 : Math.round((bucket.sessions / max) * BAR_MAX_PX);
           return (
             <div key={bucket.key} className="flex flex-1 flex-col items-center gap-2">
@@ -51,8 +53,16 @@ export default function MeilleureHeureProductivite({ buckets }: MeilleureHeurePr
                   périodes non vides gardent leur minimum de 3 px, sans
                   quoi une séance isolée face à un maximum élevé
                   n'afficherait aucune barre. */}
+              {/* Pousse depuis la base, période après période — même
+                  geste que TendanceHebdo. */}
               {bucket.sessions > 0 && (
-                <div className="w-full bg-accent-bright" style={{ height: Math.max(height, 3) }} />
+                <motion.div
+                  className="w-full bg-accent-bright"
+                  style={{ height: Math.max(height, 3), originY: 1 }}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ duration: 0.5, ease: EASE_SORTIE, delay: 0.15 + index * 0.06 }}
+                />
               )}
             </div>
           );

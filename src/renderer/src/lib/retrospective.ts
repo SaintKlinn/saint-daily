@@ -130,6 +130,67 @@ export function compareWeeks(entries: PracticeEntryLike[], now: Date = new Date(
   return { thisWeek, lastWeek };
 }
 
+/**
+ * Phrase d'écart entre les deux semaines de `compareWeeks`. Le sens est
+ * écrit en toutes lettres plutôt que porté par une flèche colorée seule :
+ * l'information ne doit reposer ni sur la couleur ni sur un glyphe qu'un
+ * lecteur d'écran ne lit pas.
+ */
+export function weekDeltaLabel({ thisWeek, lastWeek }: WeekComparison): string {
+  const delta = thisWeek.minutes - lastWeek.minutes;
+  if (delta === 0) return 'Autant que la semaine dernière.';
+  return delta > 0
+    ? `${formatMinutes(delta)} de plus que la semaine dernière.`
+    : `${formatMinutes(-delta)} de moins que la semaine dernière.`;
+}
+
+export interface WeekBucket extends WeekTotals {
+  weekStart: Date;
+  isCurrent: boolean;
+}
+
+export const TREND_WEEKS = 12;
+
+/**
+ * Totaux des `weeks` dernières semaines (lundi → dimanche, heure locale),
+ * de la plus ancienne à la semaine en cours incluse. Même découpage que
+ * `compareWeeks`, dont la semaine en cours et la précédente sont donc les
+ * deux dernières colonnes. Une entrée datée après la semaine en cours
+ * n'appartient à aucune colonne.
+ */
+export function weeklyTotals(
+  entries: PracticeEntryLike[],
+  weeks: number = TREND_WEEKS,
+  now: Date = new Date()
+): WeekBucket[] {
+  const currentWeekStart = startOfWeek(now);
+  const buckets: WeekBucket[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    buckets.push({
+      weekStart: addDays(currentWeekStart, -7 * i),
+      minutes: 0,
+      sessions: 0,
+      isCurrent: i === 0,
+    });
+  }
+  const firstWeekStart = buckets[0]?.weekStart;
+  if (!firstWeekStart) return buckets;
+  for (const entry of entries) {
+    const at = new Date(entry.practicedAt);
+    if (at < firstWeekStart) continue;
+    // Indice par recherche plutôt que par division de millisecondes : une
+    // semaine qui traverse un changement d'heure ne fait pas 7 × 24 h.
+    const bucket = buckets.find((b, index) => {
+      const end = index + 1 < buckets.length ? buckets[index + 1].weekStart : addDays(b.weekStart, 7);
+      return at >= b.weekStart && at < end;
+    });
+    if (!bucket) continue;
+    bucket.minutes += entry.durationMinutes;
+    bucket.sessions += 1;
+  }
+  return buckets;
+}
+
 export interface BreakdownRow {
   key: string;
   label: string;

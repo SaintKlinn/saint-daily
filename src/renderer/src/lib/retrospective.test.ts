@@ -10,7 +10,10 @@ import {
   tagBreakdown,
   timeOfDayBuckets,
   toLocalDayKey,
+  weekDeltaLabel,
+  weeklyTotals,
   HEATMAP_WEEKS,
+  TREND_WEEKS,
 } from './retrospective';
 
 // Les dates sont construites avec `new Date(y, m, d, h)` — donc en heure
@@ -233,5 +236,72 @@ describe('formatMinutes', () => {
     expect(formatMinutes(45)).toBe('45 min');
     expect(formatMinutes(60)).toBe('1h');
     expect(formatMinutes(135)).toBe('2h 15');
+  });
+});
+
+describe('weekDeltaLabel', () => {
+  const week = (minutes: number) => ({ minutes, sessions: 1 });
+
+  it('says when both weeks are equal', () => {
+    expect(weekDeltaLabel({ thisWeek: week(30), lastWeek: week(30) })).toBe('Autant que la semaine dernière.');
+  });
+
+  it('spells out a gain', () => {
+    expect(weekDeltaLabel({ thisWeek: week(90), lastWeek: week(15) })).toBe(
+      '1h 15 de plus que la semaine dernière.'
+    );
+  });
+
+  it('spells out a drop without a minus sign', () => {
+    expect(weekDeltaLabel({ thisWeek: week(10), lastWeek: week(40) })).toBe('30 min de moins que la semaine dernière.');
+  });
+});
+
+describe('weeklyTotals', () => {
+  const now = new Date(2026, 8, 10, 12); // jeudi 10 septembre 2026
+  const at = (y: number, m: number, d: number, h = 9) => new Date(y, m, d, h).toISOString();
+
+  it('returns TREND_WEEKS empty buckets from oldest to the current week', () => {
+    const buckets = weeklyTotals([], undefined, now);
+    expect(buckets).toHaveLength(TREND_WEEKS);
+    expect(toLocalDayKey(buckets[TREND_WEEKS - 1].weekStart)).toBe('2026-09-07');
+    expect(toLocalDayKey(buckets[0].weekStart)).toBe('2026-06-22');
+    expect(buckets.filter((b) => b.isCurrent)).toHaveLength(1);
+    expect(buckets[TREND_WEEKS - 1].isCurrent).toBe(true);
+    expect(buckets.every((b) => b.minutes === 0 && b.sessions === 0)).toBe(true);
+  });
+
+  it('sums minutes and sessions into the right week', () => {
+    const entries = [
+      { engagementId: 'a', durationMinutes: 30, practicedAt: at(2026, 8, 7) }, // lundi, semaine en cours
+      { engagementId: 'a', durationMinutes: 0, practicedAt: at(2026, 8, 9) }, // tâche cochée
+      { engagementId: 'b', durationMinutes: 45, practicedAt: at(2026, 8, 6, 23) }, // dimanche, semaine précédente
+    ];
+    const buckets = weeklyTotals(entries, 3, now);
+    expect(buckets.map((b) => [b.minutes, b.sessions])).toEqual([
+      [0, 0],
+      [45, 1],
+      [30, 2],
+    ]);
+  });
+
+  it('ignores entries before the window or after the current week', () => {
+    const entries = [
+      { engagementId: 'a', durationMinutes: 30, practicedAt: at(2026, 7, 16) }, // avant la fenêtre de 3 semaines
+      { engagementId: 'a', durationMinutes: 20, practicedAt: at(2026, 8, 14) }, // lundi suivant
+    ];
+    const buckets = weeklyTotals(entries, 3, now);
+    expect(buckets.every((b) => b.minutes === 0 && b.sessions === 0)).toBe(true);
+  });
+
+  it('agrees with compareWeeks on its last two columns', () => {
+    const entries = [
+      { engagementId: 'a', durationMinutes: 25, practicedAt: at(2026, 8, 8) },
+      { engagementId: 'a', durationMinutes: 50, practicedAt: at(2026, 8, 2) },
+    ];
+    const buckets = weeklyTotals(entries, TREND_WEEKS, now);
+    const { thisWeek, lastWeek } = compareWeeks(entries, now);
+    expect(buckets[TREND_WEEKS - 1]).toMatchObject(thisWeek);
+    expect(buckets[TREND_WEEKS - 2]).toMatchObject(lastWeek);
   });
 });
