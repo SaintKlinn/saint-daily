@@ -40,6 +40,63 @@ export function membresDuProjet(
 }
 
 /**
+ * Tous les engagements d'un projet, sous-projets compris : ses membres, les
+ * membres de ses sous-projets, et ainsi de suite. C'est la règle de
+ * remontée — le temps passé sur « la toiture » est du temps passé sur « la
+ * maison ».
+ *
+ * Chaque engagement n'apparaît qu'une fois, même rattaché à deux niveaux :
+ * un skill membre de la maison ET de la toiture ne compte pas double. Le
+ * projet lui-même n'est jamais renvoyé.
+ *
+ * La traversée tient un ensemble de visités, amorcé avec le projet : la
+ * contrainte `check (engagement_id <> project_id)` n'interdit que le cycle
+ * trivial, et une maison dans une toiture dans une maison bouclerait sans
+ * lui. L'interface refuse de créer un cycle (`sousProjetsRattachables`),
+ * mais cette fonction ne doit pas dépendre d'une garantie posée ailleurs.
+ */
+export function membresRecursifs(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  projetId: string
+): Engagement[] {
+  const visites = new Set([projetId]);
+  const resultat: Engagement[] = [];
+  const aParcourir = [projetId];
+  while (aParcourir.length > 0) {
+    const courant = aParcourir.shift() as string;
+    for (const membre of membresDuProjet(engagements, liaisons, courant)) {
+      if (visites.has(membre.id)) continue;
+      visites.add(membre.id);
+      resultat.push(membre);
+      if (membre.isProject) aParcourir.push(membre.id);
+    }
+  }
+  return resultat;
+}
+
+/**
+ * Les projets qu'on peut rattacher comme sous-projets de `projetId` : actifs,
+ * ni lui-même, ni déjà membres directs, et surtout aucun qui contient déjà
+ * `projetId`, même indirectement — le rattacher fermerait un cycle.
+ */
+export function sousProjetsRattachables(
+  engagements: Engagement[],
+  liaisons: LiaisonProjet[] | null,
+  projetId: string
+): Engagement[] {
+  const directs = new Set(membresDuProjet(engagements, liaisons, projetId).map((m) => m.id));
+  return engagements.filter(
+    (e) =>
+      e.isProject &&
+      !e.archivedAt &&
+      e.id !== projetId &&
+      !directs.has(e.id) &&
+      !membresRecursifs(engagements, liaisons, e.id).some((m) => m.id === projetId)
+  );
+}
+
+/**
  * Les projets auxquels un engagement appartient — le sens qui n'existait
  * pas avec une colonne unique, et la raison d'être de ce chantier.
  *
@@ -107,7 +164,8 @@ export function projetAffiche(
 
 /**
  * Les entrées de pratique d'un projet : celles de ses membres, plus les
- * siennes propres.
+ * siennes propres. Pour faire remonter les sous-projets, l'appelant passe
+ * `membresRecursifs` et non les seuls membres directs.
  *
  * Un projet EST un engagement et peut donc porter des entrées directement —
  * c'est ce que fait la « session de chantier » (Pomodoro ou nouvelle entrée

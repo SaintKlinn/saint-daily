@@ -4,6 +4,8 @@ import {
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
+  membresRecursifs,
+  sousProjetsRattachables,
   projetAffiche,
   projetPrincipal,
   projetsDeLEngagement,
@@ -408,5 +410,60 @@ describe('trierProjets', () => {
 
   it('ne jette pas sur une liste vide', () => {
     expect(trierProjets([], 'dormance')).toEqual([]);
+  });
+});
+
+describe('sous-projets', () => {
+  const toiture = unEngagement({ id: 'toiture', isProject: true });
+  const charpente = unEngagement({ id: 'charpente', isProject: true });
+  const couverture = unEngagement({ id: 'couverture' });
+  const engagements = [maison, atelier, toiture, charpente, menuiserie, plomberie, couverture];
+  // maison ⊃ toiture ⊃ charpente ; menuiserie à deux niveaux.
+  const liaisons = [
+    uneLiaison({ engagementId: 'plomberie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'toiture', projectId: 'maison' }),
+    uneLiaison({ engagementId: 'couverture', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'menuiserie', projectId: 'toiture' }),
+    uneLiaison({ engagementId: 'charpente', projectId: 'toiture' }),
+  ];
+  const ids = (liste: Engagement[]) => liste.map((e) => e.id).sort();
+
+  it('remonte les membres des sous-projets, sans doublon ni le projet lui-même', () => {
+    expect(ids(membresRecursifs(engagements, liaisons, 'maison'))).toEqual(
+      ['charpente', 'couverture', 'menuiserie', 'plomberie', 'toiture'].sort()
+    );
+    expect(ids(membresRecursifs(engagements, liaisons, 'toiture'))).toEqual(['charpente', 'couverture', 'menuiserie']);
+  });
+
+  it('ne boucle pas sur un cycle déjà en base', () => {
+    const cycle = [...liaisons, uneLiaison({ engagementId: 'maison', projectId: 'charpente' })];
+    expect(ids(membresRecursifs(engagements, cycle, 'maison'))).toEqual(
+      ['charpente', 'couverture', 'menuiserie', 'plomberie', 'toiture'].sort()
+    );
+    expect(ids(membresRecursifs(engagements, cycle, 'charpente'))).toContain('maison');
+  });
+
+  it('le temps remonte une seule fois par engagement', () => {
+    const parEngagement = {
+      maison: [{ durationMinutes: 5 }],
+      toiture: [{ durationMinutes: 10 }],
+      menuiserie: [{ durationMinutes: 30 }],
+      couverture: [{ durationMinutes: 60 }],
+    };
+    const membres = membresRecursifs(engagements, liaisons, 'maison');
+    expect(tempsCumuleMinutes(entreesDuProjet(parEngagement, membres, 'maison'))).toBe(105);
+  });
+
+  it('ne propose ni soi-même, ni un membre direct, ni un ancêtre', () => {
+    // Pour la charpente : la maison et la toiture la contiennent déjà.
+    expect(ids(sousProjetsRattachables(engagements, liaisons, 'charpente'))).toEqual(['atelier']);
+    // Pour la maison : la toiture est déjà là ; la charpente, indirecte, reste proposable.
+    expect(ids(sousProjetsRattachables(engagements, liaisons, 'maison'))).toEqual(['atelier', 'charpente']);
+  });
+
+  it('ne propose pas un projet archivé', () => {
+    const archive = unEngagement({ id: 'grenier', isProject: true, archivedAt: '2026-01-02T00:00:00.000Z' });
+    expect(ids(sousProjetsRattachables([...engagements, archive], liaisons, 'atelier'))).not.toContain('grenier');
   });
 });

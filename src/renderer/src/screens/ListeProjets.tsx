@@ -13,7 +13,8 @@ import {
   avancementProjet,
   entreesDuProjet,
   formatDormance,
-  membresDuProjet,
+  membresRecursifs,
+  projetsDeLEngagement,
   tempsCumuleMinutes,
   trierProjets,
 } from '../lib/projets';
@@ -43,7 +44,9 @@ export default function ListeProjets() {
 
   const { liaisons } = useLiaisonsProjet();
   const membresParProjet = useMemo(
-    () => new Map(projects.map((p) => [p.id, membresDuProjet(engagements, liaisons, p.id)])),
+    // Membres des sous-projets compris : le temps et la dormance remontent
+    // (voir `membresRecursifs`).
+    () => new Map(projects.map((p) => [p.id, membresRecursifs(engagements, liaisons, p.id)])),
     [projects, engagements, liaisons]
   );
   // Une seule requête pour l'écran entier, et non une par projet : on réunit
@@ -87,6 +90,17 @@ export default function ListeProjets() {
       }),
     [projects, membresParProjet, entriesBySkill, milestonesByEngagement]
   );
+
+  // La liste reste plate : un sous-projet y figure comme les autres, avec le
+  // nom de son parent pour le situer.
+  const parentsParProjet = useMemo(() => {
+    const parProjet = new Map<string, string>();
+    for (const p of projects) {
+      const parents = projetsDeLEngagement(engagements, liaisons, p.id);
+      if (parents.length > 0) parProjet.set(p.id, parents.map((x) => x.name).join(', '));
+    }
+    return parProjet;
+  }, [projects, engagements, liaisons]);
 
   const lignesTriees = useMemo(() => trierProjets(lignes, critere), [lignes, critere]);
   const franchisParProjet = useMemo(() => {
@@ -209,6 +223,7 @@ export default function ListeProjets() {
                       écrit pour être lu seul (fiche du projet). */}
                   {formatMinutes(ligne.minutes)} · {enMinuscule(formatDormance(ligne.jours))}
                   {franchisParProjet.has(ligne.id) ? ` · ${franchisParProjet.get(ligne.id)}` : ''}
+                  {parentsParProjet.has(ligne.id) ? ` · dans ${parentsParProjet.get(ligne.id)}` : ''}
                 </p>
               </div>
             </Link>

@@ -9,6 +9,9 @@ import {
   entreesDuProjet,
   formatDormance,
   membresDuProjet,
+  membresRecursifs,
+  projetsDeLEngagement,
+  sousProjetsRattachables,
   tempsCumuleMinutes,
 } from '../lib/projets';
 import { formatMinutes } from '../lib/retrospective';
@@ -62,6 +65,24 @@ export default function DetailProjet() {
       (e) => !e.isProject && !e.scheduledAt && !e.archivedAt && !dejaMembres.has(e.id)
     );
   }, [engagements, children]);
+  // Sous-projets : rattacher un projet à celui-ci, jamais un qui le contient
+  // déjà (voir `sousProjetsRattachables`). Et les projets dont celui-ci est
+  // un sous-projet, pour remonter d'un niveau.
+  const sousProjetsPossibles = useMemo(
+    () => (id ? sousProjetsRattachables(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
+  const parents = useMemo(
+    () => (id ? projetsDeLEngagement(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
+  // Règle de remontée : le temps, la dormance et l'objectif comptent aussi
+  // les sous-projets et leurs membres. La composition affichée reste celle
+  // des membres directs.
+  const tousLesMembres = useMemo(
+    () => (id ? membresRecursifs(engagements, liaisons, id) : []),
+    [engagements, liaisons, id]
+  );
   const [actionError, setActionError] = useState<string | null>(null);
   // La navigation n'arrive qu'après l'aller-retour de `softDelete` : sans
   // cet état, le bouton reste armable pendant toute l'attente réseau.
@@ -73,13 +94,13 @@ export default function DetailProjet() {
   // ordre différent produisent deux clés différentes et relancent la requête
   // à chaque rendu où l'ordre change.
   const idsConcernes = useMemo(
-    () => (id ? [...new Set([...children.map((c) => c.id), id])].sort() : []),
-    [children, id]
+    () => (id ? [...new Set([...tousLesMembres.map((c) => c.id), id])].sort() : []),
+    [tousLesMembres, id]
   );
   const { entriesBySkill, error: entriesError } = useAllPracticeEntries(idsConcernes);
   const entrees = useMemo(
-    () => (id ? entreesDuProjet(entriesBySkill, children, id) : []),
-    [entriesBySkill, children, id]
+    () => (id ? entreesDuProjet(entriesBySkill, tousLesMembres, id) : []),
+    [entriesBySkill, tousLesMembres, id]
   );
   const minutes = useMemo(() => tempsCumuleMinutes(entrees), [entrees]);
   const dormance = useMemo(() => formatDormance(daysSinceLastPractice(entrees)), [entrees]);
@@ -190,6 +211,10 @@ export default function DetailProjet() {
       setActionError(lierError);
       return;
     }
+    // Pas de `project_id` pour un sous-projet : la suppression d'un projet
+    // envoie à la corbeille les engagements dont il est le projet principal
+    // par cette colonne, et y emporterait le sous-projet sans ses membres.
+    if (engagements.find((e) => e.id === engagementId)?.isProject) return;
     const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
@@ -282,6 +307,19 @@ export default function DetailProjet() {
                   {project.name}
                 </button>
               </h1>
+            )}
+            {parents.length > 0 && (
+              <p className="relative mt-1 text-secondaire text-muted">
+                Sous-projet de{' '}
+                {parents.map((parent, i) => (
+                  <span key={parent.id}>
+                    {i > 0 && ', '}
+                    <Link to={`/projets/${parent.id}`} className={`text-accent-bright underline-offset-4 hover:underline ${FOCUS_RING}`}>
+                      {parent.name}
+                    </Link>
+                  </span>
+                ))}
+              </p>
             )}
         </div>
         <div className="flex max-w-sm flex-col items-end gap-2">
@@ -446,7 +484,7 @@ export default function DetailProjet() {
       <section>
         <h2 className="mb-1 font-sans text-corps font-semibold text-champagne">Composition</h2>
         {children.length === 0 ? (
-          <EmptyState>Aucun skill ni aucune tâche rattachés à ce projet.</EmptyState>
+          <EmptyState>Aucun skill, aucune tâche ni aucun sous-projet rattachés à ce projet.</EmptyState>
         ) : (
           <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
             {children.map((child) => (
@@ -455,11 +493,11 @@ export default function DetailProjet() {
                 className="flex items-center gap-2 bg-ink-800 px-4 py-4 transition-colors duration-200 hover:bg-ink-700"
               >
                 <Link
-                  to={child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
+                  to={child.isProject ? `/projets/${child.id}` : child.scheduledAt ? '/calendrier' : `/skills/${child.id}`}
                   className="flex flex-1 items-center gap-2"
                 >
                   <span className="font-data text-libelle uppercase tracking-[0.08em] text-muted">
-                    {child.scheduledAt ? 'Tâche' : 'Skill'}
+                    {child.isProject ? 'Sous-projet' : child.scheduledAt ? 'Tâche' : 'Skill'}
                   </span>
                   <span className="font-serif text-champagne">{child.name}</span>
                 </Link>
@@ -493,6 +531,30 @@ export default function DetailProjet() {
             ))}
           </select>
         </label>
+        {sousProjetsPossibles.length > 0 && (
+          <label className="mt-3 flex flex-col gap-2">
+            <span className="font-data text-libelle uppercase tracking-[0.1em] text-muted">
+              Rattacher un sous-projet
+            </span>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) handleLier(e.target.value);
+              }}
+              className={`border border-ink-700 bg-ink-800 px-3 py-2 text-corps text-champagne ${FOCUS_RING}`}
+            >
+              <option value="">Choisir…</option>
+              {sousProjetsPossibles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-secondaire text-muted">
+              Son temps remonte dans celui de ce projet ; ses jalons restent les siens.
+            </span>
+          </label>
+        )}
       </section>
 
       <section>
