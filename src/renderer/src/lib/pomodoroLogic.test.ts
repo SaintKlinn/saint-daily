@@ -4,11 +4,15 @@ import {
   checkpointNoteLabel,
   completePhase,
   consolidateDuration,
+  extendPhase,
   nextPhase,
   partialMinutesElapsed,
   pauseSession,
   phaseDurationMinutes,
+  phaseTotalMs,
+  restoreSession,
   resumeSession,
+  skipBreak,
   startSession,
   type PomodoroDurations,
   type PomodoroSession,
@@ -31,6 +35,7 @@ function baseSession(overrides: Partial<PomodoroSession> = {}): PomodoroSession 
     phaseEndsAt: 0,
     remainingMsAtPause: null,
     loggedEntryIds: [],
+    extensionMs: 0,
     ...overrides,
   };
 }
@@ -197,5 +202,97 @@ describe('checkpointNoteLabel', () => {
   it('formats as cycle N/M, 1-based', () => {
     expect(checkpointNoteLabel(0, 4)).toBe('Pomodoro — cycle 1/4');
     expect(checkpointNoteLabel(3, 4)).toBe('Pomodoro — cycle 4/4');
+  });
+});
+
+describe('extendPhase', () => {
+  const now = Date.parse('2026-09-02T10:00:00Z');
+
+  it('pushes the end of a running phase back by five minutes', () => {
+    const session = baseSession({ phaseEndsAt: now + 60_000 });
+    const extended = extendPhase(session);
+    expect(extended.phaseEndsAt).toBe(now + 6 * 60_000);
+    expect(extended.extensionMs).toBe(5 * 60_000);
+  });
+
+  it('adds to the frozen remaining time of a paused phase', () => {
+    const session = baseSession({ status: 'paused', remainingMsAtPause: 30_000 });
+    const extended = extendPhase(session, 10);
+    expect(extended.remainingMsAtPause).toBe(30_000 + 10 * 60_000);
+    expect(extended.extensionMs).toBe(10 * 60_000);
+  });
+
+  it('does nothing while waiting for the next phase to start', () => {
+    const session = baseSession({ phase: 'shortBreak', status: 'awaitingAdvance' });
+    expect(extendPhase(session)).toBe(session);
+  });
+
+  it('is counted in the phase total, in the credited minutes and in a partial stop', () => {
+    const extended = extendPhase(baseSession({ phaseEndsAt: now }));
+    expect(phaseTotalMs(extended, durations)).toBe(30 * 60_000);
+    expect(completePhase(extended, durations, true, now).loggedMinutes).toBe(30);
+    // 10 minutes restantes sur 30 : 20 minutes faites.
+    expect(partialMinutesElapsed({ ...extended, phaseEndsAt: now + 10 * 60_000 }, durations, now)).toBe(20);
+  });
+
+  it('is reset when the phase changes', () => {
+    const extended = extendPhase(baseSession({ phaseEndsAt: now }));
+    expect(completePhase(extended, durations, true, now).next.extensionMs).toBe(0);
+    expect(completePhase(extended, durations, false, now).next.extensionMs).toBe(0);
+  });
+});
+
+describe('skipBreak', () => {
+  const now = Date.parse('2026-09-02T10:00:00Z');
+
+  it('starts the next work cycle right away from a running short break', () => {
+    const session = baseSession({ phase: 'shortBreak', cycleIndex: 1, phaseEndsAt: now + 60_000 });
+    const skipped = skipBreak(session, durations, now);
+    expect(skipped).toMatchObject({ phase: 'work', cycleIndex: 2, status: 'running', extensionMs: 0 });
+    expect(skipped.phaseEndsAt).toBe(now + 25 * 60_000);
+  });
+
+  it('resets the cycle count after a long break, like finishing it would', () => {
+    const session = baseSession({ phase: 'longBreak', cycleIndex: 3, status: 'paused', remainingMsAtPause: 1000 });
+    const skipped = skipBreak(session, durations, now);
+    expect(skipped).toMatchObject({ phase: 'work', cycleIndex: 0, status: 'running', remainingMsAtPause: null });
+  });
+
+  it('skips a break that has not started yet', () => {
+    const session = baseSession({ phase: 'shortBreak', status: 'awaitingAdvance', cycleIndex: 0 });
+    expect(skipBreak(session, durations, now)).toMatchObject({ phase: 'work', cycleIndex: 1, status: 'running' });
+  });
+
+  it('does nothing during a work phase', () => {
+    const session = baseSession({ phase: 'work' });
+    expect(skipBreak(session, durations, now)).toBe(session);
+  });
+});
+
+describe('restoreSession', () => {
+  const lastSeenAt = Date.parse('2026-09-02T10:00:00Z');
+
+  it('brings a running phase back paused where the app was last alive', () => {
+    const saved = baseSession({ phaseEndsAt: lastSeenAt + 7 * 60_000 });
+    expect(restoreSession(saved, lastSeenAt)).toMatchObject({ status: 'paused', remainingMsAtPause: 7 * 60_000 });
+  });
+
+  it('brings a phase that ended before the app closed back paused at zero', () => {
+    const saved = baseSession({ phaseEndsAt: lastSeenAt - 60_000 });
+    expect(restoreSession(saved, lastSeenAt)).toMatchObject({ status: 'paused', remainingMsAtPause: 0 });
+  });
+
+  it('keeps paused and waiting sessions as they were', () => {
+    const paused = baseSession({ status: 'paused', remainingMsAtPause: 1234 });
+    const waiting = baseSession({ phase: 'shortBreak', status: 'awaitingAdvance' });
+    expect(restoreSession(paused, lastSeenAt)).toBe(paused);
+    expect(restoreSession(waiting, lastSeenAt)).toBe(waiting);
+  });
+
+  it('never credits time spent with the app closed', () => {
+    const saved = baseSession({ phaseEndsAt: lastSeenAt + 20 * 60_000 }); // 5 min faites sur 25
+    const restored = restoreSession(saved, lastSeenAt);
+    const muchLater = lastSeenAt + 3 * 60 * 60_000;
+    expect(partialMinutesElapsed(restored, durations, muchLater)).toBe(5);
   });
 });

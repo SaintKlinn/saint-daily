@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { usePomodoro } from '../lib/pomodoro';
 import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
-import { phaseDurationMinutes } from '../lib/pomodoroLogic';
+import { EXTENSION_MINUTES, phaseTotalMs } from '../lib/pomodoroLogic';
 import ProgressRing from '../components/ProgressRing';
 import RayCorner from '../components/RayCorner';
 import Button from '../components/Button';
@@ -35,6 +35,9 @@ export default function Pomodoro() {
     pause,
     resume,
     advance,
+    extend,
+    skipBreak,
+    restored,
     stop,
     switchEngagement,
     switching,
@@ -73,6 +76,25 @@ export default function Pomodoro() {
     const id = setTimeout(() => setShowCycleComplete(false), 2000);
     return () => clearTimeout(id);
   }, [cycleCompletedAt]);
+
+  // Espace : l'action principale du moment (Pause, Reprendre ou Continuer),
+  // comme sur un lecteur. Ignoré quand le focus est dans un champ ou sur un
+  // contrôle, où Espace a déjà son propre sens — taper une note, activer le
+  // bouton qui a le focus (ce qui ferait sinon l'action deux fois).
+  useEffect(() => {
+    if (!session) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.code !== 'Space' || event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
+      const cible = event.target as HTMLElement | null;
+      if (cible?.closest('input, textarea, select, button, a, [contenteditable="true"]')) return;
+      event.preventDefault();
+      if (session?.status === 'awaitingAdvance') advance();
+      else if (session?.status === 'paused') resume();
+      else pause();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [session, advance, resume, pause]);
 
   if (!session) {
     return (
@@ -171,7 +193,7 @@ export default function Pomodoro() {
 
   if (!durations) return null; // ne peut pas arriver : une session active implique que les réglages ont déjà chargé
 
-  const totalMs = phaseDurationMinutes(session.phase, durations) * 60_000;
+  const totalMs = phaseTotalMs(session, durations);
   const remainingMs =
     session.status === 'paused' && session.remainingMsAtPause !== null
       ? session.remainingMsAtPause
@@ -231,6 +253,15 @@ export default function Pomodoro() {
         </motion.p>
       </div>
 
+      {restored && (
+        // Session relue au lancement (voir restoreSession) : sans ce mot,
+        // retrouver un minuteur en pause qu'on n'a pas mis en pause
+        // semblerait être un bug.
+        <p role="status" className="relative text-center text-secondaire text-muted">
+          Session retrouvée après la fermeture de l'app. Elle t'attend en pause, là où elle s'était arrêtée.
+        </p>
+      )}
+
       {error && (
         <p role="alert" className="relative text-corps text-danger">
           {error}
@@ -265,6 +296,26 @@ export default function Pomodoro() {
           {pinned ? 'Détacher' : 'Épingler'}
         </button>
       </div>
+
+      {/* Actions secondaires, sur leur propre rangée et en petit : elles
+          ajustent la phase en cours sans être l'action du moment. */}
+      {(session.phase !== 'work' || session.status !== 'awaitingAdvance') && (
+        <div className="relative -mt-2 flex flex-wrap items-center justify-center gap-2">
+          {session.status !== 'awaitingAdvance' && (
+            <Button size="sm" onClick={extend}>
+              +{EXTENSION_MINUTES} min
+            </Button>
+          )}
+          {session.phase !== 'work' && (
+            <Button size="sm" onClick={skipBreak}>
+              Passer la pause
+            </Button>
+          )}
+        </div>
+      )}
+      <p className="relative -mt-2 font-data text-libelle text-muted">
+        Espace : {session.status === 'awaitingAdvance' ? 'continuer' : 'pause / reprise'}
+      </p>
 
       <label className="relative flex w-full flex-col gap-1 text-libelle uppercase tracking-[0.04em] text-muted">
         Note (optionnelle)

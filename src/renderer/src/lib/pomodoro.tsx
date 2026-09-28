@@ -10,13 +10,22 @@ import {
   checkpointNoteLabel,
   completePhase,
   consolidateDuration,
+  extendPhase,
   partialMinutesElapsed,
   pauseSession,
+  restoreSession,
   resumeSession,
+  skipBreak as skipBreakLogic,
   startSession,
   type PomodoroDurations,
   type PomodoroSession,
 } from './pomodoroLogic';
+import { ecrireSessionPersistee, effacerSessionPersistee, lireSessionPersistee } from './pomodoroPersistance';
+
+// Cadence à laquelle une session qui tourne note « l'app est encore
+// vivante ». C'est l'imprécision maximale de la reprise après un plantage :
+// au pire, les 5 dernières secondes avant la fermeture ne sont pas créditées.
+const HEARTBEAT_MS = 5000;
 
 interface PomodoroContextValue {
   session: PomodoroSession | null;
@@ -30,6 +39,11 @@ interface PomodoroContextValue {
   pause: () => void;
   resume: () => void;
   advance: () => void;
+  extend: () => void;
+  skipBreak: () => void;
+  // Vrai tant que la session affichée est celle retrouvée au lancement,
+  // après une fermeture de l'app, et que personne n'y a encore touché.
+  restored: boolean;
   stop: () => Promise<void>;
   switchEngagement: (skillId: string, skillName: string) => Promise<void>;
   switching: boolean;
@@ -41,8 +55,14 @@ const PomodoroContext = createContext<PomodoroContextValue | null>(null);
 export function PomodoroProvider({ children }: { children: ReactNode }) {
   const { session: authSession } = useAuth();
   const { settings } = useSettings();
-  const [session, setSession] = useState<PomodoroSession | null>(null);
-  const [note, setNote] = useState('');
+  // Lue une seule fois, au montage : le Provider est sous AuthGate, donc
+  // l'utilisateur est déjà connu ici.
+  const [sauvegarde] = useState(() => lireSessionPersistee(authSession?.user.id));
+  const [session, setSession] = useState<PomodoroSession | null>(() =>
+    sauvegarde ? restoreSession(sauvegarde.session, sauvegarde.lastSeenAt) : null
+  );
+  const [restored, setRestored] = useState(sauvegarde !== null);
+  const [note, setNote] = useState(sauvegarde?.note ?? '');
   const [error, setError] = useState<string | null>(null);
   const [pinned, setPinnedState] = useState(false);
   const [cycleCompletedAt, setCycleCompletedAt] = useState<number | null>(null);
@@ -64,7 +84,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   // pauses/cycles des Réglages au moment du lancement) et remise à null à
   // l'arrêt — sans ça, changer les Réglages pendant qu'une session tourne
   // changerait la durée des phases de travail suivantes en plein milieu.
-  const [sessionDurations, setSessionDurations] = useState<PomodoroDurations | null>(null);
+  const [sessionDurations, setSessionDurations] = useState<PomodoroDurations | null>(sauvegarde?.durations ?? null);
   const durations = sessionDurations ?? settingsDurations;
   const durationsRef = useRef(durations);
   durationsRef.current = durations;
@@ -109,6 +129,43 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       session && durationsRef.current ? { session, durations: durationsRef.current } : null
     );
   }, [session]);
+
+  // Sauvegarde à chaque changement réel (transition, note, prolongation),
+  // effacement à l'arrêt. Voir lib/pomodoroPersistance.ts.
+  const sessionDurationsRef = useRef(sessionDurations);
+  sessionDurationsRef.current = sessionDurations;
+  const persist = useCallback(() => {
+    const current = sessionRef.current;
+    const currentDurations = sessionDurationsRef.current;
+    const userId = authSessionRef.current?.user.id;
+    if (!current || !currentDurations || !userId) return;
+    ecrireSessionPersistee({
+      userId,
+      session: current,
+      durations: currentDurations,
+      note: noteRef.current,
+      lastSeenAt: Date.now(),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (session) persist();
+    else effacerSessionPersistee();
+  }, [session, sessionDurations, note, persist]);
+
+  // Battement de cœur tant que la session tourne, et un dernier à la
+  // fermeture normale de la fenêtre : c'est ce `lastSeenAt` qui fige le
+  // minuteur à la reprise (voir restoreSession). En pause, rien ne bouge,
+  // la sauvegarde faite à la mise en pause suffit.
+  useEffect(() => {
+    if (session?.status !== 'running') return;
+    const id = window.setInterval(persist, HEARTBEAT_MS);
+    window.addEventListener('pagehide', persist);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener('pagehide', persist);
+    };
+  }, [session?.status, persist]);
 
   // Filet de sécurité si le Provider se démonte alors qu'une session
   // épinglée est encore active (ex. déconnexion) : sans ça, l'overlay reste
@@ -228,6 +285,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       if (action === 'pause') pause();
       else if (action === 'resume') resume();
       else if (action === 'advance') advance();
+      else if (action === 'skip') skipBreak();
+      else if (action === 'extend') extend();
       else if (action === 'stop') void stop();
     });
     return unsubscribe;
@@ -240,6 +299,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     setSessionDurations(effective);
     setError(null);
     setNote('');
+    setRestored(false);
     setSession(startSession(skillId, skillName, effective));
   }
 
@@ -248,14 +308,29 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   }
 
   function resume() {
+    setRestored(false);
     setSession((current) => (current && current.status === 'paused' ? resumeSession(current) : current));
   }
 
   function advance() {
+    setRestored(false);
     setSession((current) =>
       current && current.status === 'awaitingAdvance' && durationsRef.current
         ? advancePhase(current, durationsRef.current)
         : current
+    );
+  }
+
+  function extend() {
+    setSession((current) => (current ? extendPhase(current) : current));
+  }
+
+  // Rien à créditer ni à solder : une pause ne produit jamais d'entrée, donc
+  // pas de verrou flushLockRef à prendre, contrairement à stop().
+  function skipBreak() {
+    setRestored(false);
+    setSession((current) =>
+      current && durationsRef.current ? skipBreakLogic(current, durationsRef.current) : current
     );
   }
 
@@ -355,6 +430,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setSessionDurations(null);
     setNote('');
+    setRestored(false);
     // Désépingle l'overlay : sans ça, la fenêtre transparente reste
     // parquée en haut à droite après la fin d'une session, capturant les
     // clics dans sa zone même invisible (comportement Electron sur les
@@ -434,6 +510,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         pause,
         resume,
         advance,
+        extend,
+        skipBreak,
+        restored,
         stop,
         switchEngagement,
         switching,
