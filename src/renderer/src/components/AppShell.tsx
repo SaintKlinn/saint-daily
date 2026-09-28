@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type JSX } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import LogoMark from './LogoMark';
 import RailFlare from './RailFlare';
@@ -16,6 +16,7 @@ import {
 } from './icons';
 import { GROUPES_NAV, type CleIcone } from '../lib/navigation';
 import { colors } from '../theme/colors';
+import { EASE_SORTIE } from '../theme/mouvement';
 import { useEngagements } from '../hooks/useEngagements';
 import { addDays } from '../lib/calendarLayout';
 import { RECURRENCE_WINDOW_DAYS, planMissingOccurrences } from '../lib/recurrence';
@@ -60,6 +61,21 @@ export default function AppShell() {
   useEffect(() => {
     ecrireRailEpingle(epingle);
   }, [epingle]);
+
+  // Transition d'écran : entrée seule, sans sortie. Une sortie animée
+  // (AnimatePresence) retiendrait l'ancien écran le temps de son départ,
+  // donc retarderait chaque navigation — sur un outil qu'on ouvre dix fois
+  // par jour, la réactivité passe avant la chorégraphie. La clé est le
+  // chemin et non la route : passer d'un skill à un autre rejoue aussi
+  // l'entrée, ce qui signale que le contenu a changé.
+  const { pathname } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+
+  // `<main>` défile, pas la fenêtre : sans remise à zéro, un écran s'ouvrait
+  // à la hauteur où l'on avait laissé le précédent.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   function basculerEpinglage() {
     setEpingle((actuel) => !actuel);
@@ -267,12 +283,26 @@ export default function AppShell() {
         <RailFlare />
       </motion.nav>
       <main
+        ref={mainRef}
         className="flex-1 overflow-y-auto px-12 py-12"
         style={{
           backgroundImage: `radial-gradient(ellipse 1100px 560px at 62% -6%, ${colors.accent.bright}1a, transparent 62%), radial-gradient(ellipse 700px 420px at 8% 78%, ${colors.accent.bright}0c, transparent 68%)`,
         }}
       >
-        <Outlet />
+        {/* Fondu court et 6 px seulement : les écrans ont déjà leurs
+            propres cascades (Accueil, Bilan), cette entrée ne fait que
+            lier la navigation à l'apparition du contenu sans la doubler. */}
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: EASE_SORTIE }}
+          // `h-full` : Introuvable centre son contenu sur la hauteur de
+          // <main>, ce que ce conteneur intercalé ne doit pas lui retirer.
+          className="h-full"
+        >
+          <Outlet />
+        </motion.div>
       </main>
       </div>
     </div>
