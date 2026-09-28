@@ -14,6 +14,7 @@ import {
   type EngagementLike,
 } from '../lib/retrospective';
 import { calculateBestStreak, calculateStreak } from '../lib/streaks';
+import { useJoursRepos } from '../lib/joursRepos';
 import BarreRepartition from '../components/BarreRepartition';
 import HeatmapCalendrier from '../components/HeatmapCalendrier';
 import MeilleureHeureProductivite from '../components/MeilleureHeureProductivite';
@@ -108,8 +109,9 @@ export default function Bilan() {
   // Toutes les entrées, tâches cochées comprises : c'est la même base que
   // la heatmap juste en dessous, donc une journée allumée sur la heatmap
   // compte aussi pour la série.
-  const serie = useMemo(() => calculateStreak(entries), [entries]);
-  const record = useMemo(() => calculateBestStreak(entries), [entries]);
+  const repos = useJoursRepos();
+  const serie = useMemo(() => calculateStreak(entries, undefined, repos), [entries, repos]);
+  const record = useMemo(() => calculateBestStreak(entries, repos), [entries, repos]);
   const total = useMemo(
     () => ({ minutes: entries.reduce((somme, entry) => somme + entry.durationMinutes, 0), seances: entries.length }),
     [entries]

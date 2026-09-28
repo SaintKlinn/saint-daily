@@ -5,6 +5,7 @@ import { useEngagements } from '../hooks/useEngagements';
 import { useAllPracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { filterByTag, calculateStreak, daysSinceLastPractice } from '../lib/streaks';
+import { useJoursRepos } from '../lib/joursRepos';
 import ProgressRing, { ringFillFromDaysSince } from '../components/ProgressRing';
 import Toggle from '../components/Toggle';
 import EmptyState from '../components/EmptyState';
@@ -28,6 +29,7 @@ export default function ListeSkills() {
   const [showArchived, setShowArchived] = useState(false);
 
   const { entriesBySkill } = useAllPracticeEntries(skills.map((s) => s.id));
+  const repos = useJoursRepos();
 
   const allTags = useMemo(() => Array.from(new Set(skills.flatMap((s) => s.tags))).sort(), [skills]);
 
@@ -110,7 +112,7 @@ export default function ListeSkills() {
       <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">
         {visible.map((skill, i) => {
           const entries = entriesBySkill[skill.id] ?? [];
-          const streak = calculateStreak(entries);
+          const streak = calculateStreak(entries, undefined, repos);
           const daysSince = daysSinceLastPractice(entries);
           return (
             <Link

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { calculateStreak, daysSinceLastPractice, filterSkillsForPicker, sortSkillsByRecentPractice } from '../lib/streaks';
+import { useJoursRepos } from '../lib/joursRepos';
 import { SearchIcon } from './icons';
 import type { Engagement, PracticeEntry } from '../lib/types';
 
@@ -20,6 +21,7 @@ export default function SkillPicker({
   loading?: boolean;
 }) {
   const [search, setSearch] = useState('');
+  const repos = useJoursRepos();
 
   const visible = useMemo(() => {
     const filtered = filterSkillsForPicker(skills, search);
@@ -47,7 +49,7 @@ export default function SkillPicker({
         )}
         {visible.map((skill) => {
           const entries = entriesBySkill[skill.id] ?? [];
-          const streak = calculateStreak(entries);
+          const streak = calculateStreak(entries, undefined, repos);
           const daysSince = daysSinceLastPractice(entries);
           const selected = skill.id === value;
           return (

@@ -7,6 +7,7 @@ import { useMilestones } from '../hooks/useMilestones';
 import { usePracticeEntries } from '../hooks/usePracticeEntries';
 import { calculateBestStreak, calculateStreak, daysSinceLastPractice, streakJustExtended } from '../lib/streaks';
 import { computeBadges, computeGoalProgress } from '../lib/motivation';
+import { useJoursRepos } from '../lib/joursRepos';
 import { projetAffiche } from '../lib/projets';
 import { MOOD_LABELS } from '../lib/seances';
 import type { GenericLevel, GoalMetric, GoalPeriod } from '../lib/types';
@@ -76,7 +77,8 @@ export default function DetailSkill() {
   const [nbSeances, setNbSeances] = useState(SEANCES_PAR_PAGE);
   const [enEdition, setEnEdition] = useState<string | null>(null);
   const seanceEnEdition = enEdition ? entries.find((e) => e.id === enEdition) : undefined;
-  const streak = useMemo(() => calculateStreak(entries), [entries]);
+  const repos = useJoursRepos();
+  const streak = useMemo(() => calculateStreak(entries, undefined, repos), [entries, repos]);
   const [streakPulse, setStreakPulse] = useState(false);
 
   useEffect(() => {
@@ -105,8 +107,8 @@ export default function DetailSkill() {
     [entries]
   );
   const chartPoints = useMemo(() => buildCumulativeHoursPath(entries), [entries]);
-  const bestStreak = useMemo(() => calculateBestStreak(entries), [entries]);
-  const badges = useMemo(() => computeBadges(entries), [entries]);
+  const bestStreak = useMemo(() => calculateBestStreak(entries, repos), [entries, repos]);
+  const badges = useMemo(() => computeBadges(entries, repos), [entries, repos]);
   const goal = useMemo(
     () =>
       skill?.goalPeriod && skill.goalMetric && skill.goalTarget

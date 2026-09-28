@@ -6,6 +6,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useNoteTemplates } from '../hooks/useNoteTemplates';
 import type { SkillAppSettings } from '../lib/types';
 import Toggle from '../components/Toggle';
+import ReglagesJoursRepos from '../components/ReglagesJoursRepos';
 import EmptyState from '../components/EmptyState';
 import Button, { buttonClassName } from '../components/Button';
 import { downloadTextFile, exportFileName, fetchExportBundle, toCsv, toJson } from '../lib/exportData';
@@ -258,6 +259,8 @@ export default function Reglages() {
           description="Ouvrir Saint Daily au démarrage de session, en arrière-plan dans la zone de notification"
         />
       </section>
+
+      <ReglagesJoursRepos />
 
       <section className="flex flex-col gap-0">
         <h2 className="mb-1 font-data text-libelle uppercase tracking-[0.1em] text-muted">Pomodoro</h2>

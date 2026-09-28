@@ -1,5 +1,6 @@
 import { startOfMonth, startOfWeek } from './calendarLayout';
 import { calculateBestStreak } from './streaks';
+import { AUCUN_REPOS, type JoursRepos } from './joursRepos';
 import { formatMinutes } from './retrospective';
 import type { GoalMetric, GoalPeriod } from './types';
 
@@ -22,10 +23,10 @@ const TEN_HOURS_IN_MINUTES = 600;
  * rien ne peut se désynchroniser de la réalité, et un import de données
  * anciennes débloque rétroactivement ce qui est mérité.
  */
-export function computeBadges(entries: MotivationEntryLike[]): Badge[] {
+export function computeBadges(entries: MotivationEntryLike[], repos: JoursRepos = AUCUN_REPOS): Badge[] {
   const sessions = entries.length;
   const minutes = entries.reduce((sum, entry) => sum + entry.durationMinutes, 0);
-  const bestStreak = calculateBestStreak(entries);
+  const bestStreak = calculateBestStreak(entries, repos);
   return [
     {
       key: 'streak-7',

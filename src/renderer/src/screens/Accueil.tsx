@@ -6,6 +6,7 @@ import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeE
 import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
+import { useJoursRepos } from '../lib/joursRepos';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
 import PremiersPas from '../components/PremiersPas';
@@ -46,6 +47,7 @@ export default function Accueil() {
     refresh: refreshEntries,
   } = useAllPracticeEntries(activeEngagements.map((e) => e.id));
   const { logEntry } = usePracticeEntries(null);
+  const repos = useJoursRepos();
   // entriesBySkill couvre TOUS les engagements actifs (tâches et projets
   // compris, voir useAllPracticeEntries(activeEngagements...) plus haut) —
   // cocher une tâche y insère une entrée de 0 minute qui devient aussitôt
@@ -68,8 +70,10 @@ export default function Accueil() {
   useEffect(() => {
     if (entriesLoading) return;
     const toutes = Object.values(entriesBySkill).flat();
-    setPalierAFeterMaintenant(palierAFeter(calculateStreak(toutes), currentStreakStart(toutes), lirePaliersFetes()));
-  }, [entriesLoading, entriesBySkill]);
+    setPalierAFeterMaintenant(
+      palierAFeter(calculateStreak(toutes, undefined, repos), currentStreakStart(toutes, undefined, repos), lirePaliersFetes())
+    );
+  }, [entriesLoading, entriesBySkill, repos]);
 
   function fermerCelebration() {
     if (palierAFeterMaintenant) ecrirePaliersFetes(palierAFeterMaintenant.fetes);
@@ -201,11 +205,11 @@ export default function Accueil() {
         const entries = entriesBySkill[skill.id] ?? [];
         return {
           skill,
-          streak: calculateStreak(entries),
+          streak: calculateStreak(entries, undefined, repos),
           daysSince: daysSinceLastPractice(entries),
         };
       }),
-    [activeSkills, entriesBySkill]
+    [activeSkills, entriesBySkill, repos]
   );
 
   const dueSkills = useMemo(
