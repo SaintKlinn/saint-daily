@@ -242,7 +242,7 @@ export default function PaletteCommandes({ onFermer }: { onFermer: () => void })
           aria-autocomplete="list"
           className="h-12 flex-1 bg-transparent text-corps text-champagne placeholder:text-muted focus:outline-none"
         />
-        <kbd className="border border-ink-700 px-1.5 py-0.5 font-data text-libelle text-muted">Échap</kbd>
+        <kbd className="border border-ink-700 px-2 py-1 font-data text-libelle text-muted">Échap</kbd>
       </div>
       <ul id="palette-resultats" role="listbox" ref={listeRef} className="flex-1 overflow-y-auto py-2">
         {resultats.length === 0 && (
