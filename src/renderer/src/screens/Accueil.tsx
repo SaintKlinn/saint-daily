@@ -65,7 +65,11 @@ export default function Accueil() {
   // cours » du Bilan. Sur les seuls engagements actifs, un jour où l'on
   // n'avait coché qu'une tâche (archivée aussitôt) ne comptait pas, et le
   // palier de ce jour n'était jamais fêté.
-  const { entries: toutesLesSeances, loading: toutesLesSeancesLoading } = useAllPracticeEntriesForUser();
+  const {
+    entries: toutesLesSeances,
+    loading: toutesLesSeancesLoading,
+    refresh: rafraichirToutesLesSeances,
+  } = useAllPracticeEntriesForUser();
   const [palierAFeterMaintenant, setPalierAFeterMaintenant] = useState<{
     palier: number;
     fetes: PaliersFetes;
@@ -74,12 +78,15 @@ export default function Accueil() {
     // Calculé une fois les séances chargées : avant, la liste est vide et
     // aucun palier ne paraîtrait atteint.
     if (toutesLesSeancesLoading) return;
+    // Une seule horloge pour tout le calcul : sans elle, la série et le jour
+    // de célébration pourraient être lus de part et d'autre de minuit UTC.
+    const maintenant = new Date();
     setPalierAFeterMaintenant(
       palierAFeter(
-        calculateStreak(toutesLesSeances, undefined, repos),
-        currentStreakStart(toutesLesSeances, undefined, repos),
+        calculateStreak(toutesLesSeances, maintenant, repos),
+        currentStreakStart(toutesLesSeances, maintenant, repos),
         lirePaliersFetes(),
-        cleJourUtc(new Date())
+        cleJourUtc(maintenant)
       )
     );
   }, [toutesLesSeancesLoading, toutesLesSeances, repos]);
@@ -195,7 +202,10 @@ export default function Accueil() {
       return;
     }
     setCompleteTaskError(null);
-    await refreshEntries();
+    // Les deux lectures : l'une alimente l'écran, l'autre la série du palier.
+    // Sans la seconde, le palier atteint par cette coche n'était fêté qu'à
+    // la prochaine ouverture de l'Accueil.
+    await Promise.all([refreshEntries(), rafraichirToutesLesSeances()]);
   }
 
   async function handleDismissWeeklyReview() {

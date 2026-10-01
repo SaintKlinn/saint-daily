@@ -43,7 +43,10 @@ describe('palierAFeter', () => {
   });
 
   it('celebrates the next milestone later in the same streak', () => {
-    expect(palierAFeter(30, '2026-08-01', { debutSerie: '2026-08-01', paliers: [7] }, '2026-08-30')?.palier).toBe(30);
+    expect(palierAFeter(30, '2026-08-01', { debutSerie: '2026-08-01', paliers: [7] }, '2026-08-30')).toEqual({
+      palier: 30,
+      fetes: { debutSerie: '2026-08-01', paliers: [7, 30], celebreLe: '2026-08-30' },
+    });
   });
 
   it('does not celebrate again when the same streak’s first day moves', () => {
@@ -58,6 +61,12 @@ describe('palierAFeter', () => {
   it('celebrates again after a real break that followed the last celebration', () => {
     const fetes = { debutSerie: '2026-08-01', paliers: [7, 30], celebreLe: '2026-09-05' };
     expect(palierAFeter(7, '2026-09-10', fetes, '2026-09-16')?.palier).toBe(7);
+  });
+
+  it('treats a streak starting on the celebration day as the same one, and the day after as a new one', () => {
+    const fetes = { debutSerie: '2026-08-01', paliers: [7, 30], celebreLe: '2026-09-05' };
+    expect(palierAFeter(7, '2026-09-05', fetes, '2026-09-11')).toBeNull();
+    expect(palierAFeter(7, '2026-09-06', fetes, '2026-09-12')?.palier).toBe(7);
   });
 
   it('estimates the celebration day of a record written before celebreLe existed', () => {
@@ -91,6 +100,12 @@ describe('lirePaliersFetes / ecrirePaliersFetes', () => {
     ecrirePaliersFetes({ debutSerie: '2026-09-01', paliers: [7], celebreLe: '2026-09-07' }, stockage);
     expect(lirePaliersFetes(stockage)).toEqual({ debutSerie: '2026-09-01', paliers: [7], celebreLe: '2026-09-07' });
     stockage.valeurs.set(CLE_PALIERS_FETES, JSON.stringify({ debutSerie: '2026-09-01', paliers: [7], celebreLe: 12 }));
+    expect(lirePaliersFetes(stockage)).toBeNull();
+    // Une valeur qui n'est pas une clé de jour fait rejeter l'enregistrement :
+    // elle ferait lever `ajouterJours` dans l'effet de l'Accueil.
+    stockage.valeurs.set(CLE_PALIERS_FETES, JSON.stringify({ debutSerie: 'pas une date', paliers: [7] }));
+    expect(lirePaliersFetes(stockage)).toBeNull();
+    stockage.valeurs.set(CLE_PALIERS_FETES, JSON.stringify({ debutSerie: '2026-09-01', paliers: [7], celebreLe: 'demain' }));
     expect(lirePaliersFetes(stockage)).toBeNull();
   });
 });

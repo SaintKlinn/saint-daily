@@ -38,7 +38,7 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
 // dès que ce seuil est dépassé — un bug qui s'aggrave avec le temps et qui
 // serait invisible sans erreur. Extrait en helper partagé pour que
 // `useAllPracticeEntries` (streaks d'Accueil/Calendrier/ListeSkills/
-// Pomodoro) et `useAllPracticeEntriesForUser` (Bilan) ne puissent pas
+// Pomodoro) et `useAllPracticeEntriesForUser` (Bilan, Journal, palier) ne puissent pas
 // diverger sur cette logique : l'un des deux paginait déjà, l'autre non.
 const PRACTICE_ENTRIES_PAGE_SIZE = 1000;
 
@@ -251,8 +251,8 @@ export function useAllPracticeEntries(engagementIds: string[]) {
 /**
  * Toutes les entrées de pratique de l'utilisateur, sans filtre
  * d'engagement — y compris celles d'engagements archivés, puisque
- * l'historique reste l'historique. Utilisé par l'écran Bilan, qui a besoin
- * d'une vue complète en une seule source.
+ * l'historique reste l'historique. Utilisé par le Bilan, le Journal et le
+ * palier de série de l'Accueil, qui ont besoin d'une vue complète unique.
  */
 export function useAllPracticeEntriesForUser() {
   const { session } = useAuth();

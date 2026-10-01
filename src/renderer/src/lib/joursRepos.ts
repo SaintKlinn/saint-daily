@@ -65,7 +65,7 @@ export function estJourDeRepos(date: Date, repos: JoursRepos): boolean {
   return joursHebdoAu(repos, cle).includes(date.getUTCDay()) || repos.dates.includes(cle);
 }
 
-const CLE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
+export const CLE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
 
 function nettoyerJours(brut: unknown): number[] {
   return Array.isArray(brut)

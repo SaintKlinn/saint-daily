@@ -1,3 +1,4 @@
+import { CLE_JOUR } from './joursRepos';
 import type { StockageLike } from './preferencesAffichage';
 
 // Paliers de série (jours consécutifs de pratique) fêtés sur l'Accueil. Les
@@ -87,11 +88,15 @@ export function lirePaliersFetes(stockage: StockageLike | null = stockageParDefa
     const brut = stockage?.getItem(CLE_PALIERS_FETES);
     if (!brut) return null;
     const v = JSON.parse(brut) as Record<string, unknown>;
+    // Les deux jours doivent être des clés `YYYY-MM-DD` : une valeur trafiquée
+    // ferait lever `ajouterJours` (toISOString sur une date invalide) dans
+    // l'effet de l'Accueil.
     if (
       typeof v?.debutSerie !== 'string' ||
+      !CLE_JOUR.test(v.debutSerie) ||
       !Array.isArray(v.paliers) ||
       !v.paliers.every((p) => typeof p === 'number') ||
-      (v.celebreLe !== undefined && typeof v.celebreLe !== 'string')
+      (v.celebreLe !== undefined && (typeof v.celebreLe !== 'string' || !CLE_JOUR.test(v.celebreLe)))
     ) {
       return null;
     }
