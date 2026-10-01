@@ -55,7 +55,7 @@ export function ChoixQuand({ valeur, onChange }: { valeur: string; onChange: (va
           value={autre ? valeur : ''}
           onChange={(e) => onChange(e.target.value)}
           aria-label="Autre date et heure"
-          className={`border px-3 py-1.5 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING} ${
+          className={`border px-3 py-2 font-data text-secondaire text-champagne [color-scheme:dark] ${FOCUS_RING} ${
             autre ? 'border-accent-bright bg-ink-800' : 'border-ink-700 bg-ink-800'
           }`}
         />
@@ -82,7 +82,7 @@ export function ChoixDuree({ valeur, onChange }: { valeur: string; onChange: (va
             {minutes} min
           </button>
         ))}
-        <label className="flex items-baseline gap-2 border border-ink-700 bg-ink-800 px-3 py-1.5">
+        <label className="flex items-baseline gap-2 border border-ink-700 bg-ink-800 px-3 py-2">
           <input
             type="number"
             min={0}

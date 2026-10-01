@@ -473,7 +473,7 @@ export default function DetailProjet() {
               />
             ))}
           </div>
-          <ul className="flex flex-wrap gap-x-5 gap-y-1">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
             {repartition.map((part, i) => (
               <li key={part.id} className="flex items-center gap-2 text-secondaire text-muted">
                 <span aria-hidden="true" className={`h-2 w-2 ${COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}`} />
