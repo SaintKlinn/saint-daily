@@ -262,9 +262,11 @@ export default function Pomodoro() {
                 explication (audit graphique, M11). */}
             {!selectedSkill
               ? 'Choisis un skill ou un projet'
-              : effectiveWorkMinutes === null
-                ? 'Choisis une durée'
-                : 'Démarrer'}
+              : !durations
+                ? 'Réglages non chargés'
+                : effectiveWorkMinutes === null
+                  ? 'Choisis une durée'
+                  : 'Démarrer'}
           </Button>
           </>
         )}

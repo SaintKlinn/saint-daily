@@ -62,7 +62,10 @@ export function useActionsRapidesTray(): void {
         // Sans réglages chargés, rien n'a démarré : épingler l'overlay
         // laisserait une fenêtre transparente et vide capturer les clics en
         // haut à droite de l'écran, sans moyen de la retirer. On montre
-        // plutôt l'écran Pomodoro, qui dit ce qui manque.
+        // plutôt l'écran Pomodoro, dont le bouton dit alors que les
+        // réglages ne sont pas chargés. Sans session, `durations` non nul
+        // vaut les réglages chargés — la condition même sous laquelle
+        // `start` démarre : `minuteurEnCours` dit donc vrai.
         const minuteurEnCours = Boolean(session) || Boolean(durations);
         if (fenetreVisible || !minuteurEnCours) {
           if (!fenetreVisible) window.api?.focusWindow?.();
