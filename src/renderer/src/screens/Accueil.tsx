@@ -396,7 +396,7 @@ export default function Accueil() {
           des rappels forcément vides ne disent rien. PremiersPas dit par où
           commencer. Attendu après le chargement, pour ne pas le faire
           clignoter chez quelqu'un qui a déjà des skills. */}
-      {!engagementsLoading && skills.length === 0 ? (
+      {!engagementsLoading && !skillsError && skills.length === 0 ? (
         <PremiersPas />
       ) : (
         <>

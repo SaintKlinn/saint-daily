@@ -250,6 +250,7 @@ export default function ListeProjets() {
       </div>
       )}
       {!loading &&
+        !error &&
         lignesTriees.length === 0 &&
         (projetsArchivesExistent ? (
           <EmptyState>Tous tes projets sont en pause. Active « Voir les projets en pause » pour les retrouver.</EmptyState>

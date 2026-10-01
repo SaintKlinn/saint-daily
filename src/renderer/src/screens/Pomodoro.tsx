@@ -25,7 +25,7 @@ const PRESET_WORK_MINUTES = [15, 25, 50];
 export default function Pomodoro() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
-  const { engagements, loading: skillsLoading } = useEngagements();
+  const { engagements, loading: skillsLoading, error: skillsError } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   const activeSkills = skills.filter((s) => !s.archivedAt);
   // Session de chantier : un projet se travaille aussi pour lui-même, et
@@ -157,6 +157,11 @@ export default function Pomodoro() {
             </button>
           </motion.div>
         )}
+        {skillsError && (
+          <p role="alert" className="text-corps text-danger">
+            {skillsError}
+          </p>
+        )}
         {error && (
           <p role="alert" className="text-corps text-danger">
             {error}
@@ -176,7 +181,7 @@ export default function Pomodoro() {
             correspond » au-dessus d'un Démarrer grisé : une impasse. On dit
             plutôt ce qu'il manque et on y mène. Pas pendant le chargement,
             ni pour une cible arrivée par lien profond (tâche planifiée). */}
-        {!skillsLoading && praticables.length === 0 && !selectedSkill ? (
+        {!skillsLoading && !skillsError && praticables.length === 0 && !selectedSkill ? (
           skills.length === 0 ? (
             <EmptyState titre="Il te faut un skill" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
               Un pomodoro se rattache à un skill : le temps de chaque cycle est enregistré sur lui.
