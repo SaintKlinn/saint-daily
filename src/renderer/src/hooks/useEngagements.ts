@@ -313,10 +313,16 @@ export function useEngagements() {
     const supabase = getSupabaseClient();
     const deletedAt = new Date().toISOString();
     if (isProject) {
+      // Jamais un sous-projet : il partirait sans ses propres membres, et
+      // disparaîtrait de ses autres parents. Le filtre est posé ici, à la
+      // source, plutôt que de compter sur `project_id` jamais écrit pour un
+      // sous-projet — une valeur parasite a déjà pu l'être par le passé
+      // (retrait d'un parent, voir handleDelier).
       const { error: childrenError } = await supabase
         .from('engagement')
         .update({ deleted_at: deletedAt })
         .eq('project_id', id)
+        .eq('is_project', false)
         .is('deleted_at', null);
       if (childrenError) return { error: toFrenchError(childrenError.message) };
     }
