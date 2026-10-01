@@ -69,7 +69,7 @@ export default function ReglagesJoursRepos() {
                 type="button"
                 aria-pressed={actif}
                 aria-label={`Repos chaque ${jour.long}`}
-                onClick={() => ecrireJoursRepos(basculerJourHebdo(repos, jour.valeur, aujourdhui))}
+                onClick={() => ecrireJoursRepos(basculerJourHebdo(repos, jour.valeur, cleJourLocal(new Date())))}
                 className={`w-12 py-2 font-data text-secondaire transition-colors duration-150 ${FOCUS_RING} ${actif ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {jour.court}

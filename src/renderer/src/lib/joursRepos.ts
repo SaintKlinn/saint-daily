@@ -11,12 +11,13 @@ import type { StockageLike } from './preferencesAffichage';
 //
 // Les jours sont comparés en UTC, comme toute la logique de série
 // (lib/streaks.ts) : un jour de repos désigne le même jour que celui où une
-// séance compterait. Le réglage hebdomadaire est daté et ne vaut que pour
-// l'avenir : le modifier ne réécrit jamais une série déjà vécue.
+// séance compterait. Le réglage hebdomadaire est daté et ne vaut qu'à partir
+// du jour où il change : le modifier ne réécrit jamais une série déjà vécue.
 
 /** Un réglage hebdomadaire et le jour où il a pris effet. */
 export interface PeriodeHebdo {
-  // `YYYY-MM-DD`, inclus. `DEPUIS_TOUJOURS` pour le réglage d'avant tout
+  // Libellé local `YYYY-MM-DD`, inclus, lu comme le jour UTC de même libellé
+  // (comme `dates`). `DEPUIS_TOUJOURS` pour le réglage d'avant tout
   // historique.
   depuis: string;
   jours: number[];

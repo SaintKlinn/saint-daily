@@ -7,6 +7,7 @@ import {
   ecrireJoursRepos,
   estJourDeRepos,
   estJourDeReposLocal,
+  joursHebdoAu,
   lireJoursRepos,
   normaliserJoursRepos,
 } from './joursRepos';
@@ -153,5 +154,42 @@ describe('historique du réglage hebdomadaire', () => {
     const repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 0, '2026-08-31');
     expect(estJourDeReposLocal(new Date(2026, 7, 30), repos)).toBe(true);
     expect(estJourDeReposLocal(new Date(2026, 8, 6), repos)).toBe(false);
+  });
+
+  it('l’historique survit à l’écriture et à la relecture', () => {
+    // Si la normalisation le perdait, le réglage d'aujourd'hui réécrirait de
+    // nouveau toutes les séries passées au prochain démarrage.
+    const stockage = stockageFactice();
+    let repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 0, '2026-08-31');
+    repos = basculerJourHebdo(repos, 6, '2026-09-07');
+    const ecrit = ecrireJoursRepos(repos, stockage);
+    expect(ecrit.historique).toHaveLength(3);
+    expect(lireJoursRepos(stockage)).toEqual(ecrit);
+    expect(lireJoursRepos(stockage)).toEqual(repos);
+  });
+
+  it('écarte les périodes invalides, trie les valides et nettoie leurs jours', () => {
+    const lu = normaliserJoursRepos({
+      hebdo: [5],
+      dates: [],
+      historique: [
+        { depuis: 'x', jours: [1] },
+        { depuis: '2026-09-01', jours: [9, 2] },
+        { depuis: '0000-01-01', jours: [0] },
+      ],
+    });
+    expect(lu.historique).toEqual([
+      { depuis: '0000-01-01', jours: [0] },
+      { depuis: '2026-09-01', jours: [2] },
+    ]);
+    expect(lu.hebdo).toEqual([2]);
+  });
+
+  it('deux bascules le même jour valent pour ce jour et les suivants, pas pour la veille', () => {
+    let repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 6, '2026-09-02');
+    repos = basculerJourHebdo(repos, 0, '2026-09-02');
+    expect(joursHebdoAu(repos, '2026-09-01')).toEqual([0]);
+    expect(joursHebdoAu(repos, '2026-09-02')).toEqual([6]);
+    expect(joursHebdoAu(repos, '2026-09-03')).toEqual([6]);
   });
 });
