@@ -81,7 +81,7 @@ export default function ReglagesJoursRepos() {
 
       <Toggle
         checked={repos.dates.includes(aujourdhui)}
-        onChange={() => ecrireJoursRepos(basculerDateRepos(repos, aujourdhui))}
+        onChange={() => ecrireJoursRepos(basculerDateRepos(repos, cleJourLocal(new Date())))}
         label="Repos aujourd'hui"
         description="Une pause imprévue : la série t'attend demain"
       />
