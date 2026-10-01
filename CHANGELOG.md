@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.11.1](https://github.com/SaintKlinn/saint-daily/compare/v1.11.0...v1.11.1) (2026-10-01)
+
+
+### Corrections
+
+* bring session fields and the project legend back onto the spacing scale ([660fdbd](https://github.com/SaintKlinn/saint-daily/commit/660fdbd3efc46a06e6672f2b373efa3a0701fd82))
+* celebrate a milestone reached by ticking a task on the home screen, and harden stored milestones ([1a3aebd](https://github.com/SaintKlinn/saint-daily/commit/1a3aebd27c5118fdfc7af652a64b81cbdc718490))
+* count milestone streaks on every session and stop re-celebrating when a streak's first day moves ([bdd71bc](https://github.com/SaintKlinn/saint-daily/commit/bdd71bc09c52fc100b2160487cf04cd2da467f18))
+* date the rest-today toggle at click time ([8f7c1b8](https://github.com/SaintKlinn/saint-daily/commit/8f7c1b84721eeb85f5cf2dcc5eec22decdc6eed5))
+* date the weekly rest-day change at click time and cover the stored history ([9736188](https://github.com/SaintKlinn/saint-daily/commit/97361887416d554228ba3f1b102ef5c5485da8c7))
+* date weekly rest-day changes and stop pruning old rest days, so past streaks never change ([de172db](https://github.com/SaintKlinn/saint-daily/commit/de172dba20f24337b1d6ce7d23304a95b303b1b3))
+* name the missing settings first on the pomodoro start button ([fbf6ab4](https://github.com/SaintKlinn/saint-daily/commit/fbf6ab4cfa9b4149d33ca09bca6d4bfa12348c8d))
+* never permanently delete a sub-project when purging a project ([eb708cc](https://github.com/SaintKlinn/saint-daily/commit/eb708ccc77ea913a690456d1998e6d101ab62c5e))
+* never restore a pomodoro session whose stop or switch was cut short by closing the app ([43a169d](https://github.com/SaintKlinn/saint-daily/commit/43a169d1c6342b1e8b8d4bc3e5a10a8aa9aae1a2))
+* never trash a sub-project with a parent, and return to the project after a chantier session ([572cef3](https://github.com/SaintKlinn/saint-daily/commit/572cef37915f2a7ed41db504dffad2ded70d986f))
+* pin the pomodoro overlay from the tray only when a timer actually started ([4d1e34e](https://github.com/SaintKlinn/saint-daily/commit/4d1e34e6b320c9f3891740848a36db15f59fbf1d))
+* return focus to the opener and let only the top dialog handle Escape and Tab ([8da1bbb](https://github.com/SaintKlinn/saint-daily/commit/8da1bbb304a01aeb5d402d0c0bae9814532b5516))
+* return to the project after a chantier session even when it is archived ([6455274](https://github.com/SaintKlinn/saint-daily/commit/6455274f30bd30177700de9a9246156ae4f25a8b))
+* say on the pomodoro button when settings are not loaded ([6549bf3](https://github.com/SaintKlinn/saint-daily/commit/6549bf3cd97f3a088cf3fa6a3b72b69031fd4f4a))
+* show only the load error, not an empty state, on Bilan, Journal and Corbeille ([8489b7b](https://github.com/SaintKlinn/saint-daily/commit/8489b7b638eb3928187262e922bfd5dde752e75f))
+* show the load error instead of a first-run screen when engagements fail to load ([b18b8ad](https://github.com/SaintKlinn/saint-daily/commit/b18b8add9317bcad0b5da2dce5176e9a261a0414))
+
+
+### Documentation
+
+* add the fix plan for the cloud delivery review findings ([ea6b9a0](https://github.com/SaintKlinn/saint-daily/commit/ea6b9a0bfa401333597bb55b7579e162cae819ed))
+
 ## [1.11.0](https://github.com/SaintKlinn/saint-daily/compare/v1.10.0...v1.11.0) (2026-09-28)
 
 
