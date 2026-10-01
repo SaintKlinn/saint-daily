@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   AUCUN_REPOS,
+  basculerJourHebdo,
   CLE_JOURS_REPOS,
+  DEPUIS_TOUJOURS,
   ecrireJoursRepos,
   estJourDeRepos,
   estJourDeReposLocal,
+  joursHebdoAu,
   lireJoursRepos,
   normaliserJoursRepos,
 } from './joursRepos';
@@ -87,14 +90,16 @@ describe('séries et jours de repos', () => {
 describe('stockage des jours de repos', () => {
   it('relit ce qui a été écrit, trié et sans doublon', () => {
     const stockage = stockageFactice();
-    ecrireJoursRepos({ hebdo: [6, 0, 6], dates: ['2026-09-02', '2026-09-01'] }, LUNDI, stockage);
+    ecrireJoursRepos({ hebdo: [6, 0, 6], dates: ['2026-09-02', '2026-09-01'] }, stockage);
     expect(lireJoursRepos(stockage)).toEqual({ hebdo: [0, 6], dates: ['2026-09-01', '2026-09-02'] });
   });
 
-  it('oublie les dates ponctuelles trop anciennes', () => {
+  it('garde toutes les dates ponctuelles, même très anciennes', () => {
+    // Les élaguer raccourcissait une série de plus de 400 jours et faisait
+    // refêter « Un an d'affilée ». Une date coûte onze octets.
     const stockage = stockageFactice();
-    ecrireJoursRepos({ hebdo: [], dates: ['2024-01-01', '2026-08-01'] }, LUNDI, stockage);
-    expect(lireJoursRepos(stockage).dates).toEqual(['2026-08-01']);
+    ecrireJoursRepos({ hebdo: [], dates: ['2024-01-01', '2026-08-01'] }, stockage);
+    expect(lireJoursRepos(stockage).dates).toEqual(['2024-01-01', '2026-08-01']);
   });
 
   it('retombe sur aucun repos si la valeur est corrompue ou le stockage refusé', () => {
@@ -104,5 +109,87 @@ describe('stockage des jours de repos', () => {
       hebdo: [2],
       dates: ['2026-08-30'],
     });
+  });
+});
+
+describe('historique du réglage hebdomadaire', () => {
+  it('un réglage modifié aujourd’hui ne vaut qu’à partir d’aujourd’hui', () => {
+    const repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 0, '2026-08-31');
+    expect(repos.hebdo).toEqual([]);
+    expect(estJourDeRepos(new Date('2026-08-30T12:00:00Z'), repos)).toBe(true); // dimanche passé
+    expect(estJourDeRepos(new Date('2026-09-06T12:00:00Z'), repos)).toBe(false); // dimanche à venir
+  });
+
+  it('retirer le dimanche ne casse pas la série déjà vécue', () => {
+    // Pratique du lundi au samedi depuis le 10 août, dimanches en repos :
+    // 19 jours pratiqués jusqu'au lundi 31.
+    const jours: string[] = [];
+    for (let d = new Date('2026-08-10T00:00:00Z'); d <= LUNDI; d.setUTCDate(d.getUTCDate() + 1)) {
+      if (d.getUTCDay() !== 0) jours.push(d.toISOString().slice(0, 10));
+    }
+    const entries = jours.map(seance);
+    const avant = { hebdo: [0], dates: [] };
+    expect(calculateStreak(entries, LUNDI, avant)).toBe(19);
+    const apres = basculerJourHebdo(avant, 0, '2026-08-31');
+    expect(calculateStreak(entries, LUNDI, apres)).toBe(19);
+    expect(calculateBestStreak(entries, apres)).toBe(19);
+  });
+
+  it('l’ancien format, sans historique, vaut depuis toujours', () => {
+    expect(estJourDeRepos(new Date('2020-01-05T12:00:00Z'), { hebdo: [0], dates: [] })).toBe(true);
+    expect(normaliserJoursRepos({ hebdo: [0], dates: [] }).historique).toBeUndefined();
+  });
+
+  it('plusieurs bascules le même jour ne laissent qu’une période pour ce jour', () => {
+    let repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 6, '2026-08-31');
+    repos = basculerJourHebdo(repos, 0, '2026-08-31');
+    expect(repos.historique).toEqual([
+      { depuis: DEPUIS_TOUJOURS, jours: [0] },
+      { depuis: '2026-08-31', jours: [6] },
+    ]);
+    expect(repos.hebdo).toEqual([6]);
+  });
+
+  it('le jour affiché suit aussi l’historique', () => {
+    const repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 0, '2026-08-31');
+    expect(estJourDeReposLocal(new Date(2026, 7, 30), repos)).toBe(true);
+    expect(estJourDeReposLocal(new Date(2026, 8, 6), repos)).toBe(false);
+  });
+
+  it('l’historique survit à l’écriture et à la relecture', () => {
+    // Si la normalisation le perdait, le réglage d'aujourd'hui réécrirait de
+    // nouveau toutes les séries passées au prochain démarrage.
+    const stockage = stockageFactice();
+    let repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 0, '2026-08-31');
+    repos = basculerJourHebdo(repos, 6, '2026-09-07');
+    const ecrit = ecrireJoursRepos(repos, stockage);
+    expect(ecrit.historique).toHaveLength(3);
+    expect(lireJoursRepos(stockage)).toEqual(ecrit);
+    expect(lireJoursRepos(stockage)).toEqual(repos);
+  });
+
+  it('écarte les périodes invalides, trie les valides et nettoie leurs jours', () => {
+    const lu = normaliserJoursRepos({
+      hebdo: [5],
+      dates: [],
+      historique: [
+        { depuis: 'x', jours: [1] },
+        { depuis: '2026-09-01', jours: [9, 2] },
+        { depuis: '0000-01-01', jours: [0] },
+      ],
+    });
+    expect(lu.historique).toEqual([
+      { depuis: '0000-01-01', jours: [0] },
+      { depuis: '2026-09-01', jours: [2] },
+    ]);
+    expect(lu.hebdo).toEqual([2]);
+  });
+
+  it('deux bascules le même jour valent pour ce jour et les suivants, pas pour la veille', () => {
+    let repos = basculerJourHebdo({ hebdo: [0], dates: [] }, 6, '2026-09-02');
+    repos = basculerJourHebdo(repos, 0, '2026-09-02');
+    expect(joursHebdoAu(repos, '2026-09-01')).toEqual([0]);
+    expect(joursHebdoAu(repos, '2026-09-02')).toEqual([6]);
+    expect(joursHebdoAu(repos, '2026-09-03')).toEqual([6]);
   });
 });

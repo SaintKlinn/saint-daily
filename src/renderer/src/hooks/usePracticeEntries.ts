@@ -38,7 +38,7 @@ function fromRow(row: PracticeEntryRow): PracticeEntry {
 // dès que ce seuil est dépassé — un bug qui s'aggrave avec le temps et qui
 // serait invisible sans erreur. Extrait en helper partagé pour que
 // `useAllPracticeEntries` (streaks d'Accueil/Calendrier/ListeSkills/
-// Pomodoro) et `useAllPracticeEntriesForUser` (Bilan) ne puissent pas
+// Pomodoro) et `useAllPracticeEntriesForUser` (Bilan, Journal, palier) ne puissent pas
 // diverger sur cette logique : l'un des deux paginait déjà, l'autre non.
 const PRACTICE_ENTRIES_PAGE_SIZE = 1000;
 
@@ -251,8 +251,8 @@ export function useAllPracticeEntries(engagementIds: string[]) {
 /**
  * Toutes les entrées de pratique de l'utilisateur, sans filtre
  * d'engagement — y compris celles d'engagements archivés, puisque
- * l'historique reste l'historique. Utilisé par l'écran Bilan, qui a besoin
- * d'une vue complète en une seule source.
+ * l'historique reste l'historique. Utilisé par le Bilan, le Journal et le
+ * palier de série de l'Accueil, qui ont besoin d'une vue complète unique.
  */
 export function useAllPracticeEntriesForUser() {
   const { session } = useAuth();
@@ -273,7 +273,14 @@ export function useAllPracticeEntriesForUser() {
     setLoading(true);
     setError(null);
     const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
-      getSupabaseClient().from('practice_entry').select('*').order('practiced_at', { ascending: false }).range(from, to)
+      getSupabaseClient()
+        .from('practice_entry')
+        .select('*')
+        // `practiced_at` seul n'est pas unique : `id` départage, pour que
+        // chaque ligne apparaisse exactement une fois d'une page à l'autre.
+        .order('practiced_at', { ascending: false })
+        .order('id')
+        .range(from, to)
     );
     // Appel périmé : une génération plus récente a démarré pendant l'attente
     // ci-dessus (nouvelle session), son résultat est déjà affiché ou en

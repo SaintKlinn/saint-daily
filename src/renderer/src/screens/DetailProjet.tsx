@@ -244,6 +244,11 @@ export default function DetailProjet() {
       setActionError(delierError);
       return;
     }
+    // Même garde que handleLier : pas de `project_id` pour un sous-projet.
+    // Sans elle, retirer un sous-projet d'un de ses parents écrivait l'autre
+    // parent dans la colonne, et supprimer cet autre parent l'emportait en
+    // corbeille.
+    if (engagements.find((e) => e.id === engagementId)?.isProject) return;
     const { error: syncError } = await synchroniserColonne(engagementId, fraiches, updateEngagement);
     if (syncError) setActionError(syncError);
   }
@@ -468,7 +473,7 @@ export default function DetailProjet() {
               />
             ))}
           </div>
-          <ul className="flex flex-wrap gap-x-5 gap-y-1">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
             {repartition.map((part, i) => (
               <li key={part.id} className="flex items-center gap-2 text-secondaire text-muted">
                 <span aria-hidden="true" className={`h-2 w-2 ${COULEURS_REPARTITION[i % COULEURS_REPARTITION.length]}`} />

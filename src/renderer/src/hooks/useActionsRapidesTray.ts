@@ -59,8 +59,20 @@ export function useActionsRapidesTray(): void {
         // Une session déjà en cours n'est jamais remplacée depuis le tray :
         // on la montre, c'est tout.
         if (!session && durations) start(skillId, skillName, durations.workMinutes);
-        if (fenetreVisible) navigate('/pomodoro');
-        else setPinned(true);
+        // Sans réglages chargés, rien n'a démarré : épingler l'overlay
+        // laisserait une fenêtre transparente et vide capturer les clics en
+        // haut à droite de l'écran, sans moyen de la retirer. On montre
+        // plutôt l'écran Pomodoro, dont le bouton dit alors que les
+        // réglages ne sont pas chargés. Sans session, `durations` non nul
+        // vaut les réglages chargés — la condition même sous laquelle
+        // `start` démarre : `minuteurEnCours` dit donc vrai.
+        const minuteurEnCours = Boolean(session) || Boolean(durations);
+        if (fenetreVisible || !minuteurEnCours) {
+          if (!fenetreVisible) window.api?.focusWindow?.();
+          navigate('/pomodoro');
+        } else {
+          setPinned(true);
+        }
       }),
     [navigate]
   );

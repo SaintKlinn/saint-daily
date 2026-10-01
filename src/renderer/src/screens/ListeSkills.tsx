@@ -160,6 +160,7 @@ export default function ListeSkills() {
       </div>
       )}
       {!loading &&
+        !error &&
         visible.length === 0 &&
         (skills.length === 0 ? (
           <EmptyState titre="Aucun skill pour l'instant" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>

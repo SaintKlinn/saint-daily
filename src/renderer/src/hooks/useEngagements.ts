@@ -313,10 +313,16 @@ export function useEngagements() {
     const supabase = getSupabaseClient();
     const deletedAt = new Date().toISOString();
     if (isProject) {
+      // Jamais un sous-projet : il partirait sans ses propres membres, et
+      // disparaîtrait de ses autres parents. Le filtre est posé ici, à la
+      // source, plutôt que de compter sur `project_id` jamais écrit pour un
+      // sous-projet — une valeur parasite a déjà pu l'être par le passé
+      // (retrait d'un parent, voir handleDelier).
       const { error: childrenError } = await supabase
         .from('engagement')
         .update({ deleted_at: deletedAt })
         .eq('project_id', id)
+        .eq('is_project', false)
         .is('deleted_at', null);
       if (childrenError) return { error: toFrenchError(childrenError.message) };
     }
@@ -373,10 +379,11 @@ export function useEngagements() {
       // s'arrête ici.
       const { data: childRows, error: readError } = await supabase
         .from('engagement')
-        .select('id, deleted_at')
+        .select('id, deleted_at, is_project')
         .eq('project_id', id);
       if (readError) return { error: toFrenchError(readError.message) };
-      const children = (childRows as { id: string; deleted_at: string | null }[] | null) ?? [];
+      const children =
+        (childRows as { id: string; deleted_at: string | null; is_project: boolean }[] | null) ?? [];
 
       // 2. Détacher tout le monde — réversible, et ce qui lève le blocage
       // de clé étrangère pour la suppression du parent à l'étape 4.
@@ -390,7 +397,13 @@ export function useEngagements() {
 
       // 3. Seulement maintenant l'étape irréversible : ceux qui étaient
       // déjà en corbeille. Un enfant restauré entre-temps survit, détaché.
-      const trashedIds = children.filter((child) => child.deleted_at).map((child) => child.id);
+      // Jamais un sous-projet : un `project_id` parasite (écrit par d'anciennes
+      // versions) ne fait pas de lui un enfant de ce projet. Mis à la corbeille
+      // de son propre chef, il y reste, simplement détaché, et se purge à part
+      // — le supprimer ici emporterait ses séances et ses jalons en cascade.
+      const trashedIds = children
+        .filter((child) => child.deleted_at && !child.is_project)
+        .map((child) => child.id);
       if (trashedIds.length > 0) {
         const { error: deleteChildrenError } = await supabase.from('engagement').delete().in('id', trashedIds);
         if (deleteChildrenError) return { error: toFrenchError(deleteChildrenError.message) };

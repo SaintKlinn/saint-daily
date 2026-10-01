@@ -69,7 +69,7 @@ export default function ReglagesJoursRepos() {
                 type="button"
                 aria-pressed={actif}
                 aria-label={`Repos chaque ${jour.long}`}
-                onClick={() => ecrireJoursRepos(basculerJourHebdo(repos, jour.valeur))}
+                onClick={() => ecrireJoursRepos(basculerJourHebdo(repos, jour.valeur, cleJourLocal(new Date())))}
                 className={`w-12 py-2 font-data text-secondaire transition-colors duration-150 ${FOCUS_RING} ${actif ? 'bg-accent-bright text-ink-900' : 'border border-ink-700 text-muted hover:text-champagne'}`}
               >
                 {jour.court}
@@ -81,7 +81,7 @@ export default function ReglagesJoursRepos() {
 
       <Toggle
         checked={repos.dates.includes(aujourdhui)}
-        onChange={() => ecrireJoursRepos(basculerDateRepos(repos, aujourdhui))}
+        onChange={() => ecrireJoursRepos(basculerDateRepos(repos, cleJourLocal(new Date())))}
         label="Repos aujourd'hui"
         description="Une pause imprévue : la série t'attend demain"
       />

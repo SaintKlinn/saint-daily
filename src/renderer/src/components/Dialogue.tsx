@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { EASE_SORTIE } from '../theme/mouvement';
@@ -21,6 +21,12 @@ interface DialogueProps {
 const FOCUSABLES =
   'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+// Fenêtres ouvertes, de la plus ancienne à la plus récente. Seule celle du
+// dessus réagit à Échap et à Tab : sans pile, chacune écoutait `window`, et
+// un Échap dans la palette ouverte par-dessus l'éditeur fermait les deux —
+// en perdant la saisie de l'éditeur.
+const pile: symbol[] = [];
+
 /**
  * La fenêtre commune de l'app : éditeur de séance, palette de commandes.
  *
@@ -32,6 +38,8 @@ const FOCUSABLES =
  *
  * À la fermeture, le focus revient à l'élément qui l'avait avant
  * l'ouverture : un clavier ne se retrouve pas au début de la page.
+ *
+ * Seule la fenêtre du dessus réagit au clavier (Échap et Tab).
  */
 export default function Dialogue({
   onFermer,
@@ -48,14 +56,21 @@ export default function Dialogue({
   onFermerRef.current = onFermer;
   const panneauRef = useRef<HTMLDivElement>(null);
 
+  // Capturé pendant le premier rendu, AVANT que React n'applique l'autoFocus
+  // d'un enfant (phase de commit). Dans l'effet, c'était déjà le champ de la
+  // fenêtre elle-même, détaché à la fermeture : le focus tombait sur la page.
+  const [avant] = useState(() => document.activeElement as HTMLElement | null);
+  const [jeton] = useState(() => Symbol('dialogue'));
+
   useEffect(() => {
-    const avant = document.activeElement as HTMLElement | null;
+    pile.push(jeton);
     const racine = document.getElementById('root');
     // Deux fenêtres peuvent se superposer (Ctrl+K depuis l'éditeur) : on ne
     // relâche `inert` que si c'est cette fenêtre qui l'a posé.
     const posee = racine && !racine.inert;
     if (posee) racine.inert = true;
     function onKeyDown(e: KeyboardEvent) {
+      if (pile[pile.length - 1] !== jeton) return;
       if (e.key === 'Escape' && fermableRef.current) {
         e.preventDefault();
         onFermerRef.current();
@@ -91,6 +106,8 @@ export default function Dialogue({
       panneau.querySelector<HTMLElement>(FOCUSABLES)?.focus();
     });
     return () => {
+      const position = pile.lastIndexOf(jeton);
+      if (position >= 0) pile.splice(position, 1);
       cancelAnimationFrame(idFocus);
       window.removeEventListener('keydown', onKeyDown);
       if (posee) racine.inert = false;

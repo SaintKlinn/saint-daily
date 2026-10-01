@@ -76,9 +76,11 @@ export default function Corbeille() {
         </p>
       )}
 
+      {/* Sur un échec de lecture, la liste vide ne veut pas dire « rien » : l'erreur
+          au-dessus suffit. Si des éléments étaient déjà là, ils restent affichés. */}
       {loading && deletedEngagements.length === 0 ? (
         <EmptyState role="status">Chargement…</EmptyState>
-      ) : deletedEngagements.length === 0 ? (
+      ) : error && deletedEngagements.length === 0 ? null : deletedEngagements.length === 0 ? (
         <EmptyState>La corbeille est vide.</EmptyState>
       ) : (
         <div className="flex flex-col gap-px border border-ink-700 bg-ink-700">

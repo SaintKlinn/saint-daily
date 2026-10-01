@@ -47,8 +47,10 @@ function demarrerPomodoro(skill: SkillRapide): void {
   const win = fenetre();
   if (!win) return;
   // Fenêtre cachée dans le tray : on le reste, et c'est l'overlay qui
-  // montre le minuteur (le renderer l'épingle). Fenêtre visible : on y
-  // affiche l'écran Pomodoro.
+  // montre le minuteur (le renderer l'épingle) — sauf si rien n'a pu
+  // démarrer, faute de réglages chargés : le renderer montre alors la
+  // fenêtre sur l'écran Pomodoro. Fenêtre visible : on y affiche l'écran
+  // Pomodoro.
   const fenetreVisible = win.isVisible() && !win.isMinimized();
   if (fenetreVisible) win.focus();
   win.webContents.send('tray:pomodoro-start', { skillId: skill.id, skillName: skill.name, fenetreVisible });

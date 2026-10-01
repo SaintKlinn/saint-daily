@@ -57,7 +57,10 @@ export default function HeatmapCalendrier({
 }: HeatmapCalendrierProps) {
   const grid = useMemo(() => buildHeatmapGrid(countEntriesByDay(entries)), [entries]);
   const repos = useJoursRepos();
-  const aDesRepos = repos.hebdo.length > 0 || repos.dates.length > 0;
+  const aDesRepos =
+    repos.hebdo.length > 0 ||
+    repos.dates.length > 0 ||
+    (repos.historique?.some((p) => p.jours.length > 0) ?? false);
   const defilementRef = useRef<HTMLDivElement>(null);
 
   // Quand la grille dépasse (fenêtre étroite), elle s'ouvre sur les semaines

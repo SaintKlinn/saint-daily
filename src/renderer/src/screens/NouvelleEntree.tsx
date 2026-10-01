@@ -20,7 +20,7 @@ export default function NouvelleEntree() {
   const [searchParams] = useSearchParams();
   const preselectedSkillId = searchParams.get('skillId');
 
-  const { engagements, loading: engagementsLoading } = useEngagements();
+  const { engagements, loading: engagementsLoading, error: engagementsError } = useEngagements();
   const skills = engagements.filter((e) => !e.scheduledAt && !e.isProject);
   // Une séance peut aussi porter sur le projet lui-même (session de
   // chantier) : son temps compte alors dans le total du projet.
@@ -78,7 +78,10 @@ export default function NouvelleEntree() {
       setError(logError);
       return;
     }
-    navigate(`/skills/${skillId}`);
+    // Une séance de chantier porte sur un projet : la fiche d'un skill le
+    // filtrerait et dirait « Introuvable — supprimé définitivement », alors
+    // que la séance vient d'être enregistrée.
+    navigate(engagements.find((e) => e.id === skillId)?.isProject ? `/projets/${skillId}` : `/skills/${skillId}`);
   }
 
   return (
@@ -88,9 +91,16 @@ export default function NouvelleEntree() {
         <p className="font-data text-libelle uppercase tracking-[0.1em] text-muted">Nouvelle entrée</p>
         <h1 className="mt-2 font-serif text-titre-ecran text-champagne">Journal de pratique</h1>
       </div>
-      {/* Sans aucun skill, le menu « Choisir… » était vide : on ne pouvait ni
-          remplir ni comprendre le formulaire. */}
-      {!engagementsLoading && skills.length === 0 ? (
+      {engagementsError && (
+        <p role="alert" className="relative text-corps text-danger">
+          {engagementsError}
+        </p>
+      )}
+      {/* Sans rien à cibler, le menu « Choisir… » était vide : on ne pouvait
+          ni remplir ni comprendre le formulaire. Un projet est aussi une
+          cible (session de chantier). Jamais sur un échec de lecture : une
+          liste vide n'y veut pas dire « aucun skill ». */}
+      {!engagementsLoading && !engagementsError && skills.length === 0 && projets.length === 0 ? (
         <EmptyState titre="Aucun skill pour l'instant" action={{ libelle: 'Créer un skill', vers: '/skills/nouveau' }}>
           Une séance s'enregistre sur un skill. Crée celui que tu veux pratiquer, puis reviens ici.
         </EmptyState>
