@@ -11,11 +11,30 @@ import type { StockageLike } from './preferencesAffichage';
 //
 // Les jours sont comparés en UTC, comme toute la logique de série
 // (lib/streaks.ts) : un jour de repos désigne le même jour que celui où une
-// séance compterait.
+// séance compterait. Le réglage hebdomadaire est daté et ne vaut que pour
+// l'avenir : le modifier ne réécrit jamais une série déjà vécue.
+
+/** Un réglage hebdomadaire et le jour où il a pris effet. */
+export interface PeriodeHebdo {
+  // `YYYY-MM-DD`, inclus. `DEPUIS_TOUJOURS` pour le réglage d'avant tout
+  // historique.
+  depuis: string;
+  jours: number[];
+}
+
+/** Antérieur à toute date réelle : vaut « depuis toujours ». */
+export const DEPUIS_TOUJOURS = '0000-01-01';
 
 export interface JoursRepos {
-  // Jours de la semaine, 0 = dimanche … 6 = samedi (`getUTCDay`).
+  // Le réglage hebdomadaire en vigueur aujourd'hui — ce que l'écran affiche.
+  // 0 = dimanche … 6 = samedi (`getUTCDay`).
   hebdo: number[];
+  // Les réglages successifs, du plus ancien au plus récent : chacun vaut de
+  // `depuis` (inclus) jusqu'au suivant. Absent, `hebdo` vaut depuis
+  // toujours — le comportement d'avant cet historique, ce qui garde valides
+  // les valeurs déjà stockées. Sans lui, décocher un jour aujourd'hui
+  // réécrivait toutes les séries passées.
+  historique?: PeriodeHebdo[];
   // Jours ponctuels, `YYYY-MM-DD`.
   dates: string[];
 }
@@ -24,34 +43,56 @@ export const AUCUN_REPOS: JoursRepos = { hebdo: [], dates: [] };
 
 export const CLE_JOURS_REPOS = 'saint-daily.jours-repos';
 
-// Les dates ponctuelles passées depuis plus longtemps que ça sont oubliées à
-// l'écriture : au-delà, elles ne changent plus aucune série en cours, et la
-// liste ne grossirait sans fin. Les records (meilleure série) peuvent
-// perdre un jour de repos très ancien ; c'est le prix d'un stockage borné.
-const CONSERVATION_JOURS = 400;
-
 /** Clé `YYYY-MM-DD` du jour UTC d'une date. */
 export function cleJourUtc(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+/** Les jours de la semaine en repos à la date de clé `cle` (`YYYY-MM-DD`). */
+export function joursHebdoAu(repos: JoursRepos, cle: string): number[] {
+  if (!repos.historique || repos.historique.length === 0) return repos.hebdo;
+  let jours: number[] = [];
+  for (const periode of repos.historique) {
+    if (periode.depuis > cle) break;
+    jours = periode.jours;
+  }
+  return jours;
+}
+
 export function estJourDeRepos(date: Date, repos: JoursRepos): boolean {
-  return repos.hebdo.includes(date.getUTCDay()) || repos.dates.includes(cleJourUtc(date));
+  const cle = cleJourUtc(date);
+  return joursHebdoAu(repos, cle).includes(date.getUTCDay()) || repos.dates.includes(cle);
+}
+
+const CLE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
+
+function nettoyerJours(brut: unknown): number[] {
+  return Array.isArray(brut)
+    ? [...new Set(brut.filter((j): j is number => Number.isInteger(j) && j >= 0 && j <= 6))].sort()
+    : [];
 }
 
 /** Valide et normalise ce qui sort du stockage : toute valeur inattendue
  *  retombe sur « aucun repos » plutôt que de fausser les séries. */
 export function normaliserJoursRepos(brut: unknown): JoursRepos {
   if (!brut || typeof brut !== 'object') return AUCUN_REPOS;
-  const { hebdo, dates } = brut as Partial<Record<keyof JoursRepos, unknown>>;
-  return {
-    hebdo: Array.isArray(hebdo)
-      ? [...new Set(hebdo.filter((j): j is number => Number.isInteger(j) && j >= 0 && j <= 6))].sort()
-      : [],
-    dates: Array.isArray(dates)
-      ? [...new Set(dates.filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort()
-      : [],
-  };
+  const { hebdo, dates, historique } = brut as Partial<Record<keyof JoursRepos, unknown>>;
+  const datesPropres = Array.isArray(dates)
+    ? [...new Set(dates.filter((d): d is string => typeof d === 'string' && CLE_JOUR.test(d)))].sort()
+    : [];
+  const periodes = Array.isArray(historique)
+    ? historique
+        .filter(
+          (p): p is { depuis: string; jours: unknown } =>
+            !!p && typeof p === 'object' && typeof (p as PeriodeHebdo).depuis === 'string' && CLE_JOUR.test((p as PeriodeHebdo).depuis)
+        )
+        .map((p) => ({ depuis: p.depuis, jours: nettoyerJours(p.jours) }))
+        .sort((a, b) => (a.depuis < b.depuis ? -1 : a.depuis > b.depuis ? 1 : 0))
+    : [];
+  if (periodes.length === 0) {
+    return { hebdo: nettoyerJours(hebdo), dates: datesPropres };
+  }
+  return { hebdo: periodes[periodes.length - 1].jours, historique: periodes, dates: datesPropres };
 }
 
 function stockageParDefaut(): StockageLike | null {
@@ -73,12 +114,9 @@ export function lireJoursRepos(stockage: StockageLike | null = stockageParDefaut
 
 export function ecrireJoursRepos(
   repos: JoursRepos,
-  now: Date = new Date(),
   stockage: StockageLike | null = stockageParDefaut()
 ): JoursRepos {
-  const limite = cleJourUtc(new Date(now.getTime() - CONSERVATION_JOURS * 86_400_000));
   const propre = normaliserJoursRepos(repos);
-  propre.dates = propre.dates.filter((d) => d >= limite);
   try {
     stockage?.setItem(CLE_JOURS_REPOS, JSON.stringify(propre));
   } catch {
@@ -120,7 +158,8 @@ export function cleJourLocal(date: Date): string {
  *  sa date locale : minuit local à Paris tombe la veille en UTC, et
  *  `estJourDeRepos` y lirait le mauvais jour. */
 export function estJourDeReposLocal(jour: Date, repos: JoursRepos): boolean {
-  return repos.hebdo.includes(jour.getDay()) || repos.dates.includes(cleJourLocal(jour));
+  const cle = cleJourLocal(jour);
+  return joursHebdoAu(repos, cle).includes(jour.getDay()) || repos.dates.includes(cle);
 }
 
 /** Ajoute la date si elle n'y est pas, la retire sinon. */
@@ -130,8 +169,18 @@ export function basculerDateRepos(repos: JoursRepos, cle: string): JoursRepos {
     : { ...repos, dates: [...repos.dates, cle] };
 }
 
-export function basculerJourHebdo(repos: JoursRepos, jour: number): JoursRepos {
-  return repos.hebdo.includes(jour)
-    ? { ...repos, hebdo: repos.hebdo.filter((j) => j !== jour) }
-    : { ...repos, hebdo: [...repos.hebdo, jour] };
+/** Ajoute ou retire un jour de la semaine **à partir d'`aujourdhui`**
+ *  (`YYYY-MM-DD`, jour local) : les jours passés gardent le réglage qui
+ *  valait alors. Plusieurs bascules le même jour ne laissent qu'une
+ *  période pour ce jour. */
+export function basculerJourHebdo(repos: JoursRepos, jour: number, aujourdhui: string): JoursRepos {
+  const nouveau = repos.hebdo.includes(jour)
+    ? repos.hebdo.filter((j) => j !== jour)
+    : [...repos.hebdo, jour].sort();
+  const passe = repos.historique && repos.historique.length > 0
+    ? repos.historique.filter((p) => p.depuis < aujourdhui)
+    : repos.hebdo.length > 0
+      ? [{ depuis: DEPUIS_TOUJOURS, jours: repos.hebdo }]
+      : [];
+  return { ...repos, hebdo: nouveau, historique: [...passe, { depuis: aujourdhui, jours: nouveau }] };
 }
