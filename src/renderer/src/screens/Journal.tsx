@@ -151,9 +151,11 @@ export default function Journal() {
         </p>
       )}
 
+      {/* Sur un échec de lecture, la liste vide ne veut pas dire « rien » : l'erreur
+          au-dessus suffit. Si des lignes étaient déjà là, elles restent affichées. */}
       {loading ? (
         <EmptyState role="status">Chargement…</EmptyState>
-      ) : rows.length === 0 ? (
+      ) : entriesError && rows.length === 0 ? null : rows.length === 0 ? (
         <EmptyState titre="Ton journal est vide" action={{ libelle: 'Logger une séance', vers: '/entree/nouvelle' }}>
           Chaque séance que tu enregistres y apparaît, avec sa note et ton humeur, aux côtés de tes bilans du soir.
         </EmptyState>

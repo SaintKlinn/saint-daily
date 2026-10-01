@@ -139,9 +139,11 @@ export default function Bilan() {
         </p>
       )}
 
+      {/* Sur un échec de lecture, la liste vide ne veut pas dire « rien » : l'erreur
+          au-dessus suffit. Si des séances étaient déjà là, elles restent affichées. */}
       {loading ? (
         <EmptyState role="status">Chargement…</EmptyState>
-      ) : entries.length === 0 ? (
+      ) : entriesError && entries.length === 0 ? null : entries.length === 0 ? (
         <EmptyState titre="Pas encore de bilan" action={{ libelle: 'Logger une séance', vers: '/entree/nouvelle' }}>
           Le Bilan se construit à partir de tes séances : série, tendance sur douze semaines, activité de l'année. Une
           première séance suffit pour qu'il prenne forme.
