@@ -150,6 +150,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const sessionDurationsRef = useRef(sessionDurations);
   sessionDurationsRef.current = sessionDurations;
   const persist = useCallback(() => {
+    // Pendant une consolidation, la session en mémoire est celle d'AVANT
+    // l'arrêt : la réécrire ferait revenir au lancement suivant une session
+    // déjà soldée si l'app se ferme à ce moment-là, et un second Arrêter la
+    // consoliderait une deuxième fois.
+    if (flushLockRef.current) return;
     const current = sessionRef.current;
     const currentDurations = sessionDurationsRef.current;
     const userId = authSessionRef.current?.user.id;
@@ -493,6 +498,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     // Arrêter une fois le switch terminé.
     if (flushLockRef.current) return;
     flushLockRef.current = true;
+    // Avant le premier aller-retour : si l'app se ferme pendant la
+    // consolidation, aucune session déjà soldée ne revient au lancement.
+    // L'effet de sauvegarde réécrit la session poursuivie dès que le
+    // changement est terminé.
+    effacerSessionPersistee();
     setSwitching(true);
     try {
       setError(null);
@@ -518,6 +528,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     // l'état React réel, pas un ref figé.
     if (flushLockRef.current) return;
     flushLockRef.current = true;
+    // Avant le premier aller-retour, pour la même raison que
+    // switchEngagement.
+    effacerSessionPersistee();
     try {
       await stopInternal();
     } finally {
