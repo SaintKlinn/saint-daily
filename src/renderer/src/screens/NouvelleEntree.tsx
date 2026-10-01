@@ -81,7 +81,7 @@ export default function NouvelleEntree() {
     // Une séance de chantier porte sur un projet : la fiche d'un skill le
     // filtrerait et dirait « Introuvable — supprimé définitivement », alors
     // que la séance vient d'être enregistrée.
-    navigate(projets.some((p) => p.id === skillId) ? `/projets/${skillId}` : `/skills/${skillId}`);
+    navigate(engagements.find((e) => e.id === skillId)?.isProject ? `/projets/${skillId}` : `/skills/${skillId}`);
   }
 
   return (
