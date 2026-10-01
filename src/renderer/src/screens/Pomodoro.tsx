@@ -260,10 +260,10 @@ export default function Pomodoro() {
           >
             {/* Le bouton dit ce qui manque plutôt que d'être grisé sans
                 explication (audit graphique, M11). */}
-            {!selectedSkill
-              ? 'Choisis un skill ou un projet'
-              : !durations
-                ? 'Réglages non chargés'
+            {!durations
+              ? 'Réglages non chargés'
+              : !selectedSkill
+                ? 'Choisis un skill ou un projet'
                 : effectiveWorkMinutes === null
                   ? 'Choisis une durée'
                   : 'Démarrer'}
