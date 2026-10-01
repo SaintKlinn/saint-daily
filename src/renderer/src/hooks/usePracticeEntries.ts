@@ -273,7 +273,14 @@ export function useAllPracticeEntriesForUser() {
     setLoading(true);
     setError(null);
     const { rows, error: fetchError } = await fetchAllPages<PracticeEntryRow>((from, to) =>
-      getSupabaseClient().from('practice_entry').select('*').order('practiced_at', { ascending: false }).range(from, to)
+      getSupabaseClient()
+        .from('practice_entry')
+        .select('*')
+        // `practiced_at` seul n'est pas unique : `id` départage, pour que
+        // chaque ligne apparaisse exactement une fois d'une page à l'autre.
+        .order('practiced_at', { ascending: false })
+        .order('id')
+        .range(from, to)
     );
     // Appel périmé : une génération plus récente a démarré pendant l'attente
     // ci-dessus (nouvelle session), son résultat est déjà affiché ou en

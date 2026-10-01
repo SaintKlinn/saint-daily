@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useEngagements } from '../hooks/useEngagements';
-import { useAllPracticeEntries, usePracticeEntries } from '../hooks/usePracticeEntries';
+import { useAllPracticeEntries, useAllPracticeEntriesForUser, usePracticeEntries } from '../hooks/usePracticeEntries';
 import { useSettings } from '../hooks/useSettings';
 import { useDailyReflections } from '../hooks/useDailyReflections';
 import { calculateStreak, currentStreakStart, daysSinceLastPractice, lastPracticedEngagementId } from '../lib/streaks';
-import { estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
+import { cleJourUtc, estJourDeReposLocal, useJoursRepos } from '../lib/joursRepos';
 import { dateCourte, echeancesProches } from '../lib/echeances';
 import { ecrirePaliersFetes, lirePaliersFetes, palierAFeter, type PaliersFetes } from '../lib/paliers';
 import CelebrationPalier from '../components/CelebrationPalier';
@@ -60,21 +60,29 @@ export default function Accueil() {
     const activeSkillIds = new Set(activeSkills.map((s) => s.id));
     return Object.fromEntries(Object.entries(entriesBySkill).filter(([id]) => activeSkillIds.has(id)));
   }, [entriesBySkill, activeSkills]);
-  // Série toutes pratiques confondues, sur les engagements actifs — la
-  // même base que la carte « Séries en cours » juste en dessous. Calculée
-  // une fois les entrées chargées : avant, `entriesBySkill` vaut `{}` et
-  // chaque palier paraîtrait perdu.
+  // Série toutes séances confondues — tâches cochées comprises, engagements
+  // archivés ou en corbeille compris — : la même base que la « Série en
+  // cours » du Bilan. Sur les seuls engagements actifs, un jour où l'on
+  // n'avait coché qu'une tâche (archivée aussitôt) ne comptait pas, et le
+  // palier de ce jour n'était jamais fêté.
+  const { entries: toutesLesSeances, loading: toutesLesSeancesLoading } = useAllPracticeEntriesForUser();
   const [palierAFeterMaintenant, setPalierAFeterMaintenant] = useState<{
     palier: number;
     fetes: PaliersFetes;
   } | null>(null);
   useEffect(() => {
-    if (entriesLoading) return;
-    const toutes = Object.values(entriesBySkill).flat();
+    // Calculé une fois les séances chargées : avant, la liste est vide et
+    // aucun palier ne paraîtrait atteint.
+    if (toutesLesSeancesLoading) return;
     setPalierAFeterMaintenant(
-      palierAFeter(calculateStreak(toutes, undefined, repos), currentStreakStart(toutes, undefined, repos), lirePaliersFetes())
+      palierAFeter(
+        calculateStreak(toutesLesSeances, undefined, repos),
+        currentStreakStart(toutesLesSeances, undefined, repos),
+        lirePaliersFetes(),
+        cleJourUtc(new Date())
+      )
     );
-  }, [entriesLoading, entriesBySkill, repos]);
+  }, [toutesLesSeancesLoading, toutesLesSeances, repos]);
 
   function fermerCelebration() {
     if (palierAFeterMaintenant) ecrirePaliersFetes(palierAFeterMaintenant.fetes);
